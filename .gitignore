@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+
+# Firebase y despliegues locales
+.firebase/
+*.log
+firebase-debug.log
+
+# Backups y archivos de trabajo temporales
+# Mantengo la carpeta backups versionada para poder volver a estados previos.
+reverted_backup/
+scratch/
+resguardo gigs/
+*.zip
+*.bak
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Sistema
+# Archivos que crean algunos sistemas operativos y no deberían subirse al repo.
+.DS_Store
+Thumbs.db

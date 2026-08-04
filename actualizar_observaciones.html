@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroFrío — Actualizador Masivo de Observaciones</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0b1320; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        h1 { font-size: 22px; margin-bottom: 6px; color: #00bfff; }
+        p.sub { font-size: 13px; color: #8ab4f8; margin-bottom: 24px; }
+        .card { background: #16243d; border: 1px solid #1e3656; border-radius: 14px; padding: 30px; width: 100%; max-width: 680px; }
+        #log { background: #070d17; border-radius: 8px; padding: 16px; font-size: 12px; font-family: monospace; height: 320px; overflow-y: auto; margin-top: 20px; border: 1px solid #1e3656; white-space: pre-wrap; }
+        .btn { display: inline-block; padding: 12px 28px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #0084ff, #00bfff); color: #fff; }
+        .btn-primary:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .progress-wrap { margin-top: 16px; background: #070d17; border-radius: 8px; overflow: hidden; height: 8px; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #0084ff, #00bfff); width: 0%; transition: width 0.3s; }
+        .stat { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+        .stat-item { background: #0b1320; border-radius: 8px; padding: 10px 16px; flex: 1; min-width: 120px; }
+        .stat-item .label { font-size: 11px; color: #627d98; margin-bottom: 2px; }
+        .stat-item .value { font-size: 20px; font-weight: 700; color: #00bfff; }
+        .green { color: #4cd964 !important; }
+        .red { color: #ff3b30 !important; }
+        .yellow { color: #f7d002 !important; }
+    </style>
+
+    <!-- Firebase v8 compat (mismo que la app) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <!-- Historial con observaciones corregidas -->
+    <script src="historial_parsed.js"></script>
+</head>
+<body>
+    <div class="card">
+        <h1>🔧 Actualizador Masivo de Observaciones</h1>
+        <p class="sub">Actualiza únicamente el campo <strong>observations</strong> de cada planilla histórica en Firestore, sin duplicar ni borrar registros.</p>
+
+        <button class="btn btn-primary" id="btnStart" onclick="iniciarActualizacion()">
+            🚀 Iniciar Actualización Masiva
+        </button>
+
+        <div class="stat">
+            <div class="stat-item">
+                <div class="label">Total a procesar</div>
+                <div class="value" id="statTotal">—</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">Actualizados</div>
+                <div class="value green" id="statOk">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">No encontrados</div>
+                <div class="value yellow" id="statSkip">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">Errores</div>
+                <div class="value red" id="statErr">0</div>
+            </div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="log">Presioná "Iniciar Actualización Masiva" para comenzar...\n</div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const logEl = document.getElementById('log');
+        const progressBar = document.getElementById('progressBar');
+        const statTotal = document.getElementById('statTotal');
+        const statOk = document.getElementById('statOk');
+        const statSkip = document.getElementById('statSkip');
+        const statErr = document.getElementById('statErr');
+
+        function log(msg, color) {
+            const line = document.createElement('div');
+            line.textContent = msg;
+            if (color) line.style.color = color;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function iniciarActualizacion() {
+            const btn = document.getElementById('btnStart');
+            btn.disabled = true;
+            btn.textContent = '⏳ Procesando...';
+            logEl.innerHTML = '';
+
+            if (!window.localHistoricalPlanillas || !Array.isArray(window.localHistoricalPlanillas)) {
+                log('❌ ERROR: No se encontró window.localHistoricalPlanillas. Verificá que historial_parsed.js esté cargado.', '#ff3b30');
+                btn.disabled = false;
+                return;
+            }
+
+            const historial = window.localHistoricalPlanillas;
+            const total = historial.length;
+            statTotal.textContent = total;
+
+            log(`📋 Registros a procesar: ${total}`, '#00bfff');
+            log('🔍 Buscando documentos en Firestore por pdtCode...', '#8ab4f8');
+            log('', null);
+
+            let okCount = 0, skipCount = 0, errCount = 0;
+
+            // Obtener todos los documentos de planillas con orderId = #IMP-HIST de una sola vez
+            log('📥 Cargando índice de planillas históricas desde Firestore...', '#8ab4f8');
+            let snapshot;
+            try {
+                snapshot = await db.collection('planillas')
+                    .where('orderId', '==', '#IMP-HIST')
+                    .get();
+            } catch(e) {
+                log(`❌ Error al cargar planillas: ${e.message}`, '#ff3b30');
+                btn.disabled = false;
+                return;
+            }
+
+            // Construir mapa pdtCode -> docId
+            const pdtMap = new Map();
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.pdtCode) pdtMap.set(data.pdtCode, doc.id);
+            });
+
+            log(`✅ Índice cargado: ${pdtMap.size} documentos históricos en Firestore.`, '#4cd964');
+            log('', null);
+
+            // Procesar en lotes de 400 para no saturar Firestore
+            const BATCH_SIZE = 400;
+
+            for (let i = 0; i < historial.length; i += BATCH_SIZE) {
+                const chunk = historial.slice(i, Math.min(i + BATCH_SIZE, historial.length));
+                const batch = db.batch();
+                let batchHasWrites = false;
+
+                for (const record of chunk) {
+                    const docId = pdtMap.get(record.pdtCode);
+                    if (!docId) {
+                        skipCount++;
+                        continue;
+                    }
+                    const ref = db.collection('planillas').doc(docId);
+                    batch.update(ref, { observations: record.observations });
+                    batchHasWrites = true;
+                    okCount++;
+                }
+
+                if (batchHasWrites) {
+                    try {
+                        await batch.commit();
+                    } catch(e) {
+                        errCount += chunk.length;
+                        log(`❌ Error en lote [${i}-${i+BATCH_SIZE}]: ${e.message}`, '#ff3b30');
+                        continue;
+                    }
+                }
+
+                const processed = Math.min(i + BATCH_SIZE, historial.length);
+                const percent = Math.round((processed / total) * 100);
+                progressBar.style.width = percent + '%';
+                statOk.textContent = okCount;
+                statSkip.textContent = skipCount;
+                statErr.textContent = errCount;
+                log(`[${processed}/${total}] Lote procesado — ${okCount} actualizados, ${skipCount} no encontrados`, '#4cd964');
+
+                await sleep(150); // Pequeña pausa entre lotes
+            }
+
+            log('', null);
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#1e3656');
+            log(`🎉 ACTUALIZACIÓN COMPLETADA`, '#f7d002');
+            log(`   ✅ Actualizados: ${okCount}`, '#4cd964');
+            log(`   ⚠️  No encontrados en Firestore: ${skipCount}`, '#f7d002');
+            log(`   ❌ Errores: ${errCount}`, '#ff3b30');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#1e3656');
+
+            progressBar.style.width = '100%';
+            btn.textContent = '✅ Finalizado';
+        }
+    </script>
+</body>
+</html>

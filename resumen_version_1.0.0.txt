@@ -1,0 +1,34 @@
+=== ELECTROFRIO V2 - NOTAS DE LA VERSIÓN 1.0.0 ===
+Fecha de Cierre: 28 de Julio de 2026
+
+Esta versión (v1.0.0) representa el sistema estable principal e incluye todas las funcionalidades desarrolladas hasta la fecha. A continuación se detalla el contenido de esta versión:
+
+1. ARQUITECTURA Y BASE DE DATOS
+- Integración completa con Firebase (Authentication para control de acceso y Firestore para base de datos en la nube).
+- Funcionamiento 100% online y sincronización en tiempo real (se desactivó el Service Worker offline para garantizar que los administradores reciban los datos al instante sin problemas de caché).
+
+2. ROLES DE USUARIO
+- Dos perfiles principales: "Administrador" (acceso total a paneles, reportes y configuraciones) y "Colaborador" (vista adaptada solo a las tareas asignadas e ingreso de datos).
+
+3. MÓDULO DE ÓRDENES DE TRABAJO
+- Panel centralizado para visualización de Órdenes Pendientes y Coordinadas (Diseño responsivo de tabla única, revirtiendo divisiones experimentales según solicitud).
+- Capacidad de crear, editar, eliminar y ver detalles de las órdenes.
+- Asignación de colaboradores/técnicos a cada orden.
+- Indicadores de estado visual (Pendiente, En Proceso, Completado).
+- Historial de Órdenes Completadas visible para los Colaboradores.
+
+4. MÓDULO DE PLANILLAS DIGITALES
+- Planillas de trabajo digitales integradas con funciones de "autofill" (autocompletado) para selección rápida de técnicos y clientes recurrentes.
+- Vinculación directa con el historial de servicios.
+
+5. CONTROL DE PERSONAL Y FICHAJES
+- Sistema de fichaje (Entrada/Salida) para colaboradores.
+- Rastreo de ubicación: Registro de coordenadas (GPS) al momento de realizar el fichaje.
+- Funcionalidad de rastreo GPS continuo para Colaboradores habilitada en segundo plano.
+
+6. UTILIDADES Y MANTENIMIENTO
+- Script integrado para migración y normalización de datos (capitalización automática de la primera letra en nombres y usuarios en toda la base de datos: fichajes, órdenes y planillas).
+- Interfaz moderna, adaptativa para celulares (Mobile-First) y con notificaciones push/alertas en pantalla.
+
+---
+Este archivo es un resguardo documental de las características de la v1.0.0.
