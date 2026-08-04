@@ -6601,15 +6601,9 @@
                     const pdtCode = getPdtCode(p);
                     const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
                     
-                    const matchesSearch = pdtCode.toLowerCase().includes(searchVal) ||
-                        (p.orderId || '').toLowerCase().includes(searchVal) ||
-                        (p.date || '').toLowerCase().includes(searchVal) ||
-                        clientName.toLowerCase().includes(searchVal) ||
-                        techList.toLowerCase().includes(searchVal) ||
-                        (p.address || '').toLowerCase().includes(searchVal) ||
-                        (p.techDetails || '').toLowerCase().includes(searchVal) ||
-                        (p.spareParts || '').toLowerCase().includes(searchVal) ||
-                        (p.observations || '').toLowerCase().includes(searchVal);
+                    const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                    const searchTerms = searchVal.split(' ').filter(t => t);
+                    const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
                         
                     if (!matchesSearch) return; // Skip this sheet if it doesn't match search
                 }
@@ -7861,15 +7855,9 @@
 
                 const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
 
-                return pdtCode.toLowerCase().includes(searchVal) ||
-                    (p.orderId || '').toLowerCase().includes(searchVal) ||
-                    (p.date || '').toLowerCase().includes(searchVal) ||
-                    clientName.toLowerCase().includes(searchVal) ||
-                    techList.toLowerCase().includes(searchVal) ||
-                    (p.address || '').toLowerCase().includes(searchVal) ||
-                    (p.techDetails || '').toLowerCase().includes(searchVal) ||
-                    (p.spareParts || '').toLowerCase().includes(searchVal) ||
-                    (p.observations || '').toLowerCase().includes(searchVal);
+                const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                const searchTerms = searchVal.split(' ').filter(t => t);
+                return searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
             });
 
             if (filteredSheets.length === 0) {
@@ -8260,6 +8248,9 @@
                     "Domicilio": p.address || p.domicilio || '',
                     "Horario": horarioStr,
                     "Colaboradores": collabsStr,
+                    "Detalles Técnicos": p.techDetails || '',
+                    "Repuestos Utilizados": p.spareParts || '',
+                    "Observaciones": p.observations || '',
                     "Mano de Obra": p.manoObra || '',
                     "Materiales": p.materiales || '',
                     "Estado": p.estadoPDT || 'NO REALIZADO'
