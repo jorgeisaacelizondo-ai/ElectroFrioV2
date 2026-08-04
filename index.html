@@ -1899,11 +1899,11 @@
                     </a>
 
                     <div class="contact-secondary-row">
-                        <a href="https://www.instagram.com/electrofriolr/" target="_blank" rel="noopener"
+                        <a href="https://www.instagram.com/electrofriov2/" target="_blank" rel="noopener"
                             class="contact-btn instagram-btn" title="Instagram">
                             Instagram
                         </a>
-                        <a href="https://www.facebook.com/electrofriolr/" target="_blank" rel="noopener"
+                        <a href="https://www.facebook.com/electrofriov2/" target="_blank" rel="noopener"
                             class="contact-btn facebook-btn" title="Facebook">
                             Facebook
                         </a>
@@ -10568,7 +10568,7 @@
             const activeNavItem = document.querySelector(`.nav-item[data-module="${moduleName}"]`);
             if (activeNavItem) {
                 const spanText = activeNavItem.querySelector('span').textContent;
-                moduleTitle.textContent = spanText;
+                moduleTitle.textContent = moduleName === 'dashboard' ? 'Dashboard Electro' : spanText;
             }
 
             localStorage.setItem('electrofrio_active_module', moduleName);
