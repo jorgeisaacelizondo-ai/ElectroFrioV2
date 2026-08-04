@@ -35,3 +35,5 @@ jobs:
           FIREBASE_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
           firebase deploy --only hosting --project "${FIREBASE_PROJECT:-electrofriov2}" --non-interactive
+
+          
