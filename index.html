@@ -2867,7 +2867,14 @@
                     <div class="content-card">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <h3 class="card-title">Historial General de Planillas de Trabajo (PDT)</h3>
-                            <div style="display: flex; gap: 8px; max-width: 480px; width: 100%; flex-wrap: wrap; align-items: center;">
+                            <div style="display: flex; gap: 8px; max-width: 700px; width: 100%; flex-wrap: wrap; align-items: center;">
+                                <button type="button" class="save-btn" onclick="exportWorksheetsToExcel()" style="width: auto; margin: 0; padding: 8px 12px; background-color: #217346; color: white; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 6px; cursor: pointer;" title="Exportar a Excel">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Excel <span id="selectedWorksheetsCount" style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px; display: none;">0</span>
+                                </button>
+                                <select id="filterWorksheetAddress" style="flex: 1; min-width: 150px; height: 35px; padding: 0 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
+                                    <option value="">-- Todos los domicilios --</option>
+                                </select>
                                 <select id="filterWorksheetWeek" style="flex: 1; min-width: 150px; height: 35px; padding: 0 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
                                     <option value="">-- Todas las semanas --</option>
                                 </select>
@@ -2879,6 +2886,9 @@
                             <table class="custom-table">
                                 <thead>
                                     <tr>
+                                        <th style="width: 40px; text-align: center;">
+                                            <input type="checkbox" id="selectAllWorksheets" onchange="toggleAllWorksheets(this.checked)" style="cursor: pointer;">
+                                        </th>
                                         <th>FECHA</th>
                                         <th>ID / CÓDIGO PDT</th>
                                         <th>CLIENTE</th>
@@ -5167,6 +5177,7 @@
                 renderJornalesTable();
             }
             if (activeModule === 'pdt' || activeModule === 'database' || activeModule === 'dashboard') {
+                populateWorksheetAddressDropdown();
                 populateWorksheetWeekDropdown();
                 renderWorksheetsTable();
             }
@@ -6566,6 +6577,31 @@
             };
         }
 
+        // Llenar dinámicamente el selector de domicilios en el historial
+        function populateWorksheetAddressDropdown() {
+            const select = document.getElementById('filterWorksheetAddress');
+            if (!select) return;
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">-- Todos los domicilios --</option>';
+            
+            const addresses = new Set();
+            planillas.forEach(p => {
+                const addr = (p.address || p.domicilio || '').trim();
+                if (addr) addresses.add(addr);
+            });
+            
+            Array.from(addresses).sort().forEach(addr => {
+                const option = document.createElement('option');
+                option.value = addr;
+                option.textContent = addr;
+                select.appendChild(option);
+            });
+            
+            if (currentValue && addresses.has(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
         // Llenar dinámicamente el selector de semana en el historial
         function populateWorksheetWeekDropdown() {
             const select = document.getElementById('filterWorksheetWeek');
@@ -7711,6 +7747,10 @@
             const weekFilterVal = document.getElementById('filterWorksheetWeek')
                 ? document.getElementById('filterWorksheetWeek').value
                 : '';
+                
+            const addressFilterVal = document.getElementById('filterWorksheetAddress')
+                ? document.getElementById('filterWorksheetAddress').value
+                : '';
 
             // Reiniciar el límite si cambia el valor de búsqueda o el de semana para optimizar
             if (searchVal !== window.lastWorksheetSearchVal || weekFilterVal !== window.lastWorksheetWeekFilterVal) {
@@ -7752,6 +7792,14 @@
             const myNameLower = myName.trim().toLowerCase();
 
             const filteredSheets = sortedSheets.filter((p, idx) => {
+                // Filtro por domicilio
+                if (addressFilterVal) {
+                    const addr = (p.address || p.domicilio || '').trim();
+                    if (addr !== addressFilterVal) {
+                        return false;
+                    }
+                }
+
                 // Filtro por semana
                 if (weekFilterVal) {
                     const info = getSheetWeekKey(p);
@@ -7798,6 +7846,12 @@
                 return;
             }
 
+            // Update Select All checkbox and counter
+            window.currentFilteredWorksheetIds = filteredSheets.map(p => p.id);
+            if (window.updateWorksheetSelectionUI) {
+                window.updateWorksheetSelectionUI();
+            }
+            
             // Limitar las planillas dibujadas en el DOM para evitar congelamiento
             const displayedSheets = filteredSheets.slice(0, window.worksheetsRenderLimit);
 
@@ -7850,8 +7904,12 @@
                     default: estColor += ' color: var(--text-primary);'; break;
                 }
 
+                const isSelected = window.selectedWorksheets && window.selectedWorksheets.has(p.id);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="worksheet-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="toggleWorksheetSelection('${p.id}', this.checked)" style="cursor: pointer;">
+                    </td>
                     <td data-label="FECHA">${fechaAR}</td>
                     <td data-label="ID / CÓDIGO PDT" style="font-weight:700; color:var(--color-blue);">
                         ${p.status === 'Borrador' ? '<span class="badge status-presupuesto" style="display: inline-block; font-size: 11px; padding: 4px 8px; font-weight: 700; border-radius: 4px; vertical-align: middle;">Borrador</span>' : pdtCode}
@@ -8047,6 +8105,150 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        };
+
+        // Funciones de Selección Múltiple y Exportación de Planillas
+        window.selectedWorksheets = window.selectedWorksheets || new Set();
+
+        window.toggleWorksheetSelection = function(id, checked) {
+            if (!window.selectedWorksheets) window.selectedWorksheets = new Set();
+            if (checked) {
+                window.selectedWorksheets.add(id);
+            } else {
+                window.selectedWorksheets.delete(id);
+            }
+            window.updateWorksheetSelectionUI();
+        };
+
+        window.toggleAllWorksheets = function(checked) {
+            if (!window.selectedWorksheets) window.selectedWorksheets = new Set();
+            const ids = window.currentFilteredWorksheetIds || [];
+            if (checked) {
+                ids.forEach(id => window.selectedWorksheets.add(id));
+            } else {
+                ids.forEach(id => window.selectedWorksheets.delete(id));
+            }
+            // Update the DOM checkboxes immediately
+            document.querySelectorAll('.worksheet-checkbox').forEach(cb => {
+                if (ids.includes(cb.value)) cb.checked = checked;
+            });
+            window.updateWorksheetSelectionUI();
+        };
+
+        window.updateWorksheetSelectionUI = function() {
+            if (!window.selectedWorksheets) window.selectedWorksheets = new Set();
+            const count = window.selectedWorksheets.size;
+            const countSpan = document.getElementById('selectedWorksheetsCount');
+            if (countSpan) {
+                countSpan.textContent = count;
+                countSpan.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+            
+            const selectAllCb = document.getElementById('selectAllWorksheets');
+            if (selectAllCb) {
+                const ids = window.currentFilteredWorksheetIds || [];
+                if (ids.length === 0) {
+                    selectAllCb.checked = false;
+                    selectAllCb.indeterminate = false;
+                } else {
+                    const selectedInView = ids.filter(id => window.selectedWorksheets.has(id)).length;
+                    if (selectedInView === ids.length) {
+                        selectAllCb.checked = true;
+                        selectAllCb.indeterminate = false;
+                    } else if (selectedInView > 0) {
+                        selectAllCb.checked = false;
+                        selectAllCb.indeterminate = true;
+                    } else {
+                        selectAllCb.checked = false;
+                        selectAllCb.indeterminate = false;
+                    }
+                }
+            }
+        };
+
+        window.exportWorksheetsToExcel = function() {
+            if (typeof XLSX === 'undefined') {
+                showToast('Librería XLSX no cargada.', 'error');
+                return;
+            }
+            
+            // Determinar qué planillas exportar
+            let sheetsToExport = [];
+            const isSelection = window.selectedWorksheets && window.selectedWorksheets.size > 0;
+            
+            if (isSelection) {
+                sheetsToExport = planillas.filter(p => window.selectedWorksheets.has(p.id));
+            } else {
+                // If no selection, export all filtered sheets (we need to apply the filter logic again, or use the ids)
+                const ids = window.currentFilteredWorksheetIds || [];
+                sheetsToExport = planillas.filter(p => ids.includes(p.id));
+            }
+            
+            if (sheetsToExport.length === 0) {
+                showToast('No hay planillas para exportar.', 'warning');
+                return;
+            }
+            
+            const msg = isSelection 
+                ? `Se exportarán ${sheetsToExport.length} planillas seleccionadas. ¿Desea continuar?`
+                : `Se exportarán ${sheetsToExport.length} planillas filtradas. ¿Desea continuar?`;
+                
+            if (!confirm(msg)) return;
+            
+            const clientesMap = new Map(clientes.map(c => [c.id, c.name]));
+            const ordenesMap = new Map(ordenesTrabajo.map(o => [o.id, o]));
+            
+            const exportData = sheetsToExport.map((p, idx) => {
+                const ord = p.orderId ? ordenesMap.get(p.orderId) : null;
+                const clientName = p.clientId ? clientesMap.get(p.clientId) : (p.client || (ord ? ord.client : "Cliente Particular"));
+                
+                // Función repetida para obtener código PDT en caso de que esté fuera de alcance local
+                const getPdtCode = (p) => {
+                    if (p.pdtCode) return p.pdtCode;
+                    if (p.id && p.id.startsWith('pdt-')) return p.id.substring(4);
+                    return p.id;
+                };
+                
+                const pdtCode = getPdtCode(p);
+                
+                let horarioStr = "08:00HS-17:00HS";
+                if (p.horaEntrada && p.horaSalida) horarioStr = `${p.horaEntrada}HS-${p.horaSalida}HS`;
+                else if (p.timeRange) horarioStr = p.timeRange;
+                else if (ord && ord.time) horarioStr = `${ord.time}HS`;
+                
+                let collabsStr = "Sin Asignar";
+                if (Array.isArray(p.technicians) && p.technicians.length > 0) collabsStr = p.technicians.join(', ');
+                else if (p.completedBy) collabsStr = p.completedBy;
+                else if (ord && ord.assignees && ord.assignees.length > 0) collabsStr = ord.assignees.join(', ');
+                else if (ord && ord.assignee) collabsStr = ord.assignee;
+                
+                return {
+                    "Fecha": p.date || '',
+                    "ID / Código PDT": pdtCode,
+                    "Cliente": clientName,
+                    "Domicilio": p.address || p.domicilio || '',
+                    "Horario": horarioStr,
+                    "Colaboradores": collabsStr,
+                    "Mano de Obra": p.manoObra || '',
+                    "Materiales": p.materiales || '',
+                    "Estado": p.estadoPDT || 'NO REALIZADO'
+                };
+            });
+            
+            try {
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Planillas");
+                
+                // Generar nombre de archivo
+                const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                XLSX.writeFile(wb, `Planillas_de_Trabajo_${dateStr}.xlsx`);
+                
+                showToast('Excel generado correctamente.', 'success');
+            } catch (error) {
+                console.error("Error al exportar:", error);
+                showToast('Error al generar Excel.', 'error');
+            }
         };
 
         // 3. Descargar Plantilla de Ejemplo para Planillas de Trabajo
@@ -9346,6 +9548,11 @@
         const filterWorksheetWeek = document.getElementById('filterWorksheetWeek');
         if (filterWorksheetWeek) {
             filterWorksheetWeek.addEventListener('change', renderWorksheetsTable);
+        }
+        
+        const filterWorksheetAddress = document.getElementById('filterWorksheetAddress');
+        if (filterWorksheetAddress) {
+            filterWorksheetAddress.addEventListener('change', renderWorksheetsTable);
         }
 
 
