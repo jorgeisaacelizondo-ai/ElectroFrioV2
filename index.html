@@ -10568,7 +10568,7 @@
             const activeNavItem = document.querySelector(`.nav-item[data-module="${moduleName}"]`);
             if (activeNavItem) {
                 const spanText = activeNavItem.querySelector('span').textContent;
-                moduleTitle.textContent = moduleName === 'dashboard' ? 'Dashboard Electro' : spanText;
+                moduleTitle.textContent = moduleName === 'dashboard' ? 'Dashboard' : spanText;
             }
 
             localStorage.setItem('electrofrio_active_module', moduleName);
