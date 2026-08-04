@@ -29,10 +29,12 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo "$FIREBASE_SERVICE_ACCOUNT" > "$GITHUB_WORKSPACE/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GITHUB_WORKSPACE/firebase-service-account.json"
+          chmod 600 "$GITHUB_WORKSPACE/firebase-service-account.json"
 
       - name: Deploy to Firebase Hosting
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-service-account.json
+          FIREBASE_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}  # opcional: crea este secret con tu projectId
         run: |
-          firebase deploy --only hosting --project electrofriov2 --non-interactive
+          firebase deploy --only hosting --project "${FIREBASE_PROJECT:-electrofriov2}" --non-interactive

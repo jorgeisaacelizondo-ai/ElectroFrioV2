@@ -54,7 +54,7 @@
         }
       ],
       "predeploy": [
-        "powershell -ExecutionPolicy Bypass -File respaldar.ps1"
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File respaldar.ps1"
       ],
       "rewrites": [
         {
@@ -114,7 +114,7 @@
         }
       ],
       "predeploy": [
-        "powershell -ExecutionPolicy Bypass -File respaldar.ps1"
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File respaldar.ps1"
       ],
       "rewrites": [
         {
