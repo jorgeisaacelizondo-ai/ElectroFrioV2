@@ -36,4 +36,6 @@ jobs:
         run: |
           firebase deploy --only hosting --project "${FIREBASE_PROJECT:-electrofriov2}" --non-interactive
 
+
+
           
