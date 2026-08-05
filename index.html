@@ -2544,6 +2544,7 @@
                         </div>
                         <div class="modal-body" style="padding: 20px;">
                             <form id="formNuevaTarea" onsubmit="saveNuevaTarea(event)">
+                                <input type="hidden" id="tarea-edit-id" value="">
                                 <div class="input-group">
                                     <label>Título / Descripción principal de la tarea</label>
                                     <input type="text" id="tarea-title" required placeholder="Ej: Revisión de Vehículos" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
@@ -7126,6 +7127,13 @@
                 </div>
             `;
             
+            document.getElementById('tarea-edit-id').value = '';
+            const titleEl = document.querySelector('#modalNuevaTarea .modal-title');
+            if(titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg> Crear Nueva Tarea`;
+            
+            const btnSave = document.querySelector('#formNuevaTarea .btn-save');
+            if(btnSave) { btnSave.innerHTML = 'Crear Tarea'; btnSave.style.display = 'block'; }
+            
             document.getElementById('modalNuevaTarea').classList.add('show');
         }
 
@@ -7133,7 +7141,7 @@
             const row = document.createElement('div');
             row.className = 'tarea-item-row';
             row.style.cssText = 'display:flex; gap:10px; align-items:center;';
-            row.innerHTML = `<input type="text" class="tarea-item-input" required placeholder="Nuevo ítem..." style="flex:1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"><button type="button" onclick="this.parentElement.remove()" style="color:var(--color-red); background:none; border:none; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; width:30px; height:30px;">&times;</button>`;
+            row.innerHTML = `<input type="text" class="tarea-item-input" required placeholder="Nuevo ítem..." style="flex:1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"><input type="hidden" class="tarea-item-checked" value="false"><button type="button" onclick="this.parentElement.remove()" style="color:var(--color-red); background:none; border:none; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; width:30px; height:30px;">&times;</button>`;
             document.getElementById('tarea-items-container').appendChild(row);
         }
 
@@ -7150,36 +7158,60 @@
                 return;
             }
 
-            const itemInputs = document.querySelectorAll('.tarea-item-input');
-            const items = Array.from(itemInputs).map(inp => ({ text: inp.value, checked: false }));
+            const itemRows = document.querySelectorAll('.tarea-item-row');
+            const items = Array.from(itemRows).map(row => {
+                const inp = row.querySelector('.tarea-item-input');
+                const chk = row.querySelector('.tarea-item-checked');
+                return { text: inp ? inp.value : '', checked: chk && chk.value === 'true' };
+            });
 
             if (items.length === 0) {
                 alert("Debes añadir al menos un ítem al checklist.");
                 return;
             }
 
-            const tareaObj = {
-                id: `tarea-${Date.now()}`,
-                title,
-                date,
-                assignees,
-                items,
-                status: 'Pendiente',
-                timestamp: getSyncedDate().toISOString(),
-                createdBy: localStorage.getItem('electrofrio_name') || 'Admin'
-            };
-
+            
+            const editId = document.getElementById('tarea-edit-id').value;
+            
             try {
                 const btn = e.target.querySelector('.btn-save');
                 btn.innerHTML = 'Guardando...';
                 btn.disabled = true;
-                
-                if (typeof db !== 'undefined') {
-                    await db.collection('tareas').doc(tareaObj.id).set(tareaObj);
+
+                if (editId) {
+                    const existingT = tareas.find(t => t.id === editId);
+                    if(!existingT) return;
+                    
+                    const updatedData = {
+                        title, date, assignees, items
+                    };
+                    
+                    if (typeof db !== 'undefined') {
+                        await db.collection('tareas').doc(editId).update(updatedData);
+                    } else {
+                        Object.assign(existingT, updatedData);
+                        localStorage.setItem('electrofrio_tareas', JSON.stringify(tareas));
+                        updateTablesAndViews();
+                    }
                 } else {
-                    tareas.push(tareaObj);
-                    localStorage.setItem('electrofrio_tareas', JSON.stringify(tareas));
-                    updateTablesAndViews();
+                    const tareaObj = {
+                        id: `tarea-${Date.now()}`,
+                        title,
+                        date,
+                        assignees,
+                        items,
+                        status: 'Pendiente',
+                        timestamp: getSyncedDate().toISOString(),
+                        createdBy: localStorage.getItem('electrofrio_name') || 'Admin'
+                    };
+                    
+                    if (typeof db !== 'undefined') {
+                        await db.collection('tareas').doc(tareaObj.id).set(tareaObj);
+                    } else {
+                        tareas.push(tareaObj);
+                        localStorage.setItem('electrofrio_tareas', JSON.stringify(tareas));
+                        updateTablesAndViews();
+                    }
                 }
                 document.getElementById('modalNuevaTarea').classList.remove('show');
             } catch (err) {
@@ -7190,6 +7222,141 @@
                 if(btn) { btn.innerHTML = 'Crear Tarea'; btn.disabled = false; }
             }
         }
+
+        
+        window.openEditTareaModal = function(id) {
+            const t = tareas.find(x => x.id === id);
+            if(!t) return;
+            
+            // Reusar openModalNuevaTarea para limpiar y preparar checkboxes de colaboradores
+            openModalNuevaTarea();
+            
+            document.getElementById('tarea-edit-id').value = id;
+            const titleEl = document.querySelector('#modalNuevaTarea .modal-title');
+            if(titleEl) titleEl.innerHTML = `✏️ Editar Tarea`;
+            const btnSave = document.querySelector('#formNuevaTarea .btn-save');
+            if(btnSave) { btnSave.innerHTML = 'Guardar Cambios'; btnSave.style.display = 'block'; }
+            
+            document.getElementById('tarea-title').value = t.title;
+            document.getElementById('tarea-date').value = t.date;
+            
+            // Marcar colaboradores
+            const collabsChecks = document.querySelectorAll('.tarea-collab-cb');
+            collabsChecks.forEach(cb => {
+                cb.checked = t.assignees.includes(cb.value);
+            });
+            
+            // Cargar items
+            const itemsContainer = document.getElementById('tarea-items-container');
+            itemsContainer.innerHTML = '';
+            t.items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'tarea-item-row';
+                row.style.cssText = 'display:flex; gap:10px; align-items:center; margin-bottom:8px;';
+                row.innerHTML = `<input type="text" class="tarea-item-input" required value="${item.text}" style="flex:1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;"><input type="hidden" class="tarea-item-checked" value="${item.checked ? 'true' : 'false'}"><button type="button" onclick="this.parentElement.remove()" style="color:var(--color-red); background:none; border:none; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; width:30px; height:30px;">&times;</button>`;
+                itemsContainer.appendChild(row);
+            });
+        };
+
+        window.openViewTareaModal = function(id) {
+            const t = tareas.find(x => x.id === id);
+            if(!t) return;
+            
+            openEditTareaModal(id);
+            const titleEl = document.querySelector('#modalNuevaTarea .modal-title');
+            if(titleEl) titleEl.innerHTML = `👁️ Ver Tarea`;
+            
+            const btnSave = document.querySelector('#formNuevaTarea .btn-save');
+            if(btnSave) btnSave.style.display = 'none';
+            
+            document.getElementById('tarea-title').readOnly = true;
+            document.getElementById('tarea-date').readOnly = true;
+            
+            const collabsChecks = document.querySelectorAll('.tarea-collab-cb');
+            collabsChecks.forEach(cb => cb.disabled = true);
+            
+            const itemInputs = document.querySelectorAll('.tarea-item-input');
+            itemInputs.forEach(i => i.readOnly = true);
+            
+            const addBtn = document.querySelector('button[onclick="addTareaItem()"]');
+            if(addBtn) addBtn.style.display = 'none';
+            
+            const removeBtns = document.querySelectorAll('.tarea-item-row button');
+            removeBtns.forEach(b => b.style.display = 'none');
+            
+            // Restaurar handlers
+            const closeBtn = document.querySelector('#modalNuevaTarea .modal-close');
+            closeBtn.onclick = function() {
+                document.getElementById('modalNuevaTarea').classList.remove('show');
+                if(btnSave) btnSave.style.display = 'block';
+                if(addBtn) addBtn.style.display = 'inline-flex';
+                document.getElementById('tarea-title').readOnly = false;
+                document.getElementById('tarea-date').readOnly = false;
+            };
+        };
+
+        window.completarTareaHoy = async function(id) {
+            if(!confirm("¿Marcar esta tarea como completada hoy?")) return;
+            const t = tareas.find(x => x.id === id);
+            if(!t) return;
+            
+            try {
+                const now = getSyncedDate().toISOString();
+                const hist = t.historialCompletados || [];
+                hist.push(now);
+                
+                const updatedData = {
+                    ultimaCompletada: now,
+                    historialCompletados: hist
+                };
+                
+                if (typeof db !== 'undefined') {
+                    await db.collection('tareas').doc(id).update(updatedData);
+                } else {
+                    Object.assign(t, updatedData);
+                    localStorage.setItem('electrofrio_tareas', JSON.stringify(tareas));
+                    updateTablesAndViews();
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Error al completar la tarea");
+            }
+        };
+
+        window.deshacerCompletarTarea = async function(id) {
+            if(!confirm("¿Deshacer el completado de esta tarea de hoy?")) return;
+            const t = tareas.find(x => x.id === id);
+            if(!t) return;
+            
+            try {
+                let hist = t.historialCompletados || [];
+                if(hist.length > 0) {
+                    hist.pop(); // quitar el ultimo
+                }
+                const ult = hist.length > 0 ? hist[hist.length-1] : null;
+                
+                const updatedData = {
+                    historialCompletados: hist
+                };
+                
+                if (typeof db !== 'undefined') {
+                    if(ult === null) {
+                        updatedData.ultimaCompletada = firebase.firestore.FieldValue.delete();
+                    } else {
+                        updatedData.ultimaCompletada = ult;
+                    }
+                    await db.collection('tareas').doc(id).update(updatedData);
+                } else {
+                    t.ultimaCompletada = ult;
+                    t.historialCompletados = hist;
+                    localStorage.setItem('electrofrio_tareas', JSON.stringify(tareas));
+                    updateTablesAndViews();
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Error al deshacer");
+            }
+        };
 
         window.deleteTarea = async function(id) {
             if(!confirm("¿Estás seguro de eliminar esta tarea?")) return;
@@ -7238,6 +7405,13 @@
             }
         }
 
+        function getTareaProgreso(t) {
+            if (!t.items || t.items.length === 0) return 0;
+            const total = t.items.length;
+            const done = t.items.filter(x => x.checked).length;
+            return done / total;
+        }
+
         function renderTareas() {
             const role = localStorage.getItem('electrofrio_role');
             const userName = localStorage.getItem('electrofrio_name');
@@ -7246,8 +7420,13 @@
                 const tbody = document.getElementById('tbody-tareas-admin');
                 if(!tbody) return;
                 
-                // Ordenar por fecha y timestamp invertido
-                const sorted = [...tareas].sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+                // Ordenar por progreso (menor a mayor) y luego por fecha
+                const sorted = [...tareas].sort((a,b) => {
+                    const pA = getTareaProgreso(a);
+                    const pB = getTareaProgreso(b);
+                    if (pA !== pB) return pA - pB;
+                    return b.timestamp.localeCompare(a.timestamp);
+                });
                 
                 let html = '';
                 sorted.forEach(t => {
@@ -7255,6 +7434,8 @@
                     const done = t.items.filter(x => x.checked).length;
                     const pct = Math.round((done/total)*100);
                     
+                    
+
                     const fParts = t.date.split('-');
                     const dateAr = fParts.length===3 ? `${fParts[2]}/${fParts[1]}/${fParts[0]}` : t.date;
                     
@@ -7272,6 +7453,8 @@
                         <td data-label="ASIGNADO A">${t.assignees.join(', ')}</td>
                         <td data-label="PROGRESO"><span style="color:${pColor}; font-weight:bold;">${done}/${total} (${pct}%)</span></td>
                         <td data-label="ACCIONES">
+                            <button class="action-icon-btn" onclick="openViewTareaModal('${t.id}')" title="Ver Tarea" style="background-color: var(--color-blue); border: none; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: all 0.2s ease; margin-right: 4px;">👁️</button>
+                            <button class="action-icon-btn" onclick="openEditTareaModal('${t.id}')" title="Editar Tarea" style="background-color: #f39c12; border: none; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: all 0.2s ease; margin-right: 4px; color: white;">✏️</button>
                             <button class="action-icon-btn" onclick="deleteTarea('${t.id}')" title="Eliminar Tarea" style="background-color: #7a1a1a; border: 1px solid #992020; border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: all 0.2s ease;">🗑️</button>
                         </td>
                     </tr>`;
@@ -7285,11 +7468,18 @@
                 if(!container) return;
                 
                 const myTareas = tareas.filter(t => t.assignees.includes(userName) || t.assignees.includes(localStorage.getItem('electrofrio_user')));
-                // Ordenar mostrando las pendientes primero o por fecha
-                const sorted = [...myTareas].sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+                // Ordenar mostrando las pendientes primero o por fecha (menor progreso arriba)
+                const sorted = [...myTareas].sort((a,b) => {
+                    const pA = getTareaProgreso(a);
+                    const pB = getTareaProgreso(b);
+                    if (pA !== pB) return pA - pB;
+                    return b.timestamp.localeCompare(a.timestamp);
+                });
                 
                 let html = '';
                 sorted.forEach(t => {
+                    
+
                     const fParts = t.date.split('-');
                     const dateAr = fParts.length===3 ? `${fParts[2]}/${fParts[1]}/${fParts[0]}` : t.date;
                     const total = t.items.length;
@@ -7299,7 +7489,7 @@
                     t.items.forEach((item, idx) => {
                         itemsHtml += `<label style="display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; padding:8px; background:var(--bg-primary); border-radius:6px; cursor:pointer;">
                             <input type="checkbox" style="width:20px; height:20px; flex-shrink:0;" ${item.checked ? 'checked' : ''} onchange="toggleTareaItemCollab('${t.id}', ${idx}, this.checked)">
-                            <span style="${item.checked ? 'text-decoration:line-through; color:var(--text-secondary);' : 'color:var(--text-primary);'}">${item.text}</span>
+                            <span style="${item.checked ? 'color:var(--text-secondary);' : 'color:var(--text-primary);'}">${item.text}</span>
                         </label>`;
                     });
 
