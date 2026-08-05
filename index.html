@@ -3562,7 +3562,7 @@
                 <button class="modal-close" onclick="closeDeletePdtModal()">&times;</button>
             </div>
             <p style="font-size: 13px; color: var(--text-secondary); margin: 16px 0 12px 0;">
-                Ingrese la clave de seguridad para eliminar el registro <strong id="deletePdtCodeDisplay" style="color: var(--color-blue);">PDT-00000</strong>:
+                Ingrese la clave de seguridad para eliminar el registro <strong id="deletePdtCodeDisplay" style="color: var(--color-blue);">PDT-0000000</strong>:
             </p>
             <form id="formConfirmDeletePDT" style="display: flex; flex-direction: column; gap: 14px;">
                 <input type="hidden" id="deletePdtTargetId">
@@ -6132,7 +6132,7 @@
                         docRef = db.collection('planillas').doc();
                     }
 
-                    const pdtCodeToSave = planillaId ? (existingP?.pdtCode || getNextPdtCode()) : getNextPdtCode();
+                    const pdtCodeToSave = planillaId ? (existingP?.pdtCode || getNextPdtCode(savedDate)) : getNextPdtCode(savedDate);
 
                     const planillaData = {
                         id: docRef.id,
@@ -7016,7 +7016,7 @@
                     const existingP = planillas.find(p => p.id === docRef.id);
                     let pdtCodeToSave = "";
                     if (statusVal === 'Enviada') {
-                        pdtCodeToSave = (existingP && existingP.pdtCode) ? existingP.pdtCode : getNextPdtCode();
+                        pdtCodeToSave = (existingP && existingP.pdtCode) ? existingP.pdtCode : getNextPdtCode(dateDisplay);
                     }
                     const orderIdToSave = existingP ? (existingP.orderId || `#PL-${Date.now().toString().slice(-6)}`) : (window.pdigCurrentOrderId || `#PL-${Date.now().toString().slice(-6)}`);
 
@@ -7874,28 +7874,56 @@
             });
         }
 
-        function formatPdtCode(num) {
-            return `PDT-${String(num).padStart(5, '0')}`;
+        function formatPdtCode(yearSuffix, month, sequential) {
+            const yy = String(yearSuffix).padStart(2, '0');
+            const mm = String(month).padStart(2, '0');
+            const nnn = String(sequential).padStart(3, '0');
+            return `PDT-${yy}${mm}${nnn}`;
         }
 
-        function getNextPdtCode() {
-            let maxNum = 0;
+        function getNextPdtCode(dateStr) {
+            let yy, mm;
+            if (dateStr && typeof dateStr === 'string') {
+                if (dateStr.includes('/')) {
+                    // Formato DD/MM/YYYY
+                    const parts = dateStr.split('/');
+                    yy = parseInt(parts[2], 10) % 100;
+                    mm = parseInt(parts[1], 10);
+                } else if (dateStr.includes('-')) {
+                    // Formato YYYY-MM-DD
+                    const parts = dateStr.split('-');
+                    yy = parseInt(parts[0], 10) % 100;
+                    mm = parseInt(parts[1], 10);
+                }
+            }
+            if (!yy || !mm || isNaN(yy) || isNaN(mm)) {
+                const now = new Date();
+                yy = now.getFullYear() % 100;
+                mm = now.getMonth() + 1;
+            }
+            const prefix = `PDT-${String(yy).padStart(2, '0')}${String(mm).padStart(2, '0')}`;
+
+            let maxSeq = 0;
             planillas.forEach(p => {
                 const code = p.pdtCode || (typeof p.id === 'string' && p.id.startsWith('PDT-') ? p.id : "");
-                if (typeof code === 'string' && code.startsWith('PDT-')) {
-                    const num = parseInt(code.replace('PDT-', ''), 10);
-                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                if (typeof code === 'string' && code.startsWith(prefix)) {
+                    const seq = parseInt(code.substring(prefix.length), 10);
+                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
                 }
             });
-            return formatPdtCode(maxNum + 1);
+            return formatPdtCode(yy, mm, maxSeq + 1);
         }
 
         function getPdtCodeForSheet(p, sortedIndex) {
             if (p.status === 'Borrador') return "Borrador";
             if (p.pdtCode) return p.pdtCode;
             if (typeof p.id === 'string' && p.id.startsWith('PDT-')) return p.id;
+            // Fallback para planillas sin código asignado
+            const now = new Date();
+            const yy = now.getFullYear() % 100;
+            const mm = now.getMonth() + 1;
             const codeNum = (planillas.length - (sortedIndex || 0));
-            return formatPdtCode(Math.max(1, codeNum));
+            return formatPdtCode(yy, mm, Math.max(1, codeNum));
         }
 
         function formatDateToAR(dStr) {
@@ -8964,12 +8992,16 @@
                     let currentBatch = db.batch();
                     let opCount = 0;
 
-                    let currentMaxPdtNum = 0;
+                    // Mapa de máximos por prefijo mes/año para importación
+                    const importMaxByPrefix = {};
                     planillas.forEach(p => {
                         const code = p.pdtCode || (typeof p.id === 'string' && p.id.startsWith('PDT-') ? p.id : "");
-                        if (typeof code === 'string' && code.startsWith('PDT-')) {
-                            const num = parseInt(code.replace('PDT-', ''), 10);
-                            if (!isNaN(num) && num > currentMaxPdtNum) currentMaxPdtNum = num;
+                        if (typeof code === 'string' && code.startsWith('PDT-') && code.length >= 8) {
+                            const pfx = code.substring(0, 8); // PDT-AAMM
+                            const seq = parseInt(code.substring(8), 10);
+                            if (!isNaN(seq) && (!importMaxByPrefix[pfx] || seq > importMaxByPrefix[pfx])) {
+                                importMaxByPrefix[pfx] = seq;
+                            }
                         }
                     });
 
@@ -8980,8 +9012,25 @@
                         const rawObservations = mapObs ? row[mapObs] : '';
 
                         if (rawClientName || rawTechDetails) {
-                            currentMaxPdtNum++;
-                            const pdtCode = formatPdtCode(currentMaxPdtNum);
+                            const rowDateStr = mapDate && row[mapDate] ? String(row[mapDate]).trim() : '';
+                            let rowYY, rowMM;
+                            if (rowDateStr && rowDateStr.includes('/')) {
+                                const pts = rowDateStr.split('/');
+                                rowYY = parseInt(pts[2], 10) % 100;
+                                rowMM = parseInt(pts[1], 10);
+                            } else if (rowDateStr && rowDateStr.includes('-')) {
+                                const pts = rowDateStr.split('-');
+                                rowYY = parseInt(pts[0], 10) % 100;
+                                rowMM = parseInt(pts[1], 10);
+                            }
+                            if (!rowYY || !rowMM || isNaN(rowYY) || isNaN(rowMM)) {
+                                const nowFb = new Date();
+                                rowYY = nowFb.getFullYear() % 100;
+                                rowMM = nowFb.getMonth() + 1;
+                            }
+                            const rowPrefix = `PDT-${String(rowYY).padStart(2,'0')}${String(rowMM).padStart(2,'0')}`;
+                            importMaxByPrefix[rowPrefix] = (importMaxByPrefix[rowPrefix] || 0) + 1;
+                            const pdtCode = formatPdtCode(rowYY, rowMM, importMaxByPrefix[rowPrefix]);
                             const docRef = db.collection('planillas').doc();
                             const collabsRaw = mapCollabs && row[mapCollabs] ? String(row[mapCollabs]).trim() : 'Técnico';
                             const techsArr = collabsRaw.split(',').map(s => s.trim());
