@@ -2503,8 +2503,34 @@
                     <!-- CONTENEDOR TAREAS ADMIN -->
                     <div id="tareas-admin-container" class="role-admin-only">
                         <div class="content-card">
-                            <div class="card-header">
-                                <h3 class="card-title">Todas las Tareas</h3>
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <h3 class="card-title" style="margin: 0;">Todas las Tareas</h3>
+                                <style>
+                                    #searchInputTareasAdmin {
+                                        width: 100%;
+                                        background-color: var(--bg-darker, #0b1120);
+                                        border: 1px solid var(--border-color, #4b5563);
+                                        color: var(--text-primary, #ffffff);
+                                        padding: 8px 12px 8px 36px;
+                                        border-radius: 6px;
+                                        outline: none;
+                                        font-size: 14px;
+                                        transition: border-color 0.3s ease;
+                                        box-sizing: border-box;
+                                    }
+                                    #searchInputTareasAdmin:focus {
+                                        border-color: var(--color-blue, #00bcd4);
+                                    }
+                                    #searchInputTareasAdmin::placeholder {
+                                        color: var(--text-muted, #9ca3af);
+                                    }
+                                </style>
+                                <div style="position: relative; width: 100%; max-width: 300px;">
+                                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted, #9ca3af); pointer-events: none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <input type="text" id="searchInputTareasAdmin" placeholder="Buscar por tarea o asignado..." oninput="renderTareas()">
+                                </div>
                             </div>
                             <div class="table-responsive">
                                 <table class="custom-table" id="table-tareas-admin">
@@ -7427,9 +7453,19 @@
                     if (pA !== pB) return pA - pB;
                     return b.timestamp.localeCompare(a.timestamp);
                 });
-                
+                // --- NUEVO: FILTRADO ---
+                const searchInput = document.getElementById('searchInputTareasAdmin');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                const filtered = sorted.filter(t => {
+                    if (!searchTerm) return true;
+                    const matchTitle = t.title.toLowerCase().includes(searchTerm);
+                    const matchAssignee = (t.assignees || []).join(', ').toLowerCase().includes(searchTerm);
+                    return matchTitle || matchAssignee;
+                });
+                // -----------------------
+
                 let html = '';
-                sorted.forEach(t => {
+                filtered.forEach(t => {
                     const total = t.items.length;
                     const done = t.items.filter(x => x.checked).length;
                     const pct = Math.round((done/total)*100);
@@ -7459,8 +7495,17 @@
                         </td>
                     </tr>`;
                 });
-                if(sorted.length === 0) {
-                    html = `<tr><td colspan="5" style="text-align:center;">No hay tareas activas</td></tr>`;
+                if(filtered.length === 0) {
+                    if(searchTerm) {
+                        html = `<tr><td colspan="5" style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <span>No se encontraron tareas para tu búsqueda: "<b>${searchTerm}</b>"</span>
+                            </div>
+                        </td></tr>`;
+                    } else {
+                        html = `<tr><td colspan="5" style="text-align:center;">No hay tareas activas</td></tr>`;
+                    }
                 }
                 tbody.innerHTML = html;
             } else {
