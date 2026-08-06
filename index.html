@@ -2934,7 +2934,10 @@
                                 <select id="filterWorksheetWeek" style="flex: 1; min-width: 150px; height: 35px; padding: 0 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
                                     <option value="">-- Todas las semanas --</option>
                                 </select>
-                                <input type="text" id="searchWorksheetInput" placeholder="Buscar por PDT, cliente, fecha..."
+                                <select id="filterWorksheetAuthor" style="flex: 1; min-width: 150px; height: 35px; padding: 0 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
+                                    <option value="">-- Todos los autores --</option>
+                                </select>
+                                <input type="text" id="searchWorksheetInput" placeholder="Búsqueda general..."
                                     style="flex: 1.5; min-width: 180px; height: 35px; padding: 0 12px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box;">
                             </div>
                         </div>
@@ -2946,6 +2949,7 @@
                                             <input type="checkbox" id="selectAllWorksheets" onchange="toggleAllWorksheets(this.checked)" style="cursor: pointer;">
                                         </th>
                                         <th>FECHA</th>
+                                        <th>AUTOR</th>
                                         <th>ID / CÓDIGO PDT</th>
                                         <th>CLIENTE</th>
                                         <th>DOMICILIO</th>
@@ -3642,6 +3646,11 @@
                 <input type="hidden" id="pdig-planilla-id">
                 <!-- SECCIÓN 1: DATOS GLOBALES GENERALES -->
                 <div class="form-section-title" style="border-bottom: 2px solid var(--color-blue); padding-bottom: 5px; color: var(--color-blue); font-size: 15px; font-weight: 700; margin-bottom: 15px;">1. Información General</div>
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="pdig-cargado-por">¿Quién completó esta planilla?</label>
+                    <input type="text" id="pdig-cargado-por" required readonly style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; opacity: 0.7; cursor: not-allowed;" title="Autocompletado con su usuario actual">
+                </div>
                 
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label for="pdig-fecha">Fecha del Servicio</label>
@@ -5240,6 +5249,7 @@
             if (activeModule === 'pdt' || activeModule === 'database' || activeModule === 'dashboard') {
                 populateWorksheetAddressDropdown();
                 populateWorksheetWeekDropdown();
+                if (typeof populateWorksheetAuthorDropdown === "function") populateWorksheetAuthorDropdown();
                 renderWorksheetsTable();
             }
             
@@ -6181,7 +6191,8 @@
                         completedBy: savedCompletedBy,
                         date: savedDate,
                         horaEntrada: savedHoraEntrada,
-                        horaSalida: savedHoraSalida
+                        horaSalida: savedHoraSalida,
+                        cargado_por: existingP ? (existingP.cargado_por || userName) : userName
                     };
 
                     // 1. Actualizar lista local de planillas inmediatamente para respuesta instantánea
@@ -6662,7 +6673,7 @@
                     const pdtCode = getPdtCode(p);
                     const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
                     
-                    const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                    const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''} ${p.cargado_por || ''} ${p.area || ''} ${p.status || ''} ${p.manoObra || ''} ${p.materiales || ''} ${p.estadoPDT || ''} ${p.timeRange || ''} ${p.horaEntrada || ''} ${p.horaSalida || ''}`.toLowerCase();
                     const searchTerms = searchVal.split(' ').filter(t => t);
                     const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
                         
@@ -6768,6 +6779,11 @@
                 const salidaInput = document.getElementById('pdig-hora-salida');
 
                 if (fechaInput) fechaInput.value = getLocalISODate(today);
+                
+                const cargadoPorInput = document.getElementById('pdig-cargado-por');
+                if (cargadoPorInput) {
+                    cargadoPorInput.value = localStorage.getItem('electrofrio_name') || localStorage.getItem('electrofrio_user') || 'Desconocido';
+                }
 
                 const hours = String(today.getHours()).padStart(2, '0');
                 const minutes = String(today.getMinutes()).padStart(2, '0');
@@ -7071,7 +7087,8 @@
                         observations: obsVal || 'Sin observaciones',
                         area: areaVal,
                         status: statusVal,
-                        timestamp: existingP ? (existingP.timestamp || new Date().toISOString()) : new Date().toISOString()
+                        timestamp: existingP ? (existingP.timestamp || new Date().toISOString()) : new Date().toISOString(),
+                        cargado_por: document.getElementById('pdig-cargado-por') ? document.getElementById('pdig-cargado-por').value : (localStorage.getItem('electrofrio_name') || 'Desconocido')
                     };
 
                     // 1. Actualizar lista local de planillas inmediatamente para respuesta instantánea
@@ -8049,6 +8066,31 @@
             }
         };
 
+        
+        function populateWorksheetAuthorDropdown(searchVal = '') {
+            const select = document.getElementById('filterWorksheetAuthor');
+            if (!select) return;
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">-- Todos los autores --</option>';
+            
+            const authors = new Set();
+            planillas.forEach(p => {
+                const author = (p.cargado_por || '-').trim();
+                authors.add(author);
+            });
+            
+            Array.from(authors).sort().forEach(author => {
+                const option = document.createElement('option');
+                option.value = author.toLowerCase();
+                option.textContent = author;
+                select.appendChild(option);
+            });
+            
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        }
+
         function renderWorksheetsTable() {
             const tbody = document.getElementById('worksheetsTableBody');
             if (!tbody) return;
@@ -8069,6 +8111,7 @@
                 
             if (searchVal !== window.lastWorksheetSearchVal) {
                 populateWorksheetAddressDropdown(searchVal);
+                populateWorksheetAuthorDropdown(searchVal);
             }
             const addressFilterVal = document.getElementById('filterWorksheetAddress')
                 ? document.getElementById('filterWorksheetAddress').value
@@ -8152,7 +8195,7 @@
 
                 const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
 
-                const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''} ${p.cargado_por || ''} ${p.area || ''} ${p.status || ''} ${p.manoObra || ''} ${p.materiales || ''} ${p.estadoPDT || ''} ${p.timeRange || ''} ${p.horaEntrada || ''} ${p.horaSalida || ''}`.toLowerCase();
                 const searchTerms = searchVal.split(' ').filter(t => t);
                 return searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
             });
@@ -8227,6 +8270,7 @@
                         <input type="checkbox" class="worksheet-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="toggleWorksheetSelection('${p.id}', this.checked)" style="cursor: pointer;">
                     </td>
                     <td data-label="FECHA">${fechaAR}</td>
+                    <td data-label="AUTOR"><span style="color: #4caf50; font-weight: bold; background: rgba(76,175,80,0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block;">${p.cargado_por || '-'}</span></td>
                     <td data-label="ID / CÓDIGO PDT" style="font-weight:700; color:var(--color-blue);">
                         ${p.status === 'Borrador' ? '<span class="badge status-presupuesto" style="display: inline-block; font-size: 11px; padding: 4px 8px; font-weight: 700; border-radius: 4px; vertical-align: middle;">Borrador</span>' : pdtCode}
                     </td>
@@ -9265,7 +9309,7 @@
                     </div>
 
                     <div class="section">
-                        <div class="section-title">Información General del Servicio</div>
+                        <div class="section-title">Información General del Servicio - ${p.cargado_por || '-'}</div>
                         <div class="grid-2">
                             <div><div class="label">Fecha de Registro</div><div class="val">${dateFormatted}</div></div>
                             <div><div class="label">Rango Horario de Trabajo</div><div class="val">${timeRange}</div></div>
@@ -9888,6 +9932,11 @@
         const filterWorksheetWeek = document.getElementById('filterWorksheetWeek');
         if (filterWorksheetWeek) {
             filterWorksheetWeek.addEventListener('change', renderWorksheetsTable);
+        }
+        
+        const filterWorksheetAuthor = document.getElementById('filterWorksheetAuthor');
+        if (filterWorksheetAuthor) {
+            filterWorksheetAuthor.addEventListener('change', renderWorksheetsTable);
         }
         
         const filterWorksheetAddress = document.getElementById('filterWorksheetAddress');
