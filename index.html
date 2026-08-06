@@ -2079,17 +2079,46 @@
                     </div>
                 </div>
 
-                <button class="nav-item" data-module="presupuesto">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                    <span>Presupuestos</span>
-                </button>
+                <!-- Grupo Utilidades -->
+                <div class="nav-group">
+                    <button class="nav-item nav-group-header-btn" type="button" id="btnGroupUtilidades">
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="16" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                            </svg>
+                            <span>Utilidades</span>
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            class="nav-group-chevron">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="nav-submenu" id="submenuUtilidades">
+                        <button class="nav-item" data-module="presupuesto">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                            <span>Presupuestos</span>
+                        </button>
+                        <button class="nav-item" data-module="proveedores">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span>Proveedores</span>
+                        </button>
+                    </div>
+                </div>
 
                 <button class="nav-item" data-module="configuracion">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -3008,6 +3037,11 @@
                                 y generar presupuestos formales para los clientes.</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- PROVEEDORES -->
+                <div id="mod-proveedores" class="page-content hidden">
+                    <iframe src="proveedores.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- HISTORIAL DE IMPORTACIONES -->
@@ -4581,13 +4615,13 @@
                 const itemFichajes = sidebarNav.querySelector('[data-module="fichajes"]');
                 const itemJornales = sidebarNav.querySelector('[data-module="jornales"]');
                 const itemDatabase = sidebarNav.querySelector('[data-module="database"]');
-                const itemGroupDb = sidebarNav.querySelector('.nav-group');
-                const itemPresupuesto = sidebarNav.querySelector('[data-module="presupuesto"]');
+                const itemGroupDb = document.getElementById('btnGroupDatabase')?.closest('.nav-group');
+                const itemGroupUtilidades = document.getElementById('btnGroupUtilidades')?.closest('.nav-group');
                 const itemConfiguracion = sidebarNav.querySelector('[data-module="configuracion"]');
 
                 const allItems = [
                     itemDashboard, itemOrdenes, itemTareas, itemCalendario, itemMapa,
-                    itemFichajes, itemJornales, itemDatabase, itemGroupDb, itemPresupuesto, itemConfiguracion
+                    itemFichajes, itemJornales, itemDatabase, itemGroupDb, itemGroupUtilidades, itemConfiguracion
                 ];
 
                 allItems.forEach(el => {
@@ -4607,7 +4641,7 @@
                         itemFichajes,
                         itemJornales,
                         itemGroupDb,
-                        itemPresupuesto,
+                        itemGroupUtilidades,
                         itemConfiguracion
                     ];
                 } else if (isPremium) {
@@ -4617,7 +4651,7 @@
                           itemTareas,
                         itemDatabase,
                         itemFichajes,
-                        itemPresupuesto
+                        itemGroupUtilidades
                     ];
                 } else {
                     visibleAndOrdered = [
@@ -11020,9 +11054,9 @@
 
             let allowedModules = [];
             if (role === 'Administrador') {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'materiales', 'manodeobra', 'presupuesto', 'configuracion'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'configuracion'];
             } else if (isPremium) {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto', 'proveedores'];
             } else {
                 allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes'];
             }
@@ -11072,6 +11106,17 @@
                 if (parentGroup) parentGroup.classList.remove('open');
             }
 
+            // Expandir/colapsar submenú Utilidades
+            const submenuUtil = document.getElementById('submenuUtilidades');
+            const parentGroupUtil = document.getElementById('btnGroupUtilidades')?.closest('.nav-group');
+            if (['presupuesto', 'proveedores'].includes(moduleName)) {
+                if (submenuUtil) submenuUtil.classList.add('open');
+                if (parentGroupUtil) parentGroupUtil.classList.add('open');
+            } else {
+                if (submenuUtil) submenuUtil.classList.remove('open');
+                if (parentGroupUtil) parentGroupUtil.classList.remove('open');
+            }
+
             if (moduleName === 'calendario') {
                 setTimeout(() => {
                     initGoogleCalendar();
@@ -11096,6 +11141,17 @@
                 const parentGroup = btnGroupDatabase.closest('.nav-group');
                 parentGroup.classList.toggle('open');
                 submenuDatabase.classList.toggle('open');
+            });
+        }
+
+        // Toggle submenú Utilidades
+        const btnGroupUtilidades = document.getElementById('btnGroupUtilidades');
+        const submenuUtilidades = document.getElementById('submenuUtilidades');
+        if (btnGroupUtilidades && submenuUtilidades) {
+            btnGroupUtilidades.addEventListener('click', () => {
+                const parentGroup = btnGroupUtilidades.closest('.nav-group');
+                parentGroup.classList.toggle('open');
+                submenuUtilidades.classList.toggle('open');
             });
         }
 

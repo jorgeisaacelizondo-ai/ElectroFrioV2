@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Proveedores</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-body: #0b1121;
+            --bg-card: #111827;
+            --bg-input: rgba(255,255,255,0.05);
+            --border-color: rgba(255,255,255,0.08);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --color-blue: #3b82f6;
+            --color-blue-hover: #2563eb;
+            --color-green: #198754;
+            --color-green-hover: #157347;
+            --color-gray: #6c757d;
+            --color-gray-hover: #5c636a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: var(--bg-body); color: var(--text-secondary); }
+        h1, h2 { color: var(--text-primary); }
+        h1 { font-size: 1.5em; margin-bottom: 20px; }
+        h2 { font-size: 1.1em; margin-bottom: 10px; }
+        .container { background: var(--bg-card); padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .section { margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 25px; }
+        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .upload-zone { border: 2px dashed rgba(59,130,246,0.3); border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; color: var(--text-muted); background-color: rgba(255,255,255,0.03); transition: 0.3s; }
+        .upload-zone:hover { border-color: rgba(59,130,246,0.6); color: var(--color-blue); background-color: rgba(59,130,246,0.08); }
+        .upload-zone p { margin: 0; font-size: 14px; }
+        .status-msg { font-weight: bold; color: var(--color-blue); display: none; margin-top: 10px; font-size: 13px; }
+        .counters { font-size: 0.85em; color: var(--text-muted); margin-top: 5px; }
+
+        .controls-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.04); padding: 15px; border-radius: 8px; }
+        
+        .search-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .form-control { padding: 9px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; outline: none; font-family: inherit; background: var(--bg-input); color: var(--text-primary); font-size: 13px; }
+        .form-control:focus { border-color: rgba(59,130,246,0.5); box-shadow: 0 0 0 0.25rem rgba(59,130,246,.15); }
+        select.form-control { cursor: pointer; min-width: 150px; }
+        
+        .btn { padding: 9px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 13px; }
+        .btn-primary { background-color: var(--color-blue); color: white; }
+        .btn-primary:hover { background-color: var(--color-blue-hover); }
+        .btn-secondary { background-color: var(--color-gray); color: white; }
+        .btn-secondary:hover { background-color: var(--color-gray-hover); }
+        .btn-success { background-color: var(--color-green); color: white; }
+        .btn-success:hover { background-color: var(--color-green-hover); }
+        
+        .data-grid-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); max-height: 500px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); white-space: nowrap; font-size: 13px; }
+        
+        th { background-color: #0f172a; color: var(--text-secondary); position: sticky; top: 0; z-index: 1; font-weight: 600; }
+        th.editable-header { border-bottom: 2px dashed #334155; transition: background-color 0.2s; }
+        th.editable-header:hover { background-color: #1e293b; }
+        
+        .header-content { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .header-text { flex-grow: 1; cursor: text; outline: none; }
+        .header-text:focus { border-bottom: 2px solid var(--color-blue); background-color: rgba(255, 255, 255, 0.1); }
+        
+        .btn-delete-col { background: none; border: none; cursor: pointer; font-size: 1.1em; opacity: 0.6; transition: 0.2s; padding: 0; }
+        .btn-delete-col:hover { opacity: 1; transform: scale(1.1); }
+
+        tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+        tr:hover { background-color: rgba(59,130,246,0.06); }
+        
+        .editable { background-color: rgba(255,255,255,0.03); cursor: cell; }
+        .editable:focus { outline: 2px solid rgba(59,130,246,0.5); outline-offset: -2px; }
+        .empty-state { text-align: center; color: #475569; font-style: italic; padding: 30px !important; }
+        
+        .col-acciones { width: 40px; text-align: center; background-color: #0f172a; position: sticky; left: 0; z-index: 2; border-right: 2px solid var(--border-color); }
+        th.col-acciones { background-color: #0f172a !important; z-index: 3; }
+        .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.1em; transition: 0.2s; opacity: 0.7; }
+        .btn-delete:hover { transform: scale(1.2); opacity: 1; color: red; }
+
+        .tip-text { font-size: 0.85em; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📦 Módulo de Proveedores</h1>
+
+    <div class="section">
+        <h2>1. Carga de Lista de Precios (Excel/CSV)</h2>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+            <p>📁 Haz clic o arrastra aquí tu archivo Excel o CSV</p>
+            <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+        </div>
+        <div class="status-msg" id="status-msg">Procesando archivo...</div>
+        <div class="counters" id="counters"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Filtros y Edición</h2>
+        
+        <div class="controls-bar">
+            <div class="search-group">
+                <select id="search-column" class="form-control" disabled onchange="aplicarFiltro()">
+                    <option value="all">Todas las columnas</option>
+                </select>
+                <input type="text" id="search-input" class="form-control" placeholder="Escribe para buscar..." disabled onkeyup="aplicarFiltro()">
+                <button class="btn btn-secondary" id="btn-clear" onclick="limpiarFiltro()" disabled title="Limpiar Filtro">✖️ Limpiar</button>
+            </div>
+            
+            <button class="btn btn-success" id="btn-export" onclick="exportarCSVLimpio()" disabled>📥 Exportar Filtrado a Sistema Contable</button>
+        </div>
+
+        <p class="tip-text">
+            💡 <strong>Tip:</strong> Puedes editar nombres de columnas, borrar filas (❌) o columnas (🗑️). Al exportar, <strong>solo se guardará lo que esté visible en pantalla.</strong>
+        </p>
+
+        <div class="data-grid-container">
+            <table id="price-table">
+                <thead id="table-head">
+                    <tr><th>Esperando archivo...</th></tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr id="fila-espera">
+                        <td class="empty-state">Sube tu archivo para ver y editar los datos aquí...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const statusMsg = document.getElementById('status-msg');
+    const countersDiv = document.getElementById('counters');
+    const tableHead = document.getElementById('table-head');
+    const tableBody = document.getElementById('table-body');
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        statusMsg.style.display = 'block';
+        countersDiv.innerHTML = '';
+        statusMsg.textContent = `Analizando y limpiando ${file.name}...`;
+        limpiarFiltro();
+        
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+            generarTablaLimpiada(jsonData);
+        };
+
+        reader.readAsArrayBuffer(file);
+        e.target.value = ''; 
+    });
+
+    function generarTablaLimpiada(datos) {
+        if (datos.length === 0) {
+            alert("El archivo parece estar vacío.");
+            return;
+        }
+
+        const encabezados = datos[0];
+        const columnasValidas = []; 
+        let columnasEliminadasAutomaticamente = 0;
+
+        for (let j = 0; j < encabezados.length; j++) {
+            let colVacia = true;
+            for (let i = 0; i < datos.length; i++) {
+                let valor = datos[i][j] !== undefined ? String(datos[i][j]).trim() : "";
+                if (valor !== "") {
+                    colVacia = false;
+                    break; 
+                }
+            }
+            if (!colVacia) columnasValidas.push(j);
+            else columnasEliminadasAutomaticamente++;
+        }
+
+        let theadHTML = '<tr><th class="col-acciones no-export"></th>'; 
+        
+        columnasValidas.forEach(colIndex => {
+            let colName = encabezados[colIndex];
+            let nombre = colName !== undefined && String(colName).trim() !== "" ? colName : "Columna " + (colIndex + 1);
+            
+            theadHTML += `
+                <th class="editable-header">
+                    <div class="header-content">
+                        <span class="header-text" contenteditable="true" onblur="actualizarDropdownColumnas()" title="Clic para editar el nombre">${nombre}</span>
+                        <button class="btn-delete-col" title="Eliminar columna" tabindex="-1" onclick="eliminarColumna(this)">🗑️</button>
+                    </div>
+                </th>`;
+        });
+        theadHTML += '</tr>';
+
+        let tbodyHTML = '';
+        let filasValidas = 0;
+        let filasEliminadas = 0;
+
+        for (let i = 1; i < datos.length; i++) {
+            let fila = datos[i];
+            let isRowEmpty = true;
+
+            for (let j of columnasValidas) {
+                let valor = fila[j] !== undefined ? String(fila[j]).trim() : "";
+                if (valor !== "") { isRowEmpty = false; break; }
+            }
+
+            if (isRowEmpty) { filasEliminadas++; continue; }
+
+            let filaHTML = `<tr><td class="col-acciones no-export"><button class="btn-delete" title="Eliminar fila" tabindex="-1" onclick="eliminarFila(this)">❌</button></td>`;
+            for (let j of columnasValidas) {
+                let valor = fila[j] !== undefined ? fila[j] : "";
+                filaHTML += `<td class="editable" contenteditable="true">${valor}</td>`;
+            }
+            filaHTML += `</tr>`;
+            
+            tbodyHTML += filaHTML;
+            filasValidas++;
+        }
+
+        tableHead.innerHTML = theadHTML;
+        tableBody.innerHTML = tbodyHTML;
+        
+        statusMsg.textContent = `¡Carga exitosa!`;
+        countersDiv.innerHTML = `✅ ${filasValidas} filas listas | 🗑️ Se ocultaron ${filasEliminadas} filas y ${columnasEliminadasAutomaticamente} columnas vacías.`;
+        
+        document.getElementById('btn-export').disabled = false;
+        document.getElementById('search-column').disabled = false;
+        document.getElementById('search-input').disabled = false;
+        document.getElementById('btn-clear').disabled = false;
+        
+        actualizarDropdownColumnas();
+    }
+
+    function actualizarDropdownColumnas() {
+        const select = document.getElementById('search-column');
+        const currentSelection = select.value;
+        
+        select.innerHTML = '<option value="all">Todas las columnas</option>';
+        
+        const ths = tableHead.querySelectorAll('th:not(.no-export)');
+        ths.forEach((th, index) => {
+            const spanTexto = th.querySelector('.header-text');
+            const nombreColumna = spanTexto ? spanTexto.innerText.trim() : `Columna ${index + 1}`;
+            select.innerHTML += `<option value="${index + 1}">${nombreColumna}</option>`;
+        });
+        
+        if (select.querySelector(`option[value="${currentSelection}"]`)) {
+            select.value = currentSelection;
+        }
+    }
+
+    function aplicarFiltro() {
+        const input = document.getElementById("search-input").value.toLowerCase();
+        const columnaSeleccionada = document.getElementById("search-column").value;
+        const filas = tableBody.querySelectorAll("tr");
+
+        filas.forEach(fila => {
+            if (fila.id === 'fila-espera') return;
+
+            let mostrarFila = false;
+            
+            if (columnaSeleccionada === "all") {
+                const celdas = fila.querySelectorAll("td:not(.no-export)");
+                for (let celda of celdas) {
+                    if (celda.innerText.toLowerCase().includes(input)) {
+                        mostrarFila = true;
+                        break;
+                    }
+                }
+            } else {
+                const celdaEspecifica = fila.cells[columnaSeleccionada];
+                if (celdaEspecifica && celdaEspecifica.innerText.toLowerCase().includes(input)) {
+                    mostrarFila = true;
+                }
+            }
+
+            fila.style.display = mostrarFila ? "" : "none";
+        });
+    }
+
+    function limpiarFiltro() {
+        document.getElementById("search-input").value = "";
+        document.getElementById("search-column").value = "all";
+        
+        const filas = tableBody.querySelectorAll("tr");
+        filas.forEach(fila => {
+            fila.style.display = "";
+        });
+    }
+
+    function eliminarFila(btn) {
+        btn.closest('tr').remove();
+    }
+
+    function eliminarColumna(btn) {
+        const th = btn.closest('th');
+        const tabla = th.closest('table');
+        const indexColumna = th.cellIndex;
+
+        th.remove();
+        const filas = tabla.querySelectorAll('tbody tr');
+        filas.forEach(fila => {
+            if (fila.cells.length > indexColumna) {
+                fila.deleteCell(indexColumna);
+            }
+        });
+        actualizarDropdownColumnas();
+    }
+
+    function exportarCSVLimpio() {
+        const table = document.getElementById('price-table');
+        const rows = table.querySelectorAll('tr');
+        let csvContent = "";
+
+        rows.forEach((row, rowIndex) => {
+            if (row.style.display === "none") return;
+
+            const cells = row.querySelectorAll('th:not(.no-export), td:not(.no-export)');
+            let rowData = [];
+            
+            cells.forEach(cell => {
+                let cellText = "";
+                if (cell.tagName.toLowerCase() === 'th') {
+                    const spanTexto = cell.querySelector('.header-text');
+                    cellText = spanTexto ? spanTexto.innerText.trim() : cell.innerText.trim();
+                } else {
+                    cellText = cell.innerText.trim(); 
+                }
+                
+                cellText = cellText.replace(/"/g, '""');
+                if (cellText.includes(';') || cellText.includes('\n') || cellText.includes('"')) {
+                    cellText = `"${cellText}"`;
+                }
+                rowData.push(cellText);
+            });
+
+            csvContent += rowData.join(";") + "\n";
+        });
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "Proveedores_Exportacion_Filtrada.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
