@@ -2937,7 +2937,7 @@
                                 <select id="filterWorksheetAuthor" style="flex: 1; min-width: 150px; height: 35px; padding: 0 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
                                     <option value="">-- Todos los autores --</option>
                                 </select>
-                                <input type="text" id="searchWorksheetInput" placeholder="Buscar por PDT, cliente, fecha..."
+                                <input type="text" id="searchWorksheetInput" placeholder="Búsqueda general..."
                                     style="flex: 1.5; min-width: 180px; height: 35px; padding: 0 12px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box;">
                             </div>
                         </div>
@@ -5249,6 +5249,7 @@
             if (activeModule === 'pdt' || activeModule === 'database' || activeModule === 'dashboard') {
                 populateWorksheetAddressDropdown();
                 populateWorksheetWeekDropdown();
+                if (typeof populateWorksheetAuthorDropdown === "function") populateWorksheetAuthorDropdown();
                 renderWorksheetsTable();
             }
             
@@ -6672,7 +6673,7 @@
                     const pdtCode = getPdtCode(p);
                     const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
                     
-                    const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                    const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''} ${p.cargado_por || ''} ${p.area || ''} ${p.status || ''} ${p.manoObra || ''} ${p.materiales || ''} ${p.estadoPDT || ''} ${p.timeRange || ''} ${p.horaEntrada || ''} ${p.horaSalida || ''}`.toLowerCase();
                     const searchTerms = searchVal.split(' ').filter(t => t);
                     const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
                         
@@ -8194,7 +8195,7 @@
 
                 const techList = Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '');
 
-                const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''}`.toLowerCase();
+                const searchStr = `${pdtCode} ${p.orderId || ''} ${p.date || ''} ${clientName || ''} ${techList} ${p.address || ''} ${p.domicilio || ''} ${p.techDetails || ''} ${p.spareParts || ''} ${p.observations || ''} ${p.cargado_por || ''} ${p.area || ''} ${p.status || ''} ${p.manoObra || ''} ${p.materiales || ''} ${p.estadoPDT || ''} ${p.timeRange || ''} ${p.horaEntrada || ''} ${p.horaSalida || ''}`.toLowerCase();
                 const searchTerms = searchVal.split(' ').filter(t => t);
                 return searchTerms.length === 0 || searchTerms.every(term => searchStr.includes(term));
             });
