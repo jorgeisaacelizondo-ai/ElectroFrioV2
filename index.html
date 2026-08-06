@@ -2109,6 +2109,14 @@
                             </svg>
                             <span>Presupuestos</span>
                         </button>
+                        <button class="nav-item" data-module="proveedores">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span>Proveedores</span>
+                        </button>
                     </div>
                 </div>
 
@@ -3029,6 +3037,11 @@
                                 y generar presupuestos formales para los clientes.</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- PROVEEDORES -->
+                <div id="mod-proveedores" class="page-content hidden">
+                    <iframe src="proveedores.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- HISTORIAL DE IMPORTACIONES -->
@@ -11041,9 +11054,9 @@
 
             let allowedModules = [];
             if (role === 'Administrador') {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'materiales', 'manodeobra', 'presupuesto', 'configuracion'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'configuracion'];
             } else if (isPremium) {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto', 'proveedores'];
             } else {
                 allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes'];
             }
@@ -11096,7 +11109,7 @@
             // Expandir/colapsar submenú Utilidades
             const submenuUtil = document.getElementById('submenuUtilidades');
             const parentGroupUtil = document.getElementById('btnGroupUtilidades')?.closest('.nav-group');
-            if (['presupuesto'].includes(moduleName)) {
+            if (['presupuesto', 'proveedores'].includes(moduleName)) {
                 if (submenuUtil) submenuUtil.classList.add('open');
                 if (parentGroupUtil) parentGroupUtil.classList.add('open');
             } else {
