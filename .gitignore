@@ -23,3 +23,5 @@ __pycache__/
 # Archivos que crean algunos sistemas operativos y no deberían subirse al repo.
 .DS_Store
 Thumbs.db
+
+backups/
