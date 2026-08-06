@@ -7088,7 +7088,7 @@
                         area: areaVal,
                         status: statusVal,
                         timestamp: existingP ? (existingP.timestamp || new Date().toISOString()) : new Date().toISOString(),
-                        cargado_por: document.getElementById('pdig-cargado-por') ? document.getElementById('pdig-cargado-por').value : (localStorage.getItem('electrofrio_name') || 'Desconocido')
+                        cargado_por: existingP && existingP.cargado_por ? existingP.cargado_por : (document.getElementById('pdig-cargado-por') ? document.getElementById('pdig-cargado-por').value : (localStorage.getItem('electrofrio_name') || 'Desconocido'))
                     };
 
                     // 1. Actualizar lista local de planillas inmediatamente para respuesta instantánea
@@ -9423,6 +9423,13 @@
             // Rellenar ID y orderId previos
             document.getElementById('pdig-planilla-id').value = p.id;
             window.pdigCurrentOrderId = p.orderId;
+
+            if (p.cargado_por) {
+                const cargadoPorInput = document.getElementById('pdig-cargado-por');
+                if (cargadoPorInput) {
+                    cargadoPorInput.value = p.cargado_por;
+                }
+            }
 
             // Rellenar fecha
             if (p.date && p.date.includes('/')) {
