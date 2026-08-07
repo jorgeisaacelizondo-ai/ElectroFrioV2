@@ -4902,7 +4902,7 @@
                             }
                             const badgeData = getBadgeInfo(o.status);
                             const hoyBadgeAdmin = isTodayO ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
-                            const formattedDateAdmin = o.date ? (formatDateToAR(o.date) + hoyBadgeAdmin) : 'Sin fecha';
+                            const formattedDateAdmin = o.date ? (formatDateWithDayToAR(o.date) + hoyBadgeAdmin) : 'Sin fecha';
 
                             tr.innerHTML = `
                                 <td data-label="ID">${o.id}</td>
@@ -4939,7 +4939,7 @@
                                 tr.style.opacity = '0.7';
                                 tr.onclick = () => openOrderDetailsModal(o.id);
                                 const badgeData = getBadgeInfo(o.status);
-                                const formattedDateAdmin = o.date ? formatDateToAR(o.date) : 'Sin fecha';
+                                const formattedDateAdmin = o.date ? formatDateWithDayToAR(o.date) : 'Sin fecha';
 
                                 tr.innerHTML = `
                                     <td data-label="ID">${o.id}</td>
@@ -5129,7 +5129,7 @@
 
                             // Formatear Fecha y Horario con fallback
                             const hoyBadgeDash = isTodayO ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
-                            const formattedDate = o.date ? (formatDateToAR(o.date) + hoyBadgeDash) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            const formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadgeDash) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                             const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                             tr.innerHTML = `
@@ -5168,7 +5168,7 @@
                                 const tr = document.createElement('tr');
                                 tr.style.opacity = '0.7';
                                 const badgeData = getBadgeInfo(o.status);
-                                const formattedDate = o.date ? formatDateToAR(o.date) : '';
+                                const formattedDate = o.date ? formatDateWithDayToAR(o.date) : '';
                                 const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '';
 
                                 tr.innerHTML = `
@@ -5453,7 +5453,7 @@
 
                             // Formatear Fecha y Horario con fallback si falta coordinación
                             const hoyBadge = isTodayOrder ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
-                            const formattedDate = o.date ? (formatDateToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            const formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                             const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                             const actionTd = role === 'Administrador' ? `
@@ -5517,7 +5517,7 @@
                                 const badgeData = getBadgeInfo(o.status);
                                 const collaboratorsNames = o.assignees ? o.assignees.join(', ') : (o.assignee || 'Sin Asignar');
                                 const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
-                                const formattedDate = o.date ? formatDateToAR(o.date) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                                const formattedDate = o.date ? formatDateWithDayToAR(o.date) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                                 const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                                 const actionTd = role === 'Administrador' ? `
@@ -8405,6 +8405,27 @@
             return dStr;
         }
 
+        function formatDateWithDayToAR(dStr) {
+            if (!dStr) return '';
+            let dateObj;
+            if (dStr.includes('/')) {
+                const parts = dStr.split('/');
+                if (parts.length === 3) {
+                    dateObj = new Date(parts[2], parseInt(parts[1])-1, parts[0]);
+                }
+            } else {
+                const parts = dStr.split('-');
+                if (parts.length === 3 && parts[0].length === 4) {
+                    dateObj = new Date(parts[0], parseInt(parts[1])-1, parts[2]);
+                }
+            }
+            const dateStr = formatDateToAR(dStr);
+            if (!dateObj) return dateStr;
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const dayName = days[dateObj.getDay()];
+            return `${dateStr}<br><span style="font-size: 11px; color: var(--text-muted);">${dayName}</span>`;
+        }
+
         
         window.savePlanillaManual = async function(planillaId) {
             const pIndex = planillas.findIndex(p => p.id === planillaId);
@@ -8636,7 +8657,7 @@
                 const ord = p.orderId ? ordenesMap.get(p.orderId) : null;
                 const clientName = p.clientId ? clientesMap.get(p.clientId) : (p.client || (ord ? ord.client : "Cliente Particular"));
                 const pdtCode = getPdtCodeForSheet(p, idx);
-                const fechaAR = formatDateToAR(p.date);
+                const fechaAR = formatDateWithDayToAR(p.date);
 
                 // Formatear Horario
                 let horarioStr = "08:00HS-17:00HS";
