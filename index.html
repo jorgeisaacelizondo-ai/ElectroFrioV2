@@ -2263,7 +2263,7 @@
                             <!-- Tabla de Ordenes Recientes -->
                             <div class="content-card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Órdenes de Trabajo Recientes</h3>
+                                    <h3 class="card-title">Órdenes de Trabajo Activas</h3>
                                     <span style="font-size:12px; color:var(--text-secondary); cursor:pointer;"
                                         onclick="switchTab('ordenes')">Ver todo</span>
                                 </div>
@@ -4801,23 +4801,118 @@
                 }
                 document.getElementById('adminStatFichajesSub').textContent = subText;
 
-                // Tabla de órdenes recientes (últimas 4)
+                // Tabla de órdenes del día + próximas (Admin Dashboard)
                 const recentBody = document.getElementById('adminRecentOrdersBody');
                 if (recentBody) {
                     recentBody.innerHTML = '';
-                    ordenesTrabajo.slice(0, 4).forEach(o => {
-                        const tr = document.createElement('tr');
-                        const badgeClass = o.status === 'Completado' ? 'info' : o.status === 'En Proceso' ? 'success' : o.status === 'Presupuesto' ? 'warning' : 'danger';
-                        const statusText = o.status === 'Pendiente' ? 'Pendiente visita' : o.status;
-                        tr.innerHTML = `
-                            <td data-label="ID">${o.id}</td>
-                            <td data-label="Cliente">${o.client}</td>
-                            <td data-label="Tipo">${o.type}</td>
-                            <td data-label="Estado"><span class="badge ${badgeClass}">${statusText}</span></td>
-                            <td data-label="Fecha">${o.date || 'Sin fecha'}</td>
-                        `;
-                        recentBody.appendChild(tr);
+
+                    // Helpers
+                    const parseDateAdmin = (dStr) => {
+                        if (!dStr) return 0;
+                        let parts = dStr.split('/');
+                        if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                        parts = dStr.split('-');
+                        if (parts.length === 3) return new Date(parts[0], parts[1]-1, parts[2]).getTime();
+                        return new Date(dStr).getTime() || 0;
+                    };
+                    const parseTimeAdmin = (tStr) => {
+                        if (!tStr || tStr === '') return 9999;
+                        const match = tStr.match(/(\d{1,2}):(\d{2})/);
+                        if (match) return parseInt(match[1]) * 60 + parseInt(match[2]);
+                        return 9999;
+                    };
+                    const todayStartAdmin = new Date();
+                    todayStartAdmin.setHours(0, 0, 0, 0);
+                    const todayTsAdmin = todayStartAdmin.getTime();
+                    const isTodayAdmin = (dStr) => {
+                        const ts = parseDateAdmin(dStr);
+                        if (!ts) return false;
+                        const d = new Date(ts);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime() === todayTsAdmin;
+                    };
+
+                    // Filtrar solo órdenes activas con fecha
+                    const adminActiveOrders = ordenesTrabajo.filter(o => o.date && o.date !== "" && o.status !== 'Completado');
+
+                    const adminHoy = adminActiveOrders.filter(o => isTodayAdmin(o.date));
+                    const adminOtros = adminActiveOrders.filter(o => !isTodayAdmin(o.date));
+
+                    adminHoy.sort((a, b) => parseTimeAdmin(a.time) - parseTimeAdmin(b.time));
+                    adminOtros.sort((a, b) => {
+                        const dateDiff = parseDateAdmin(a.date) - parseDateAdmin(b.date);
+                        if (dateDiff !== 0) return dateDiff;
+                        return parseTimeAdmin(a.time) - parseTimeAdmin(b.time);
                     });
+
+                    const sortedAdminOrders = [...adminHoy, ...adminOtros];
+                    let adminInsertedHoy = false;
+                    let adminInsertedOtros = false;
+                    const countAdminHoy = adminHoy.length;
+
+                    if (sortedAdminOrders.length === 0) {
+                        recentBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes activas.</td></tr>`;
+                    } else {
+                        sortedAdminOrders.forEach(o => {
+                            const isTodayO = isTodayAdmin(o.date);
+
+                            // Header "Hoy"
+                            if (isTodayO && !adminInsertedHoy) {
+                                adminInsertedHoy = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="5" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: 14px 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:18px;">📋</span>
+                                                <span style="font-weight:700; font-size:15px; color:#00e676; text-transform:uppercase; letter-spacing:0.5px;">Hoy</span>
+                                                <span style="background:rgba(0,230,118,0.15); color:#00e676; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(0,230,118,0.3);">${countAdminHoy} ${countAdminHoy === 1 ? 'orden' : 'órdenes'}</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(0,230,118,0.4), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                recentBody.appendChild(headerTr);
+                            }
+
+                            // Header "Próximos días"
+                            if (!isTodayO && !adminInsertedOtros) {
+                                adminInsertedOtros = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="5" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: ${adminInsertedHoy ? '18px' : '14px'} 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:16px;">📅</span>
+                                                <span style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Próximos días</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                recentBody.appendChild(headerTr);
+                            }
+
+                            const tr = document.createElement('tr');
+                            tr.style.cursor = 'pointer';
+                            tr.onclick = () => openOrderDetailsModal(o.id);
+                            if (isTodayO) {
+                                tr.style.borderLeft = '3px solid #00e676';
+                            }
+                            const badgeData = getBadgeInfo(o.status);
+                            const hoyBadgeAdmin = isTodayO ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
+                            const formattedDateAdmin = o.date ? (formatDateToAR(o.date) + hoyBadgeAdmin) : 'Sin fecha';
+
+                            tr.innerHTML = `
+                                <td data-label="ID">${o.id}</td>
+                                <td data-label="Cliente">${o.client}</td>
+                                <td data-label="Descripción del Trabajo">${o.type}</td>
+                                <td data-label="Estado"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
+                                <td data-label="Fecha">${formattedDateAdmin}</td>
+                            `;
+                            recentBody.appendChild(tr);
+                        });
+                    }
                 }
             }
 
@@ -4885,18 +4980,112 @@
                 const collabOrdersBody = document.getElementById('collabOrdersTableBody');
                 if (collabOrdersBody) {
                     collabOrdersBody.innerHTML = '';
+
+                    // Helper para parsear fecha a timestamp
+                    const parseDateDash = (dStr) => {
+                        if (!dStr) return 0;
+                        let parts = dStr.split('/');
+                        if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                        parts = dStr.split('-');
+                        if (parts.length === 3) return new Date(parts[0], parts[1]-1, parts[2]).getTime();
+                        return new Date(dStr).getTime() || 0;
+                    };
+
+                    // Helper para parsear horario a minutos
+                    const parseTimeDash = (tStr) => {
+                        if (!tStr || tStr === '') return 9999;
+                        const match = tStr.match(/(\d{1,2}):(\d{2})/);
+                        if (match) return parseInt(match[1]) * 60 + parseInt(match[2]);
+                        return 9999;
+                    };
+
+                    // Obtener fecha de hoy normalizada
+                    const todayStartDash = new Date();
+                    todayStartDash.setHours(0, 0, 0, 0);
+                    const todayTsDash = todayStartDash.getTime();
+
+                    const isTodayDash = (dStr) => {
+                        const ts = parseDateDash(dStr);
+                        if (!ts) return false;
+                        const d = new Date(ts);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime() === todayTsDash;
+                    };
+
                     if (myOrders.length === 0) {
-                        collabOrdersBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No tienes órdenes asignadas hoy.</td></tr>`;
+                        collabOrdersBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No tienes órdenes asignadas.</td></tr>`;
                     } else {
-                        myOrders.forEach(o => {
+                        // Separar órdenes de hoy y del resto
+                        const dashHoy = myOrders.filter(o => isTodayDash(o.date));
+                        const dashOtros = myOrders.filter(o => !isTodayDash(o.date));
+
+                        // Ordenar hoy por horario ascendente
+                        dashHoy.sort((a, b) => parseTimeDash(a.time) - parseTimeDash(b.time));
+
+                        // Ordenar otros por fecha ascendente + horario
+                        dashOtros.sort((a, b) => {
+                            const dateDiff = parseDateDash(a.date) - parseDateDash(b.date);
+                            if (dateDiff !== 0) return dateDiff;
+                            return parseTimeDash(a.time) - parseTimeDash(b.time);
+                        });
+
+                        const sortedDashOrders = [...dashHoy, ...dashOtros];
+                        let dashInsertedHoy = false;
+                        let dashInsertedOtros = false;
+                        const countDashHoy = dashHoy.length;
+
+                        sortedDashOrders.forEach(o => {
+                            const isTodayO = isTodayDash(o.date);
+
+                            // Header "Hoy"
+                            if (isTodayO && !dashInsertedHoy) {
+                                dashInsertedHoy = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="8" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: 14px 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:18px;">📋</span>
+                                                <span style="font-weight:700; font-size:15px; color:#00e676; text-transform:uppercase; letter-spacing:0.5px;">Hoy</span>
+                                                <span style="background:rgba(0,230,118,0.15); color:#00e676; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(0,230,118,0.3);">${countDashHoy} ${countDashHoy === 1 ? 'orden' : 'órdenes'}</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(0,230,118,0.4), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                collabOrdersBody.appendChild(headerTr);
+                            }
+
+                            // Header "Próximos días"
+                            if (!isTodayO && !dashInsertedOtros) {
+                                dashInsertedOtros = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="8" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: ${dashInsertedHoy ? '18px' : '14px'} 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:16px;">📅</span>
+                                                <span style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Próximos días</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                collabOrdersBody.appendChild(headerTr);
+                            }
+
                             const tr = document.createElement('tr');
+                            if (isTodayO) {
+                                tr.style.borderLeft = '3px solid #00e676';
+                            }
                             const badgeData = getBadgeInfo(o.status);
                             const actionBtn = o.status !== 'Completado'
                                 ? `<button class="save-btn" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver / Estado</button>`
                                 : `<span style="color:var(--color-green); font-size:12px; font-weight:600;">Listo</span>`;
 
-                            // Formatear Fecha y Horario con fallback si falta coordinación
-                            const formattedDate = o.date ? formatDateToAR(o.date) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            // Formatear Fecha y Horario con fallback
+                            const hoyBadgeDash = isTodayO ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
+                            const formattedDate = o.date ? (formatDateToAR(o.date) + hoyBadgeDash) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                             const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                             tr.innerHTML = `
@@ -5059,7 +5248,7 @@
                         activeOrdersToShow = ordenesTrabajo.filter(o => o.date && o.date !== "");
                     }
 
-                    // Helper para ordenar por fecha decreciente
+                    // Helper para parsear fecha a timestamp
                     const parseDateStr = (dStr) => {
                         if (!dStr) return 0;
                         let parts = dStr.split('/');
@@ -5069,14 +5258,42 @@
                         return new Date(dStr).getTime() || 0;
                     };
 
-                    // Asegurar que las órdenes "Pendientes de visita" estén siempre al principio
-                    const pendientes = activeOrdersToShow.filter(o => o.status === 'Pendiente');
-                    const otras = activeOrdersToShow.filter(o => o.status !== 'Pendiente');
-                    
-                    pendientes.sort((a, b) => parseDateStr(b.date) - parseDateStr(a.date));
-                    otras.sort((a, b) => parseDateStr(b.date) - parseDateStr(a.date));
+                    // Helper para parsear horario a minutos para ordenar
+                    const parseTimeStr = (tStr) => {
+                        if (!tStr || tStr === '') return 9999; // Sin horario va al final
+                        const match = tStr.match(/(\d{1,2}):(\d{2})/);
+                        if (match) return parseInt(match[1]) * 60 + parseInt(match[2]);
+                        return 9999;
+                    };
 
-                    activeOrdersToShow = [...pendientes, ...otras];
+                    // Obtener fecha de hoy normalizada (sin hora)
+                    const todayStart = new Date();
+                    todayStart.setHours(0, 0, 0, 0);
+                    const todayTimestamp = todayStart.getTime();
+
+                    const isToday = (dStr) => {
+                        const ts = parseDateStr(dStr);
+                        if (!ts) return false;
+                        const d = new Date(ts);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime() === todayTimestamp;
+                    };
+
+                    // Hoy primero (ordenado por horario), luego el resto por fecha ascendente + horario
+                    const ordenesHoy = activeOrdersToShow.filter(o => isToday(o.date));
+                    const ordenesOtros = activeOrdersToShow.filter(o => !isToday(o.date));
+
+                    // Ordenar las de hoy por horario ascendente
+                    ordenesHoy.sort((a, b) => parseTimeStr(a.time) - parseTimeStr(b.time));
+
+                    // Ordenar las demás por fecha ascendente (más cercana primero) y luego por horario
+                    ordenesOtros.sort((a, b) => {
+                        const dateDiff = parseDateStr(a.date) - parseDateStr(b.date);
+                        if (dateDiff !== 0) return dateDiff;
+                        return parseTimeStr(a.time) - parseTimeStr(b.time);
+                    });
+
+                    activeOrdersToShow = [...ordenesHoy, ...ordenesOtros];
 
                     const titleEl = document.getElementById('ordersListTitle');
                     if (titleEl) {
@@ -5086,9 +5303,58 @@
                     if (activeOrdersToShow.length === 0) {
                         ordersFullBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes activas.</td></tr>`;
                     } else {
-                        activeOrdersToShow.forEach(o => {
+                        const totalCols = role === 'Administrador' ? 8 : 7;
+                        let insertedHoyHeader = false;
+                        let insertedOtrosHeader = false;
+
+                        // Contar órdenes de hoy
+                        const countHoy = activeOrdersToShow.filter(o => isToday(o.date)).length;
+
+                        activeOrdersToShow.forEach((o, idx) => {
+                            const isTodayOrder = isToday(o.date);
+
+                            // Insertar header de sección "Hoy"
+                            if (isTodayOrder && !insertedHoyHeader) {
+                                insertedHoyHeader = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="${totalCols}" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: 14px 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:18px;">📋</span>
+                                                <span style="font-weight:700; font-size:15px; color:#00e676; text-transform:uppercase; letter-spacing:0.5px;">Hoy</span>
+                                                <span style="background:rgba(0,230,118,0.15); color:#00e676; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(0,230,118,0.3);">${countHoy} ${countHoy === 1 ? 'orden' : 'órdenes'}</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(0,230,118,0.4), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                ordersFullBody.appendChild(headerTr);
+                            }
+
+                            // Insertar header de sección "Próximos días"
+                            if (!isTodayOrder && !insertedOtrosHeader) {
+                                insertedOtrosHeader = true;
+                                const headerTr = document.createElement('tr');
+                                headerTr.innerHTML = `
+                                    <td colspan="${totalCols}" style="padding: 0; border: none;">
+                                        <div style="display:flex; align-items:center; gap:10px; padding: ${insertedHoyHeader ? '18px' : '14px'} 12px 10px 12px;">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size:16px;">📅</span>
+                                                <span style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Próximos días</span>
+                                            </div>
+                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+                                        </div>
+                                    </td>
+                                `;
+                                ordersFullBody.appendChild(headerTr);
+                            }
+
                             const tr = document.createElement('tr');
                             tr.style.cursor = 'pointer';
+                            if (isTodayOrder) {
+                                tr.style.borderLeft = '3px solid #00e676';
+                            }
                             tr.onclick = (e) => {
                                 if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
                                     openOrderDetailsModal(o.id);
@@ -5100,7 +5366,8 @@
                             const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
 
                             // Formatear Fecha y Horario con fallback si falta coordinación
-                            const formattedDate = o.date ? formatDateToAR(o.date) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            const hoyBadge = isTodayOrder ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
+                            const formattedDate = o.date ? (formatDateToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                             const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                             const actionTd = role === 'Administrador' ? `
