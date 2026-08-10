@@ -266,6 +266,58 @@
             color: var(--text-muted);
         }
 
+        /* Iconos de calendario y reloj en inputs de fecha y hora a color blanco puro */
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(100) !important;
+            -webkit-filter: invert(1) brightness(100) !important;
+            opacity: 1 !important;
+            cursor: pointer !important;
+        }
+
+        input[type="date"],
+        input[type="time"],
+        input[type="datetime-local"] {
+            color-scheme: dark !important;
+            color: #ffffff !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(100) !important;
+            -webkit-filter: invert(1) brightness(100) !important;
+            opacity: 1 !important;
+            cursor: pointer !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        input[type="time"]::-webkit-calendar-picker-indicator:hover,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 0.8 !important;
+            transform: scale(1.1);
+        }
+
+        body.light-mode ::-webkit-calendar-picker-indicator {
+            filter: none !important;
+            -webkit-filter: none !important;
+            opacity: 0.7 !important;
+        }
+
+        body.light-mode input[type="date"],
+        body.light-mode input[type="time"],
+        body.light-mode input[type="datetime-local"] {
+            color-scheme: light !important;
+            color: #1e293b !important;
+        }
+
+        body.light-mode input[type="date"]::-webkit-calendar-picker-indicator,
+        body.light-mode input[type="time"]::-webkit-calendar-picker-indicator,
+        body.light-mode input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: none !important;
+            -webkit-filter: none !important;
+            opacity: 0.7 !important;
+        }
+
         /* Sección de Contacto de Clientes */
         .social-contact-wrapper {
             padding-top: 25px;
@@ -2717,8 +2769,15 @@
                                         </button>
                                         <h3 class="card-title" id="ordersListTitle" style="margin: 0;">Órdenes Pendientes / Coordinadas</h3>
                                     </div>
-                                    <button class="save-btn role-admin-only" id="btnOpenAddOrderModal"
-                                        style="width: auto; margin-top:0; padding:8px 16px; background-color: var(--color-blue); color: #000; font-weight: 700;">+ Crear Orden</button>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <button type="button" class="save-btn role-admin-only" id="btnOpenNewClientFromOrders" onclick="openNewClientModal()"
+                                            style="width: auto; margin-top:0; padding:8px 14px; background-color: rgba(0, 180, 216, 0.12); border: 1px solid var(--color-blue); color: var(--color-blue); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                            + Nuevo Cliente
+                                        </button>
+                                        <button class="save-btn role-admin-only" id="btnOpenAddOrderModal"
+                                            style="width: auto; margin-top:0; padding:8px 16px; background-color: var(--color-blue); color: #000; font-weight: 700;">+ Crear Orden</button>
+                                    </div>
                                 </div>
                                 <div class="table-responsive" id="pendingOrdersTableContainer" style="margin-top: 15px; transition: all 0.3s ease;">
                                     <table class="custom-table">
@@ -3356,7 +3415,13 @@
                 <div class="input-group">
                     <label for="order-client-search">Cliente</label>
                     <div class="autocomplete-container" style="position: relative; width: 100%;">
-                        <input type="text" id="order-client-search" placeholder="Escriba para buscar cliente..." style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" required autocomplete="off">
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <input type="text" id="order-client-search" placeholder="Escriba para buscar cliente..." style="flex: 1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" required autocomplete="off">
+                            <button type="button" class="role-admin-only" onclick="openNewClientModalForOrder()" title="Crear Nuevo Cliente" style="height: 38px; padding: 0 12px; background: rgba(0, 180, 216, 0.15); border: 1px solid var(--color-blue); color: var(--color-blue); border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>+ Nuevo</span>
+                            </button>
+                        </div>
                         <input type="hidden" id="order-client" value="">
                         <div id="order-client-suggestions" class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
@@ -3396,6 +3461,7 @@
                 <div style="margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
+                        <button type="button" onclick="setOrderModulePreset('', '', '', 'order')" style="background: none; border: none; color: var(--color-blue); font-size: 11px; cursor: pointer; text-decoration: underline;">Limpiar horario</button>
                     </div>
                     <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
                         <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'order')">08:00 a 09:30</button>
@@ -3405,7 +3471,7 @@
                         <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'order')">15:00 a 16:30</button>
                         <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'order')">16:30 a 18:00</button>
                     </div>
-                    <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
+                    <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs (Dejar vacío para "Pendiente de coordinación")</div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
@@ -3415,11 +3481,11 @@
                     </div>
                     <div class="input-group" style="margin-bottom: 0;">
                         <label for="order-time">Hora Inicio</label>
-                        <input type="time" id="order-time" value="08:00" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="time" id="order-time" value="" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                     </div>
                     <div class="input-group" style="margin-bottom: 0;">
                         <label for="order-time-end">Hora Fin</label>
-                        <input type="time" id="order-time-end" value="09:30" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="time" id="order-time-end" value="" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                     </div>
                 </div>
 
@@ -3528,6 +3594,7 @@
                     <div class="role-admin-only" style="margin-bottom: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
+                            <button type="button" onclick="setOrderModulePreset('', '', '', 'detail')" style="background: none; border: none; color: var(--color-blue); font-size: 11px; cursor: pointer; text-decoration: underline;">Limpiar horario</button>
                         </div>
                         <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
                             <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'detail')">08:00 a 09:30</button>
@@ -3537,7 +3604,7 @@
                             <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'detail')">15:00 a 16:30</button>
                             <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'detail')">16:30 a 18:00</button>
                         </div>
-                        <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
+                        <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs (Dejar vacío para "Pendiente de coordinación")</div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;" class="role-admin-only">
@@ -3547,11 +3614,11 @@
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
                             <label for="detail-time">Hora Inicio</label>
-                            <input type="time" id="detail-time" value="08:00" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                            <input type="time" id="detail-time" value="" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
                             <label for="detail-time-end">Hora Fin</label>
-                            <input type="time" id="detail-time-end" value="09:30" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                            <input type="time" id="detail-time-end" value="" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                         </div>
                     </div>
 
@@ -3991,7 +4058,7 @@
     </div>
 
     <!-- MODAL NUEVO / EDITAR CLIENTE CENTRADO -->
-    <div id="modalNuevoClienteCentered" class="modal-overlay">
+    <div id="modalNuevoClienteCentered" class="modal-overlay" style="z-index: 3000;">
         <div class="modal-card" style="max-width: 600px; width: 95%; background-color: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
                 <h3 class="modal-title" id="clientModalTitle" style="margin: 0; font-size: 18px; color: var(--text-primary);">Nuevo Cliente</h3>
@@ -4000,25 +4067,19 @@
             <form id="formNuevoClienteModal" onsubmit="handleSaveClientForm(event)" style="margin-top: 15px;">
                 <input type="hidden" id="modal-client-id-edit">
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="input-group">
-                        <label for="modal-client-name">Nombre / Razón Social <span style="color: red;">*</span></label>
-                        <input type="text" id="modal-client-name" placeholder="Ej: Heladería Polar" required style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                    </div>
-                    <div class="input-group">
-                        <label for="modal-client-cuit">CUIT / DNI</label>
-                        <input type="text" id="modal-client-cuit" placeholder="Ej: 30-12345678-9" style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                    </div>
+                <div class="input-group">
+                    <label for="modal-client-name">Nombre / Razón Social <span style="color: red;">*</span></label>
+                    <input type="text" id="modal-client-name" placeholder="Ej: Heladería Polar" required style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 12px;">
-                    <div class="input-group">
+                    <div class="input-group" style="margin-bottom: 0;">
                         <label for="modal-client-phone">Teléfono de Contacto <span style="color: red;">*</span></label>
                         <input type="text" id="modal-client-phone" placeholder="Ej: 3804349027" required style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                     </div>
-                    <div class="input-group">
-                        <label for="modal-client-email">Email</label>
-                        <input type="email" id="modal-client-email" placeholder="Ej: contacto@polar.com" style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="modal-client-cuit">CUIT / DNI (Opcional)</label>
+                        <input type="text" id="modal-client-cuit" placeholder="Ej: 30-12345678-9" style="width: 100%; padding: 9px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                     </div>
                 </div>
 
@@ -6416,7 +6477,7 @@
             for (const ord of ordenesTrabajo) {
                 if (excludeOrderId && ord.id === excludeOrderId) continue;
                 if (ord.status === 'Completado' || ord.status === 'Cancelado') continue;
-                if (!ord.date) continue;
+                if (!ord.date || !ord.time) continue;
 
                 const ordDateISO = normalizeDateToISO(ord.date);
                 if (ordDateISO !== targetDateISO) continue;
@@ -6428,7 +6489,7 @@
                 const isAssigned = assignees.some(a => normalizeCollabName(a) === collabNorm);
                 if (!isAssigned) continue;
 
-                const ordStartMin = timeStringToMinutes(ord.time || '08:00');
+                const ordStartMin = timeStringToMinutes(ord.time);
                 let ordEndMin = timeStringToMinutes(ord.timeEnd || '');
                 if (ordEndMin === 9999 || ordEndMin <= ordStartMin) {
                     ordEndMin = ordStartMin + 90;
@@ -6436,7 +6497,7 @@
 
                 // Verificación de intervalo superpuesto
                 if (targetStartMin < ordEndMin && targetEndMin > ordStartMin) {
-                    const startFmt = ord.time || '08:00';
+                    const startFmt = ord.time;
                     const endFmt = ord.timeEnd || (ordStartMin + 90 >= 1080 ? '18:00' : '09:30');
                     return {
                         type: 'orden',
@@ -6603,8 +6664,8 @@
             const orderTimeEl = document.getElementById('order-time');
             const orderTimeEndEl = document.getElementById('order-time-end');
 
-            if (orderTimeEl) orderTimeEl.value = '08:00';
-            if (orderTimeEndEl) orderTimeEndEl.value = '09:30';
+            if (orderTimeEl) orderTimeEl.value = '';
+            if (orderTimeEndEl) orderTimeEndEl.value = '';
 
             updateOrderCollabAvailability();
 
@@ -6699,8 +6760,8 @@
             const address = document.getElementById('order-address').value.trim();
             const type = document.getElementById('order-type').value.trim();
             const dateVal = document.getElementById('order-date').value;
-            const timeVal = document.getElementById('order-time').value || "08:00";
-            const timeEndVal = document.getElementById('order-time-end') ? document.getElementById('order-time-end').value : "09:30";
+            const timeVal = document.getElementById('order-time') ? document.getElementById('order-time').value : "";
+            const timeEndVal = document.getElementById('order-time-end') ? document.getElementById('order-time-end').value : "";
 
             if (!clientSearchVal) {
                 alert("Por favor, ingrese un cliente.");
@@ -6723,8 +6784,8 @@
                 }
             }
 
-            // Validar superposición de horarios para colaboradores asignados
-            if (dateVal) {
+            // Validar superposición de horarios para colaboradores asignados si se especificó horario
+            if (dateVal && timeVal) {
                 for (const assignee of assignees) {
                     if (assignee === "Sin Asignar") continue;
                     const conflict = checkCollaboratorTimeConflict(assignee, dateVal, timeVal, timeEndVal, null, null);
@@ -6771,6 +6832,13 @@
 
                 const orderIdStr = getNextOrderId();
 
+                let timeRangeVal = "";
+                if (timeVal && timeEndVal) {
+                    timeRangeVal = `${timeVal}HS-${timeEndVal}HS`;
+                } else if (timeVal) {
+                    timeRangeVal = `${timeVal}HS`;
+                }
+
                 const nuevaOT = {
                     id: orderIdStr,
                     clientId: clientId,
@@ -6781,7 +6849,7 @@
                     date: dateVal,
                     time: timeVal,
                     timeEnd: timeEndVal,
-                    timeRange: timeEndVal ? `${timeVal}HS-${timeEndVal}HS` : `${timeVal}HS`,
+                    timeRange: timeRangeVal,
                     type: type,
                     timestamp: getSyncedDate().toISOString()
                 };
@@ -7258,9 +7326,11 @@
                 // Filtrar clientes
                 const matches = clientes.filter(c => c.name.toLowerCase().includes(typedValLower));
 
-                // Agregar opción para crear uno nuevo si no hay coincidencia exacta
-                const exactMatch = matches.some(c => c.name.toLowerCase() === typedValLower);
-                
+                if (matches.length === 0) {
+                    suggestionsEl.style.display = 'none';
+                    return;
+                }
+
                 matches.forEach(c => {
                     const div = document.createElement('div');
                     div.className = 'autocomplete-suggestion';
@@ -7285,33 +7355,6 @@
                     };
                     suggestionsEl.appendChild(div);
                 });
-
-                if (!exactMatch) {
-                    const divAdd = document.createElement('div');
-                    divAdd.className = 'autocomplete-suggestion';
-                    divAdd.style.fontWeight = 'bold';
-                    divAdd.style.color = 'var(--color-blue)';
-                    divAdd.textContent = `+ Agregar "${typedVal}" como nuevo cliente...`;
-                    divAdd.onclick = () => {
-                        inputSearch.value = typedVal;
-                        if (hiddenId) hiddenId.value = 'NEW_CLIENT';
-                        suggestionsEl.innerHTML = '';
-                        suggestionsEl.style.display = 'none';
-
-                        // Renderizar opción única 'Sin especificar' y custom address
-                        renderAddressChoices({ name: typedVal, addresses: ['Sin especificar'] }, addressChoicesContainerId, addressHiddenId, 'Sin especificar', typeKey);
-
-                        // Si es el de ordenes de trabajo, mostrar campos de nuevo cliente
-                        if (inputSearchId === 'order-client-search') {
-                            const quickFields = document.getElementById('quick-client-fields');
-                            if (quickFields) quickFields.classList.remove('hidden');
-                            document.getElementById('order-new-client-name').value = typedVal;
-                            document.getElementById('order-new-client-name').required = true;
-                            document.getElementById('order-new-client-phone').required = true;
-                        }
-                    };
-                    suggestionsEl.appendChild(divAdd);
-                }
 
                 suggestionsEl.style.display = 'block';
             };
@@ -8431,7 +8474,10 @@
             window.autocompletesInitialized = true;
         }
 
-        window.openNewClientModal = function (clientId = null) {
+        window.clientModalCaller = null;
+
+        window.openNewClientModal = function (clientId = null, caller = null, defaultName = '') {
+            window.clientModalCaller = caller;
             const modal = document.getElementById('modalNuevoClienteCentered');
             const title = document.getElementById('clientModalTitle');
             const form = document.getElementById('formNuevoClienteModal');
@@ -8449,7 +8495,6 @@
                     document.getElementById('modal-client-name').value = c.name || '';
                     document.getElementById('modal-client-cuit').value = c.cuit || '';
                     document.getElementById('modal-client-phone').value = c.phone || '';
-                    document.getElementById('modal-client-email').value = c.email || '';
                     document.getElementById('modal-client-notes').value = c.notes || '';
 
                     const addrList = Array.isArray(c.addresses) && c.addresses.length > 0 ? c.addresses : [c.address || ''];
@@ -8458,11 +8503,32 @@
             } else {
                 if (title) title.innerText = "Nuevo Cliente";
                 document.getElementById('modal-client-id-edit').value = '';
+                if (defaultName) {
+                    const nameInput = document.getElementById('modal-client-name');
+                    if (nameInput) nameInput.value = defaultName;
+                }
                 addClientAddressRow('');
             }
 
             modal.classList.add('show');
             modal.style.display = 'flex';
+
+            // Focus en el primer campo relevante
+            setTimeout(() => {
+                const nameInput = document.getElementById('modal-client-name');
+                const phoneInput = document.getElementById('modal-client-phone');
+                if (nameInput && !nameInput.value) {
+                    nameInput.focus();
+                } else if (phoneInput) {
+                    phoneInput.focus();
+                }
+            }, 100);
+        };
+
+        window.openNewClientModalForOrder = function (defaultName = '') {
+            const searchInput = document.getElementById('order-client-search');
+            const searchVal = defaultName || (searchInput ? searchInput.value.trim() : '');
+            openNewClientModal(null, 'order', searchVal);
         };
 
         window.closeNewClientModal = function () {
@@ -8471,7 +8537,17 @@
                 modal.classList.remove('show');
                 modal.style.display = 'none';
             }
+            window.clientModalCaller = null;
         };
+
+        const modalNuevoClienteCenteredEl = document.getElementById('modalNuevoClienteCentered');
+        if (modalNuevoClienteCenteredEl) {
+            modalNuevoClienteCenteredEl.addEventListener('click', (e) => {
+                if (e.target === modalNuevoClienteCenteredEl) {
+                    closeNewClientModal();
+                }
+            });
+        }
 
         window.addClientAddressRow = function (val = '') {
             const container = document.getElementById('clientAddressesContainer');
@@ -8496,7 +8572,6 @@
             const name = document.getElementById('modal-client-name').value.trim();
             const cuit = document.getElementById('modal-client-cuit').value.trim();
             const phone = document.getElementById('modal-client-phone').value.trim();
-            const email = document.getElementById('modal-client-email').value.trim();
             const notes = document.getElementById('modal-client-notes').value.trim();
 
             const addrInputs = document.querySelectorAll('.modal-client-address-item');
@@ -8507,18 +8582,19 @@
             const primaryAddress = addresses[0] || 'Sin especificar';
 
             try {
+                let savedClient = null;
                 if (editId) {
                     const idx = clientes.findIndex(c => c.id === editId);
                     if (idx !== -1) {
                         clientes[idx].name = name;
                         clientes[idx].cuit = cuit;
                         clientes[idx].phone = phone;
-                        clientes[idx].email = email;
                         clientes[idx].notes = notes;
                         clientes[idx].address = primaryAddress;
                         clientes[idx].addresses = addresses.length > 0 ? addresses : [primaryAddress];
 
                         await db.collection('clientes').doc(editId).set(clientes[idx], { merge: true });
+                        savedClient = clientes[idx];
                         showToast("Cliente actualizado correctamente", "success");
                     }
                 } else {
@@ -8529,7 +8605,6 @@
                         name: name,
                         cuit: cuit,
                         phone: phone,
-                        email: email,
                         notes: notes,
                         address: primaryAddress,
                         addresses: addresses.length > 0 ? addresses : [primaryAddress]
@@ -8537,12 +8612,29 @@
 
                     await docRef.set(newClient);
                     clientes.push(newClient);
+                    savedClient = newClient;
                     showToast("Cliente creado exitosamente", "success");
                 }
 
                 localStorage.setItem('electrofrio_clients', JSON.stringify(clientes));
                 renderClientsTable();
                 if (typeof populateClientSelects === 'function') populateClientSelects();
+
+                // Si fue llamado desde el modal de órdenes o si el modal de órdenes está abierto
+                const orderModal = document.getElementById('modalNuevaOrden');
+                if (window.clientModalCaller === 'order' || (orderModal && orderModal.classList.contains('show'))) {
+                    const orderSearchInput = document.getElementById('order-client-search');
+                    const orderHiddenId = document.getElementById('order-client');
+                    if (orderSearchInput && orderHiddenId && savedClient) {
+                        orderSearchInput.value = savedClient.name;
+                        orderHiddenId.value = savedClient.id;
+                        renderAddressChoices(savedClient, 'order-address-choices', 'order-address', savedClient.address || '', 'order');
+                        const quickFields = document.getElementById('quick-client-fields');
+                        if (quickFields) quickFields.classList.add('hidden');
+                        showToast(`¡Cliente "${savedClient.name}" seleccionado en la orden!`, "info");
+                    }
+                }
+
                 closeNewClientModal();
             } catch (err) {
                 console.error("Error guardando cliente:", err);
@@ -10935,9 +11027,9 @@
             const detailTime = document.getElementById('detail-time');
             const detailTimeEnd = document.getElementById('detail-time-end');
 
-            let startTime = ord.time || "08:00";
+            let startTime = ord.time || "";
             let endTime = ord.timeEnd || "";
-            if (!endTime) {
+            if (startTime && !endTime) {
                 const sMin = timeStringToMinutes(startTime);
                 const eMin = sMin + 90;
                 const eH = Math.floor(eMin / 60);
@@ -11023,11 +11115,11 @@
                 const addressVal = document.getElementById('detail-address-input') ? document.getElementById('detail-address-input').value.trim() : "";
                 const typeVal = document.getElementById('detail-type-input') ? document.getElementById('detail-type-input').value.trim() : "";
                 const date = document.getElementById('detail-date') ? document.getElementById('detail-date').value : "";
-                const time = document.getElementById('detail-time') ? document.getElementById('detail-time').value : "08:00";
-                const timeEnd = document.getElementById('detail-time-end') ? document.getElementById('detail-time-end').value : "09:30";
+                const time = document.getElementById('detail-time') ? document.getElementById('detail-time').value : "";
+                const timeEnd = document.getElementById('detail-time-end') ? document.getElementById('detail-time-end').value : "";
                 const assignees = Array.from(document.querySelectorAll('input[name="edit-order-assignees"]:checked')).map(cb => cb.value);
 
-                if (role !== 'Colaborador' && date) {
+                if (role !== 'Colaborador' && date && time) {
                     for (const assignee of assignees) {
                         if (assignee === "Sin Asignar") continue;
                         const conflict = checkCollaboratorTimeConflict(assignee, date, time, timeEnd, orderId, null);
@@ -11041,6 +11133,13 @@
                 // 1. Aplicar cambios localmente de inmediato para respuesta instantánea
                 const ordIdx = ordenesTrabajo.findIndex(o => o.id === orderId);
                 if (ordIdx > -1) {
+                    let timeRangeVal = "";
+                    if (time && timeEnd) {
+                        timeRangeVal = `${time}HS-${timeEnd}HS`;
+                    } else if (time) {
+                        timeRangeVal = `${time}HS`;
+                    }
+
                     if (role === 'Colaborador') {
                         ordenesTrabajo[ordIdx].status = status;
                         ordenesTrabajo[ordIdx].observations = obsVal;
@@ -11053,7 +11152,7 @@
                         ordenesTrabajo[ordIdx].date = date;
                         ordenesTrabajo[ordIdx].time = time;
                         ordenesTrabajo[ordIdx].timeEnd = timeEnd;
-                        ordenesTrabajo[ordIdx].timeRange = timeEnd ? `${time}HS-${timeEnd}HS` : `${time}HS`;
+                        ordenesTrabajo[ordIdx].timeRange = timeRangeVal;
                         ordenesTrabajo[ordIdx].assignees = assignees.length > 0 ? assignees : ["Sin Asignar"];
                     }
                     localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
@@ -11069,6 +11168,13 @@
                 // 4. Guardar cambios en segundo plano en Firestore sin bloquear la UI
                 (async () => {
                     try {
+                        let timeRangeVal = "";
+                        if (time && timeEnd) {
+                            timeRangeVal = `${time}HS-${timeEnd}HS`;
+                        } else if (time) {
+                            timeRangeVal = `${time}HS`;
+                        }
+
                         if (role === 'Colaborador') {
                             await db.collection('ordenes').doc(orderId).update({
                                 status: status,
@@ -11084,7 +11190,7 @@
                                 date: date,
                                 time: time,
                                 timeEnd: timeEnd,
-                                timeRange: timeEnd ? `${time}HS-${timeEnd}HS` : `${time}HS`,
+                                timeRange: timeRangeVal,
                                 assignees: assignees.length > 0 ? assignees : ["Sin Asignar"]
                             });
                             await saveNewAddressToClient("", clientVal, addressVal);
