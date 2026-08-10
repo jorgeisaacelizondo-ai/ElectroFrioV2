@@ -1848,6 +1848,41 @@
         .fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active {
             color: #000;
         }
+
+        /* --- Estilos para Atajos Rápidos de Módulos y Estado de Colaboradores --- */
+        .btn-module-preset {
+            padding: 6px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            outline: none;
+        }
+        .btn-module-preset:hover {
+            border-color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.12);
+            color: var(--color-blue);
+        }
+        .btn-module-preset:active {
+            transform: scale(0.98);
+        }
+        .collab-busy-tag {
+            display: inline-block;
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 82, 82, 0.35);
+            margin-left: 6px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 
@@ -3358,14 +3393,33 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <div class="input-group" style="flex: 1;">
-                        <label for="order-date">Fecha de Visita (Opcional)</label>
-                        <input type="date" id="order-date">
+                <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
                     </div>
-                    <div class="input-group" style="flex: 1;">
-                        <label for="order-time">Horario</label>
-                        <input type="time" id="order-time">
+                    <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'order')">08:00 a 09:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('09:30', '11:00', '', 'order')">09:30 a 11:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('11:00', '12:30', '', 'order')">11:00 a 12:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('13:30', '15:00', '', 'order')">13:30 a 15:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'order')">15:00 a 16:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'order')">16:30 a 18:00</button>
+                    </div>
+                    <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="order-date">Fecha de Visita</label>
+                        <input type="date" id="order-date" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="order-time">Hora Inicio</label>
+                        <input type="time" id="order-time" value="08:00" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="order-time-end">Hora Fin</label>
+                        <input type="time" id="order-time-end" value="09:30" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                     </div>
                 </div>
 
@@ -3471,14 +3525,33 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 10px;" class="role-admin-only">
-                        <div class="input-group" style="flex: 1;">
-                            <label for="detail-date">Fecha de Planificación</label>
-                            <input type="date" id="detail-date">
+                    <div class="role-admin-only" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
                         </div>
-                        <div class="input-group" style="flex: 1;">
-                            <label for="detail-time">Hora de Visita</label>
-                            <input type="time" id="detail-time">
+                        <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'detail')">08:00 a 09:30</button>
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('09:30', '11:00', '', 'detail')">09:30 a 11:00</button>
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('11:00', '12:30', '', 'detail')">11:00 a 12:30</button>
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('13:30', '15:00', '', 'detail')">13:30 a 15:00</button>
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'detail')">15:00 a 16:30</button>
+                            <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'detail')">16:30 a 18:00</button>
+                        </div>
+                        <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; margin-bottom: 10px;" class="role-admin-only">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="detail-date">Fecha de Planificación</label>
+                            <input type="date" id="detail-date" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="detail-time">Hora Inicio</label>
+                            <input type="time" id="detail-time" value="08:00" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="detail-time-end">Hora Fin</label>
+                            <input type="time" id="detail-time-end" value="09:30" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
                         </div>
                     </div>
 
@@ -3533,6 +3606,20 @@
                         <div id="planilla-completed-by-checkboxes" class="collab-checkbox-list" style="max-height: 100px; overflow-y: auto; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--bg-input); display: flex; flex-direction: column; gap: 6px;">
                             <!-- Dinámico -->
                         </div>
+                    </div>
+                </div>
+                
+                <div class="admin-planilla-fields" style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
+                    </div>
+                    <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'planilla')">08:00 a 09:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('09:30', '11:00', '', 'planilla')">09:30 a 11:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('11:00', '12:30', '', 'planilla')">11:00 a 12:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('13:30', '15:00', '', 'planilla')">13:30 a 15:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'planilla')">15:00 a 16:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'planilla')">16:30 a 18:00</button>
                     </div>
                 </div>
                 
@@ -3655,6 +3742,21 @@
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label for="pdig-fecha">Fecha del Servicio</label>
                     <input type="date" id="pdig-fecha" required style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary);">Atajos de Horarios Rápidos</label>
+                    </div>
+                    <div class="module-quick-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('08:00', '09:30', '', 'pdig')">08:00 a 09:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('09:30', '11:00', '', 'pdig')">09:30 a 11:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('11:00', '12:30', '', 'pdig')">11:00 a 12:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('13:30', '15:00', '', 'pdig')">13:30 a 15:00</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('15:00', '16:30', '', 'pdig')">15:00 a 16:30</button>
+                        <button type="button" class="btn-module-preset" onclick="setOrderModulePreset('16:30', '18:00', '', 'pdig')">16:30 a 18:00</button>
+                    </div>
+                    <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -5454,7 +5556,9 @@
                             // Formatear Fecha y Horario con fallback si falta coordinación
                             const hoyBadge = isTodayOrder ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
                             const formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
-                            const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            
+                            let orderTimeStr = o.timeEnd ? `${o.time}HS-${o.timeEnd}HS` : (o.time ? `${o.time} hs` : '');
+                            let formattedTime = orderTimeStr || '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
                             const actionTd = role === 'Administrador' ? `
                                 <td data-label="ACCIONES">
@@ -6238,7 +6342,234 @@
             });
         }
 
-// Lógica para poblar checkboxes de colaboradores al abrir orden (Admin)
+        // --- SISTEMA DE MÓDULOS HORARIOS Y CONTROL DE SUPERPOSICIÓN DE COLABORADORES ---
+
+        const WORK_MODULES_DEF = [
+            { id: 1, name: "Módulo 1", start: "08:00", end: "09:30", startMin: 480, endMin: 570 },
+            { id: 2, name: "Módulo 2", start: "09:30", end: "11:00", startMin: 570, endMin: 660 },
+            { id: 3, name: "Módulo 3", start: "11:00", end: "12:30", startMin: 660, endMin: 750 },
+            { id: 4, name: "Módulo 4", start: "13:30", end: "15:00", startMin: 810, endMin: 900 },
+            { id: 5, name: "Módulo 5", start: "15:00", end: "16:30", startMin: 900, endMin: 990 },
+            { id: 6, name: "Módulo 6", start: "16:30", end: "18:00", startMin: 990, endMin: 1080 }
+        ];
+
+        function timeStringToMinutes(tStr) {
+            if (!tStr) return 9999;
+            const match = String(tStr).match(/(\d{1,2}):(\d{2})/);
+            if (!match) return 9999;
+            const h = parseInt(match[1], 10);
+            const m = parseInt(match[2], 10);
+            if (isNaN(h) || isNaN(m)) return 9999;
+            return (h * 60) + m;
+        }
+
+        function normalizeDateToISO(dStr) {
+            if (!dStr) return '';
+            dStr = String(dStr).trim();
+            if (dStr.includes('/')) {
+                const parts = dStr.split('/');
+                if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            if (dStr.includes('-')) {
+                const parts = dStr.split('-');
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) {
+                        return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    }
+                    if (parts[2].length === 4) {
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                }
+            }
+            return dStr;
+        }
+
+        function normalizeCollabName(name) {
+            if (!name) return '';
+            return name
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim()
+                .toLowerCase();
+        }
+
+        function checkCollaboratorTimeConflict(collabName, targetDateStr, targetStartStr, targetEndStr, excludeOrderId = null, excludePlanillaId = null) {
+            if (!collabName || !targetDateStr || !targetStartStr) return null;
+
+            const targetDateISO = normalizeDateToISO(targetDateStr);
+            if (!targetDateISO) return null;
+
+            const targetStartMin = timeStringToMinutes(targetStartStr);
+            let targetEndMin = timeStringToMinutes(targetEndStr);
+            if (targetEndMin === 9999 || targetEndMin <= targetStartMin) {
+                targetEndMin = targetStartMin + 90; // Default: 90 minutos
+            }
+
+            const collabNorm = normalizeCollabName(collabName);
+
+            // 1. Revisar en Órdenes de Trabajo activas
+            for (const ord of ordenesTrabajo) {
+                if (excludeOrderId && ord.id === excludeOrderId) continue;
+                if (ord.status === 'Completado' || ord.status === 'Cancelado') continue;
+                if (!ord.date) continue;
+
+                const ordDateISO = normalizeDateToISO(ord.date);
+                if (ordDateISO !== targetDateISO) continue;
+
+                let assignees = [];
+                if (Array.isArray(ord.assignees)) assignees = ord.assignees;
+                else if (ord.assignee) assignees = [ord.assignee];
+
+                const isAssigned = assignees.some(a => normalizeCollabName(a) === collabNorm);
+                if (!isAssigned) continue;
+
+                const ordStartMin = timeStringToMinutes(ord.time || '08:00');
+                let ordEndMin = timeStringToMinutes(ord.timeEnd || '');
+                if (ordEndMin === 9999 || ordEndMin <= ordStartMin) {
+                    ordEndMin = ordStartMin + 90;
+                }
+
+                // Verificación de intervalo superpuesto
+                if (targetStartMin < ordEndMin && targetEndMin > ordStartMin) {
+                    const startFmt = ord.time || '08:00';
+                    const endFmt = ord.timeEnd || (ordStartMin + 90 >= 1080 ? '18:00' : '09:30');
+                    return {
+                        type: 'orden',
+                        sourceId: ord.id,
+                        timeRange: `${startFmt} a ${endFmt}`,
+                        client: ord.client || 'Cliente',
+                        date: ord.date
+                    };
+                }
+            }
+
+            // 2. Revisar en Planillas de Trabajo
+            for (const p of planillas) {
+                if (excludePlanillaId && p.id === excludePlanillaId) continue;
+                if (excludeOrderId && p.orderId && p.orderId === excludeOrderId) continue;
+                if (p.status === 'Cancelado' || p.status === 'Eliminado') continue;
+                if (!p.date) continue;
+
+                const pDateISO = normalizeDateToISO(p.date);
+                if (pDateISO !== targetDateISO) continue;
+
+                let techs = [];
+                if (Array.isArray(p.technicians)) techs = p.technicians;
+                if (p.completedBy) techs = [...techs, ...p.completedBy.split(',').map(s => s.trim())];
+
+                const isAssigned = techs.some(t => normalizeCollabName(t) === collabNorm);
+                if (!isAssigned) continue;
+
+                let pStartMin = timeStringToMinutes(p.horaEntrada || '');
+                let pEndMin = timeStringToMinutes(p.horaSalida || '');
+                if (pStartMin === 9999 && p.timeRange) {
+                    const match = p.timeRange.match(/(\d{1,2}:\d{2})/g);
+                    if (match && match.length > 0) {
+                        pStartMin = timeStringToMinutes(match[0]);
+                        if (match.length > 1) pEndMin = timeStringToMinutes(match[1]);
+                    }
+                }
+                if (pStartMin === 9999) continue;
+                if (pEndMin === 9999 || pEndMin <= pStartMin) {
+                    pEndMin = pStartMin + 90;
+                }
+
+                if (targetStartMin < pEndMin && targetEndMin > pStartMin) {
+                    const pCode = p.pdtCode || p.id || 'PDT';
+                    const startFmt = p.horaEntrada || '08:00';
+                    const endFmt = p.horaSalida || '09:30';
+                    return {
+                        type: 'planilla',
+                        sourceId: pCode,
+                        timeRange: `${startFmt} a ${endFmt}`,
+                        client: p.client || 'Cliente',
+                        date: p.date
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        window.setOrderModulePreset = function (startTime, endTime, moduleLabel = '', context = 'order') {
+            let startInput, endInput;
+            if (context === 'order') {
+                startInput = document.getElementById('order-time');
+                endInput = document.getElementById('order-time-end');
+            } else if (context === 'detail') {
+                startInput = document.getElementById('detail-time');
+                endInput = document.getElementById('detail-time-end');
+            } else if (context === 'planilla') {
+                startInput = document.getElementById('planilla-hora-entrada');
+                endInput = document.getElementById('planilla-hora-salida');
+            } else if (context === 'pdig') {
+                startInput = document.getElementById('pdig-hora-entrada');
+                endInput = document.getElementById('pdig-hora-salida');
+            }
+
+            if (startInput) startInput.value = startTime;
+            if (endInput) endInput.value = endTime;
+
+            if (context === 'order') {
+                updateOrderCollabAvailability();
+            } else if (context === 'detail') {
+                updateDetailOrderCollabAvailability();
+            }
+        };
+
+        function updateContainerCollabAvailability(containerId, dateVal, startTimeVal, endTimeVal, excludeOrderId = null, excludePlanillaId = null) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const collabName = cb.value;
+                const parentDiv = cb.closest('div');
+                let busyTag = parentDiv ? parentDiv.querySelector('.collab-busy-tag') : null;
+
+                if (!dateVal || !startTimeVal) {
+                    cb.disabled = false;
+                    if (busyTag) busyTag.remove();
+                    return;
+                }
+
+                const conflict = checkCollaboratorTimeConflict(collabName, dateVal, startTimeVal, endTimeVal, excludeOrderId, excludePlanillaId);
+                if (conflict) {
+                    cb.disabled = true;
+                    if (cb.checked) {
+                        cb.checked = false;
+                        showToast(`⚠️ ${collabName} fue desmarcado: ya está asignado el ${formatDateToAR(dateVal)} (${conflict.timeRange} en ${conflict.sourceId})`, 'warning');
+                    }
+                    if (!busyTag && parentDiv) {
+                        const span = document.createElement('span');
+                        span.className = 'collab-busy-tag';
+                        span.innerHTML = `⛔ Ocupado (${conflict.timeRange})`;
+                        span.title = `Asignado en ${conflict.sourceId} - ${conflict.client}`;
+                        parentDiv.appendChild(span);
+                    } else if (busyTag) {
+                        busyTag.innerHTML = `⛔ Ocupado (${conflict.timeRange})`;
+                        busyTag.title = `Asignado en ${conflict.sourceId} - ${conflict.client}`;
+                    }
+                } else {
+                    cb.disabled = false;
+                    if (busyTag) busyTag.remove();
+                }
+            });
+        }
+
+        function updateOrderCollabAvailability() {
+            const dateVal = document.getElementById('order-date') ? document.getElementById('order-date').value : '';
+            const startVal = document.getElementById('order-time') ? document.getElementById('order-time').value : '';
+            const endVal = document.getElementById('order-time-end') ? document.getElementById('order-time-end').value : '';
+            updateContainerCollabAvailability('order-assignees-checkboxes', dateVal, startVal, endVal, null, null);
+        }
+
+        // Lógica para poblar checkboxes de colaboradores al abrir orden (Admin)
         function populateAssigneeSelect() {
             const container = document.getElementById('order-assignees-checkboxes');
             if (container) {
@@ -6257,6 +6588,7 @@
                         container.appendChild(div);
                     }
                 });
+                updateOrderCollabAvailability();
             }
         }
 
@@ -6266,6 +6598,15 @@
             formNuevaOrden.reset();
             const quickFields = document.getElementById('quick-client-fields');
             if (quickFields) quickFields.classList.add('hidden');
+
+            const orderDateEl = document.getElementById('order-date');
+            const orderTimeEl = document.getElementById('order-time');
+            const orderTimeEndEl = document.getElementById('order-time-end');
+
+            if (orderTimeEl) orderTimeEl.value = '08:00';
+            if (orderTimeEndEl) orderTimeEndEl.value = '09:30';
+
+            updateOrderCollabAvailability();
 
             const modalContent = modalNuevaOrden.querySelector('.modal-content');
             modalNuevaOrden.style.display = 'flex';
@@ -6304,6 +6645,15 @@
                 modalNuevaOrden.classList.remove('show');
                 formNuevaOrden.reset();
                 document.getElementById('quick-client-fields').classList.add('hidden');
+            }
+        });
+
+        // Event listeners para actualizar disponibilidad en vivo en nueva orden
+        ['order-date', 'order-time', 'order-time-end'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateOrderCollabAvailability);
+                el.addEventListener('change', updateOrderCollabAvailability);
             }
         });
 
@@ -6349,7 +6699,8 @@
             const address = document.getElementById('order-address').value.trim();
             const type = document.getElementById('order-type').value.trim();
             const dateVal = document.getElementById('order-date').value;
-            const timeVal = document.getElementById('order-time').value;
+            const timeVal = document.getElementById('order-time').value || "08:00";
+            const timeEndVal = document.getElementById('order-time-end') ? document.getElementById('order-time-end').value : "09:30";
 
             if (!clientSearchVal) {
                 alert("Por favor, ingrese un cliente.");
@@ -6369,6 +6720,18 @@
                 assignees = Array.from(document.querySelectorAll('input[name="order-assignees"]:checked')).map(cb => cb.value);
                 if (assignees.length === 0) {
                     assignees = ["Sin Asignar"];
+                }
+            }
+
+            // Validar superposición de horarios para colaboradores asignados
+            if (dateVal) {
+                for (const assignee of assignees) {
+                    if (assignee === "Sin Asignar") continue;
+                    const conflict = checkCollaboratorTimeConflict(assignee, dateVal, timeVal, timeEndVal, null, null);
+                    if (conflict) {
+                        alert(`No se puede crear la orden: El colaborador ${assignee} ya está asignado el ${formatDateToAR(dateVal)} (${conflict.timeRange} en ${conflict.sourceId}). Seleccione otro horario u otro colaborador.`);
+                        return;
+                    }
                 }
             }
 
@@ -6416,7 +6779,9 @@
                     assignees: assignees,
                     status: "Pendiente",
                     date: dateVal,
-                    time: timeVal || "08:00",
+                    time: timeVal,
+                    timeEnd: timeEndVal,
+                    timeRange: timeEndVal ? `${timeVal}HS-${timeEndVal}HS` : `${timeVal}HS`,
                     type: type,
                     timestamp: getSyncedDate().toISOString()
                 };
@@ -6437,6 +6802,11 @@
                 alert("Error al abrir orden: " + error.message);
             }
         });
+
+        // --- LOGICA DE PLANILLA TRADICIONAL ---
+        function updatePlanillaCollabAvailability() {
+            // Sin bloqueo de colaboradores en planilla de trabajo
+        }
 
         // Función para completar Orden de Trabajo (Abre la planilla)
         window.completeWorkOrder = function (orderId) {
@@ -6475,6 +6845,21 @@
             document.getElementById('planilla-spare-parts').value = '';
             document.getElementById('planilla-observations').value = '';
 
+            let defaultStart = ord.time || "08:00";
+            let defaultEnd = ord.timeEnd || "";
+            if (!defaultEnd) {
+                const sMin = timeStringToMinutes(defaultStart);
+                const eMin = sMin + 90;
+                const eH = Math.floor(eMin / 60);
+                const eM = eMin % 60;
+                defaultEnd = `${String(eH).padStart(2, '0')}:${String(eM).padStart(2, '0')}`;
+            }
+
+            const pHE = document.getElementById('planilla-hora-entrada');
+            const pHS = document.getElementById('planilla-hora-salida');
+            if (pHE) pHE.value = defaultStart;
+            if (pHS) pHS.value = defaultEnd;
+
             // Precargar si ya existe planilla
             const existingPlanilla = planillas.find(p => p.orderId === orderId);
             if (existingPlanilla) {
@@ -6483,6 +6868,9 @@
                 document.getElementById('planilla-spare-parts').value = existingPlanilla.spareParts;
                 document.getElementById('planilla-observations').value = existingPlanilla.observations;
                 
+                if (existingPlanilla.horaEntrada) pHE.value = existingPlanilla.horaEntrada;
+                if (existingPlanilla.horaSalida) pHS.value = existingPlanilla.horaSalida;
+
                 if (role === 'Administrador') {
                     document.getElementById('planilla-date').value = existingPlanilla.date || todayStr;
                     populateAdminPlanillaSelects(
@@ -6806,6 +7194,10 @@
 
         const modalNuevaPlanillaDigital = document.getElementById('modalNuevaPlanillaDigital');
         const planillaDigitalForm = document.getElementById('planillaDigitalForm');
+
+        function updatePdigCollabAvailability() {
+            // Sin bloqueo de disponibilidad en planilla digital
+        }
 
         function populatePlanillaDigitalTechs() {
             const container = document.getElementById('pdig-tecnicos-checkboxes');
@@ -7203,10 +7595,8 @@
                     cargadoPorInput.value = localStorage.getItem('electrofrio_name') || localStorage.getItem('electrofrio_user') || 'Desconocido';
                 }
 
-                const hours = String(today.getHours()).padStart(2, '0');
-                const minutes = String(today.getMinutes()).padStart(2, '0');
-                if (entradaInput) entradaInput.value = `${hours}:${minutes}`;
-                if (salidaInput) salidaInput.value = `${hours}:${minutes}`;
+                if (entradaInput) entradaInput.value = '08:00';
+                if (salidaInput) salidaInput.value = '09:30';
 
                 const contenedor = document.getElementById('pdig-contenedor-equipos');
                 if (contenedor && contenedor.children.length === 0) {
@@ -8570,7 +8960,7 @@
             const clientesMap = new Map(clientes.map(c => [c.id, c.name]));
             const ordenesMap = new Map(ordenesTrabajo.map(o => [o.id, o]));
 
-            // Ordenar planillas por fecha / timestamp descendente, y por código PDT descendente ante fechas iguales
+            // Ordenar planillas por fecha descendente, luego por horario de inicio descendente (17:00/18:00 arriba, 08:00 abajo) y por código PDT descendente
             const sortedSheets = [...planillas].sort((a, b) => {
                 const parseDate = (dStr) => {
                     if (!dStr) return '';
@@ -8585,6 +8975,24 @@
                 
                 const dateComp = dB.localeCompare(dA);
                 if (dateComp !== 0) return dateComp;
+
+                // Ante igual fecha, ordenar cronológicamente con las horas de la tarde arriba (17hs arriba, 8hs abajo)
+                const getSheetStartMin = (sheet) => {
+                    if (sheet.horaEntrada) return timeStringToMinutes(sheet.horaEntrada);
+                    if (sheet.timeRange) {
+                        const m = sheet.timeRange.match(/(\d{1,2}:\d{2})/);
+                        if (m) return timeStringToMinutes(m[1]);
+                    }
+                    const ord = sheet.orderId ? ordenesMap.get(sheet.orderId) : null;
+                    if (ord && ord.time) return timeStringToMinutes(ord.time);
+                    return 0;
+                };
+
+                const timeA = getSheetStartMin(a);
+                const timeB = getSheetStartMin(b);
+                if (timeA !== timeB) {
+                    return timeB - timeA; // Mayor hora primero (17:00 arriba, 08:00 abajo)
+                }
 
                 const codeA = a.pdtCode || a.id || "";
                 const codeB = b.pdtCode || b.id || "";
@@ -8659,14 +9067,20 @@
                 const pdtCode = getPdtCodeForSheet(p, idx);
                 const fechaAR = formatDateWithDayToAR(p.date);
 
-                // Formatear Horario
+                // Formatear Horario limpio
                 let horarioStr = "08:00HS-17:00HS";
                 if (p.horaEntrada && p.horaSalida) {
                     horarioStr = `${p.horaEntrada}HS-${p.horaSalida}HS`;
+                } else if (p.horaEntrada) {
+                    horarioStr = `${p.horaEntrada}HS`;
                 } else if (p.timeRange) {
                     horarioStr = p.timeRange;
                 } else if (ord && ord.time) {
-                    horarioStr = `${ord.time}HS`;
+                    if (ord.timeEnd) {
+                        horarioStr = `${ord.time}HS-${ord.timeEnd}HS`;
+                    } else {
+                        horarioStr = `${ord.time}HS`;
+                    }
                 }
 
                 // Formatear Colaboradores
@@ -9890,8 +10304,11 @@
                 }
             }
             const formatTime = (t, fb) => { t = (t||"").trim(); if(t.length === 4 && !t.startsWith("0")) t = "0"+t; return t.length >= 5 ? t.substring(0,5) : fb; };
-            document.getElementById('pdig-hora-entrada').value = formatTime(defaultHE_pdig, '08:00');
-            document.getElementById('pdig-hora-salida').value = formatTime(defaultHS_pdig, '17:00');
+            const finalHE = formatTime(defaultHE_pdig, '08:00');
+            const finalHS = formatTime(defaultHS_pdig, '09:30');
+            document.getElementById('pdig-hora-entrada').value = finalHE;
+            document.getElementById('pdig-hora-salida').value = finalHS;
+
             document.getElementById('pdig-cliente-input').value = p.client || '';
             document.getElementById('pdig-cliente-id').value = p.clientId || '';
             document.getElementById('pdig-domicilio').value = p.address || '';
@@ -10114,6 +10531,23 @@
             techCbs.forEach(cb => {
                 cb.checked = assignees.some(name => name.trim().toLowerCase() === cb.value.trim().toLowerCase());
             });
+
+            // Configurar horas de la orden si existen
+            if (ord.time) {
+                const pdigHE = document.getElementById('pdig-hora-entrada');
+                const pdigHS = document.getElementById('pdig-hora-salida');
+                let startTime = ord.time;
+                let endTime = ord.timeEnd || "";
+                if (!endTime) {
+                    const sMin = timeStringToMinutes(startTime);
+                    const eMin = sMin + 90;
+                    const eH = Math.floor(eMin / 60);
+                    const eM = eMin % 60;
+                    endTime = `${String(eH).padStart(2, '0')}:${String(eM).padStart(2, '0')}`;
+                }
+                if (pdigHE) pdigHE.value = startTime;
+                if (pdigHS) pdigHS.value = endTime;
+            }
         };
 
         // 2. EDITAR PLANILLA DE TRABAJO
@@ -10158,8 +10592,11 @@
                     }
                     const formatTime = (t, fb) => { t = (t||"").trim(); if(t.length === 4 && !t.startsWith("0")) t = "0"+t; return t.length >= 5 ? t.substring(0,5) : fb; };
                     
-                    document.getElementById('planilla-hora-entrada').value = formatTime(defaultHE, "08:00");
-                    document.getElementById('planilla-hora-salida').value = formatTime(defaultHS, "17:00");
+                    const finalHE = formatTime(defaultHE, "08:00");
+                    const finalHS = formatTime(defaultHS, "09:30");
+                    document.getElementById('planilla-hora-entrada').value = finalHE;
+                    document.getElementById('planilla-hora-salida').value = finalHS;
+
                     populateAdminPlanillaSelects(
                         p.clientId || p.client || (ord ? ord.clientId : ""), 
                         p.address || p.domicilio || (clientObj ? clientObj.address : (ord ? ord.address : "")), 
@@ -10414,7 +10851,15 @@
         }
 
         // --- LOGICA DE DETALLES Y EDICION DE ORDEN ---
-        function populateEditAssigneesCheckboxes(assignedList = []) {
+        function updateDetailOrderCollabAvailability() {
+            const orderId = document.getElementById('detail-order-id') ? document.getElementById('detail-order-id').textContent.trim() : null;
+            const dateVal = document.getElementById('detail-date') ? document.getElementById('detail-date').value : '';
+            const startVal = document.getElementById('detail-time') ? document.getElementById('detail-time').value : '';
+            const endVal = document.getElementById('detail-time-end') ? document.getElementById('detail-time-end').value : '';
+            updateContainerCollabAvailability('detail-assignees-checkboxes', dateVal, startVal, endVal, orderId, null);
+        }
+
+        function populateEditAssigneesCheckboxes(assignedList = [], currentOrderId = null) {
             const container = document.getElementById('detail-assignees-checkboxes');
             if (container) {
                 container.innerHTML = '';
@@ -10433,8 +10878,18 @@
                         container.appendChild(div);
                     }
                 });
+                updateDetailOrderCollabAvailability();
             }
         }
+
+        // Listeners para actualizar disponibilidad en tiempo real en modal detalle
+        ['detail-date', 'detail-time', 'detail-time-end'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateDetailOrderCollabAvailability);
+                el.addEventListener('change', updateDetailOrderCollabAvailability);
+            }
+        });
 
         window.openOrderDetailsModal = function (orderId) {
             const ord = ordenesTrabajo.find(o => o.id === orderId);
@@ -10474,25 +10929,41 @@
             }
 
             const role = localStorage.getItem('electrofrio_role');
-            populateEditAssigneesCheckboxes(ord.assignees || []);
+            populateEditAssigneesCheckboxes(ord.assignees || [], ord.id);
 
             const detailDate = document.getElementById('detail-date');
             const detailTime = document.getElementById('detail-time');
+            const detailTimeEnd = document.getElementById('detail-time-end');
+
+            let startTime = ord.time || "08:00";
+            let endTime = ord.timeEnd || "";
+            if (!endTime) {
+                const sMin = timeStringToMinutes(startTime);
+                const eMin = sMin + 90;
+                const eH = Math.floor(eMin / 60);
+                const eM = eMin % 60;
+                endTime = `${String(eH).padStart(2, '0')}:${String(eM).padStart(2, '0')}`;
+            }
 
             if (detailDate) detailDate.value = ord.date || "";
-            if (detailTime) detailTime.value = ord.time || "08:00";
+            if (detailTime) detailTime.value = startTime;
+            if (detailTimeEnd) detailTimeEnd.value = endTime;
+
+            updateDetailOrderCollabAvailability();
 
             const btnSaveOrderDetail = document.getElementById('btnSaveOrderDetail');
             if (role === 'Colaborador') {
                 if (statusSelect) statusSelect.disabled = false;
                 if (detailDate) detailDate.disabled = true;
                 if (detailTime) detailTime.disabled = true;
+                if (detailTimeEnd) detailTimeEnd.disabled = true;
                 if (btnSaveOrderDetail) btnSaveOrderDetail.textContent = 'Actualizar Estado';
                 if (btnDetailDelete) btnDetailDelete.style.display = 'none';
             } else {
                 if (statusSelect) statusSelect.disabled = false;
                 if (detailDate) detailDate.disabled = false;
                 if (detailTime) detailTime.disabled = false;
+                if (detailTimeEnd) detailTimeEnd.disabled = false;
                 if (btnSaveOrderDetail) btnSaveOrderDetail.textContent = 'Guardar Cambios';
                 if (btnDetailDelete) btnDetailDelete.style.display = 'block';
             }
@@ -10548,6 +11019,25 @@
                 const obsVal = document.getElementById('detail-observations') ? document.getElementById('detail-observations').value.trim() : "";
                 const role = localStorage.getItem('electrofrio_role');
 
+                const clientVal = document.getElementById('detail-client-input') ? document.getElementById('detail-client-input').value.trim() : "";
+                const addressVal = document.getElementById('detail-address-input') ? document.getElementById('detail-address-input').value.trim() : "";
+                const typeVal = document.getElementById('detail-type-input') ? document.getElementById('detail-type-input').value.trim() : "";
+                const date = document.getElementById('detail-date') ? document.getElementById('detail-date').value : "";
+                const time = document.getElementById('detail-time') ? document.getElementById('detail-time').value : "08:00";
+                const timeEnd = document.getElementById('detail-time-end') ? document.getElementById('detail-time-end').value : "09:30";
+                const assignees = Array.from(document.querySelectorAll('input[name="edit-order-assignees"]:checked')).map(cb => cb.value);
+
+                if (role !== 'Colaborador' && date) {
+                    for (const assignee of assignees) {
+                        if (assignee === "Sin Asignar") continue;
+                        const conflict = checkCollaboratorTimeConflict(assignee, date, time, timeEnd, orderId, null);
+                        if (conflict) {
+                            alert(`No se puede guardar: El colaborador ${assignee} ya está asignado el ${formatDateToAR(date)} (${conflict.timeRange} en ${conflict.sourceId}). Seleccione otro horario u otro colaborador.`);
+                            return;
+                        }
+                    }
+                }
+
                 // 1. Aplicar cambios localmente de inmediato para respuesta instantánea
                 const ordIdx = ordenesTrabajo.findIndex(o => o.id === orderId);
                 if (ordIdx > -1) {
@@ -10555,13 +11045,6 @@
                         ordenesTrabajo[ordIdx].status = status;
                         ordenesTrabajo[ordIdx].observations = obsVal;
                     } else {
-                        const clientVal = document.getElementById('detail-client-input').value.trim();
-                        const addressVal = document.getElementById('detail-address-input').value.trim();
-                        const typeVal = document.getElementById('detail-type-input').value.trim();
-                        const date = document.getElementById('detail-date').value;
-                        const time = document.getElementById('detail-time').value;
-                        const assignees = Array.from(document.querySelectorAll('input[name="edit-order-assignees"]:checked')).map(cb => cb.value);
-
                         ordenesTrabajo[ordIdx].client = clientVal;
                         ordenesTrabajo[ordIdx].address = addressVal;
                         ordenesTrabajo[ordIdx].type = typeVal;
@@ -10569,6 +11052,8 @@
                         ordenesTrabajo[ordIdx].observations = obsVal;
                         ordenesTrabajo[ordIdx].date = date;
                         ordenesTrabajo[ordIdx].time = time;
+                        ordenesTrabajo[ordIdx].timeEnd = timeEnd;
+                        ordenesTrabajo[ordIdx].timeRange = timeEnd ? `${time}HS-${timeEnd}HS` : `${time}HS`;
                         ordenesTrabajo[ordIdx].assignees = assignees.length > 0 ? assignees : ["Sin Asignar"];
                     }
                     localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
@@ -10590,13 +11075,6 @@
                                 observations: obsVal
                             });
                         } else {
-                            const clientVal = document.getElementById('detail-client-input').value.trim();
-                            const addressVal = document.getElementById('detail-address-input').value.trim();
-                            const typeVal = document.getElementById('detail-type-input').value.trim();
-                            const date = document.getElementById('detail-date').value;
-                            const time = document.getElementById('detail-time').value;
-                            const assignees = Array.from(document.querySelectorAll('input[name="edit-order-assignees"]:checked')).map(cb => cb.value);
-
                             await db.collection('ordenes').doc(orderId).update({
                                 client: clientVal,
                                 address: addressVal,
@@ -10605,6 +11083,8 @@
                                 observations: obsVal,
                                 date: date,
                                 time: time,
+                                timeEnd: timeEnd,
+                                timeRange: timeEnd ? `${time}HS-${timeEnd}HS` : `${time}HS`,
                                 assignees: assignees.length > 0 ? assignees : ["Sin Asignar"]
                             });
                             await saveNewAddressToClient("", clientVal, addressVal);
@@ -11549,7 +12029,7 @@
 
             let allowedModules = [];
             if (role === 'Administrador') {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'configuracion'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'importaciones', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'configuracion'];
             } else if (isPremium) {
                 allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto', 'proveedores'];
             } else {
