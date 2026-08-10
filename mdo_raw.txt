@@ -1,0 +1,952 @@
+1. HELADERAS FAMILIARES
+A. Refrigeración
+•	Cambio de compresor 
+•	Cambio de filtro secador 
+•	Cambio de refrigerante 
+•	Recuperación de refrigerante 
+•	Vacío del sistema 
+•	Limpieza del circuito 
+•	Barrido con nitrógeno 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura de cañerías 
+•	Cambio de caño de proceso 
+•	Cambio de condensador 
+•	Cambio de evaporador 
+•	Reparación de evaporador 
+•	Cambio de capilar 
+•	Destape de capilar 
+•	Destape de retorno 
+•	Cambio de válvula Schrader 
+•	Cambio de aceite del compresor (cuando corresponda) 
+B. Sistema eléctrico
+•	Cambio de relé PTC 
+•	Cambio de protector térmico 
+•	Cambio de capacitor 
+•	Cambio de cable de alimentación 
+•	Cambio de ficha 
+•	Cambio de bornera 
+•	Reparación del cableado 
+•	Reparación de cortocircuito 
+•	Reparación de falso contacto 
+C. Control de temperatura
+No Inverter
+•	Cambio de termostato 
+•	Calibración del termostato 
+Inverter
+•	Cambio de placa inverter 
+•	Cambio del módulo inverter 
+•	Reparación del módulo inverter 
+•	Cambio del compresor inverter 
+D. Electrónica
+•	Cambio de placa principal 
+•	Reparación de placa electrónica 
+•	Cambio de display 
+•	Cambio de botonera 
+•	Reparación del panel 
+•	Reprogramación electrónica (si aplica) 
+E. Sistema No Frost
+•	Cambio de resistencia 
+•	Cambio de fusible térmico 
+•	Cambio de bimetal 
+•	Cambio de sensor NTC 
+•	Cambio del ventilador del freezer 
+•	Cambio del ventilador del refrigerador 
+•	Reparación del sistema de deshielo 
+•	Destape de drenaje 
+•	Limpieza de drenaje 
+•	Descongelamiento completo 
+F. Sensores
+•	Cambio sensor freezer 
+•	Cambio sensor refrigerador 
+•	Cambio sensor ambiente 
+•	Cambio sensor evaporador 
+G. Ventilación
+•	Cambio motor ventilador 
+•	Cambio hélice 
+•	Reparación ventilador 
+•	Lubricación 
+H. Agua
+•	Cambio válvula de agua 
+•	Cambio mangueras 
+•	Cambio filtro de agua 
+•	Reparación dispensador 
+•	Reparación fábrica de hielo 
+•	Cambio motor ice maker 
+I. Puertas
+•	Cambio burlete 
+•	Pegado burlete 
+•	Regulación de puertas 
+•	Cambio bisagras 
+•	Cambio manija 
+•	Cambio cierre automático 
+•	Reparación puerta 
+J. Interior
+•	Cambio luz LED 
+•	Cambio portalámparas 
+•	Cambio interruptor puerta 
+•	Cambio estantes 
+•	Cambio cajones 
+•	Cambio tapa evaporador 
+K. Limpieza
+•	Limpieza condensador 
+•	Limpieza evaporador 
+•	Limpieza completa 
+•	Sanitización 
+•	Lavado técnico 
+
+2. HELADERAS COMERCIALES
+Refrigeración
+•	Cambio compresor 
+•	Cambio unidad condensadora 
+•	Cambio evaporador 
+•	Cambio condensador 
+•	Cambio capilar 
+•	Cambio filtro 
+•	Carga de refrigerante 
+•	Recuperación de refrigerante 
+•	Vacío 
+•	Barrido con nitrógeno 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura 
+•	Destape de capilar 
+Ventilación
+•	Cambio motor ventilador evaporador 
+•	Cambio motor ventilador condensador 
+•	Cambio hélices 
+Eléctrico
+•	Cambio termostato 
+•	Cambio controlador digital 
+•	Cambio relé 
+•	Cambio protector 
+•	Cambio capacitor 
+•	Cambio contactor 
+•	Cambio llave 
+•	Cambio cableado 
+Electrónica
+•	Cambio controlador Dixell 
+•	Cambio Full Gauge 
+•	Cambio Elitech 
+•	Programación controlador 
+•	Cambio display 
+Deshielo
+•	Cambio resistencia 
+•	Cambio sensor 
+•	Cambio bimetal 
+•	Reparación sistema de deshielo 
+Estructura
+•	Cambio burletes 
+•	Cambio bisagras 
+•	Cambio vidrio 
+•	Cambio cerradura 
+•	Cambio ruedas 
+•	Cambio patas 
+Mantenimiento
+•	Limpieza condensador 
+•	Limpieza evaporador 
+•	Limpieza completa 
+•	Mantenimiento preventivo 
+•	Control de consumo eléctrico 
+•	Medición de presiones 
+•	Medición de temperatura 
+•	Verificación de funcionamiento 
+
+3. Reparaciones generales
+•	Diagnóstico en taller 
+•	Diagnóstico a domicilio 
+•	Instalación 
+•	Reinstalación 
+•	Desinstalación 
+•	Traslado del equipo 
+•	Cambio de ubicación 
+•	Informe técnico 
+•	Certificado de funcionamiento 
+•	Presupuesto sin reparación 
+•	Revisión preventiva 
+•	Visita técnica 
+
+1. FREEZERS FAMILIARES
+A. Refrigeración
+* Cambio de compresor
+* Cambio de filtro secador
+* Carga de refrigerante
+* Recuperación de refrigerante
+* Vacío del sistema
+* Barrido con nitrógeno
+* Búsqueda de fuga
+* Reparación de fuga
+* Soldadura
+* Cambio de evaporador
+* Reparación de evaporador
+* Cambio de condensador
+* Cambio de capilar
+* Destape de capilar
+* Cambio válvula Schrader
+B. sistema eléctrico
+* Cambio relé PTC
+* Cambio protector térmico
+* Cambio capacitor
+* Cambio cable alimentación
+* Cambio ficha
+* Reparación cableado
+C. Control de temperatura
+No Inverter
+* Cambio termostato
+* Calibración termostato
+Inverter
+* Cambio placa inverter
+* Reparación módulo inverter
+* Cambio compresor inverter
+D. Electrónica
+* Cambio placa principal
+* Cambio display
+* Cambio botonera
+* Reparación electrónica
+E. No Frost
+* Cambio resistencia
+* Cambio fusible térmico
+* Cambio bimetal
+* Cambio sensor NTC
+* Cambio ventilador
+* Reparación sistema de deshielo
+* Destape de drenaje
+F. Sensores
+* Sensor ambiente
+* Sensor evaporador
+* Sensor congelador
+G. Puertas y tapas
+* Cambio burlete
+* Pegado burlete
+* Cambio bisagras
+* Cambio manija
+* Regulación tapa
+* Reparación tapa
+H. Interior
+* Cambio canastos
+* Cambio divisores
+* Cambio luz LED
+* Cambio interruptor
+I. Limpieza
+* Limpieza condensador
+* Limpieza evaporador
+* Limpieza completa
+* Sanitización
+
+2. FREEZERS COMERCIALES
+Refrigeración
+* Cambio compresor
+* Cambio unidad condensadora
+* Cambio evaporador
+* Cambio condensador
+* Cambio capilar
+* Cambio filtro
+* Carga de refrigerante
+* Recuperación de refrigerante
+* Vacío
+* Barrido con nitrógeno
+* Búsqueda de fuga
+* Reparación de fuga
+* Soldadura
+Ventilación
+* Cambio motor ventilador
+* Cambio hélice
+* Reparación ventilador
+Eléctrico
+* Cambio termostato
+* Cambio controlador digital
+* Cambio relé
+* Cambio protector
+* Cambio capacitor
+* Cambio contactor
+Electrónica
+* Cambio controlador Dixell
+* Cambio Full Gauge
+* Cambio Elitech
+* Programación controlador
+* Cambio display
+Deshielo
+* Cambio resistencia
+* Cambio sensor
+* Cambio bimetal
+* Reparación sistema de deshielo
+Estructura
+* Cambio burlete
+* Cambio tapa de vidrio
+* Cambio cerradura
+* Cambio ruedas
+* Cambio patas
+Mantenimiento
+* Limpieza condensador
+* Limpieza evaporador
+* Limpieza completa
+* Medición de presiones
+* Medición de temperatura
+* Control de consumo
+* Mantenimiento preventivo
+
+AIRES ACONDICIONADOS RESIDENCIALES
+1. UNIDAD EXTERIOR (CONDENSADORA)
+Compresor
+•	Cambio de compresor 
+•	Reparación de compresor 
+•	Cambio de aceite 
+•	Cambio de resistencia de cárter 
+•	Cambio de soportes antivibratorios 
+•	Cambio de válvulas 
+•	Cambio de juntas 
+•	Cambio de terminales eléctricos 
+Circuito frigorífico
+•	Cambio de filtro secador 
+•	Cambio de válvula Schrader 
+•	Cambio de válvula de expansión 
+•	Cambio de válvula de 4 vías 
+•	Cambio de válvula solenoide 
+•	Cambio de presostato 
+•	Cambio de cañerías 
+•	Recuperación de refrigerante 
+•	Carga de refrigerante 
+•	Vacío del sistema 
+•	Barrido con nitrógeno 
+•	Limpieza del circuito 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura de cobre 
+•	Soldadura cobre-aluminio 
+•	Cambio de separador de aceite 
+•	Cambio de acumulador de succión 
+Condensador
+•	Cambio de condensador 
+•	Reparación del condensador 
+•	Limpieza de serpentinas 
+•	Lavado químico 
+•	Enderezado de aletas 
+Ventilación
+•	Cambio de motor ventilador 
+•	Cambio de hélice 
+•	Cambio de rulemanes 
+•	Balanceo del ventilador 
+•	Lubricación 
+•	Cambio de rejillas 
+2. UNIDAD INTERIOR (EVAPORADORA)
+Evaporador
+•	Cambio de evaporador 
+•	Reparación de evaporador 
+•	Limpieza del evaporador 
+•	Lavado químico 
+•	Desinfección 
+Ventilación
+•	Cambio de turbina 
+•	Cambio de motor turbina 
+•	Balanceo de turbina 
+•	Lubricación 
+•	Cambio de soportes 
+Drenaje
+•	Destape de drenaje 
+•	Cambio de manguera 
+•	Cambio de bandeja de condensados 
+•	Reparación de pérdidas de agua 
+•	Instalación de bomba de desagüe 
+Filtros
+•	Limpieza de filtros 
+•	Cambio de filtros 
+•	Instalación de filtros nuevos 
+3. SISTEMA ELÉCTRICO
+•	Cambio de capacitor de marcha 
+•	Cambio de capacitor permanente 
+•	Cambio de contactor 
+•	Cambio de relé 
+•	Cambio de protector térmico 
+•	Cambio de fusibles 
+•	Cambio de térmica 
+•	Cambio de cableado 
+•	Cambio de borneras 
+•	Cambio de alimentación eléctrica 
+•	Reparación de cableado 
+•	Reparación de falso contacto 
+•	Reparación de cortocircuito 
+4. ELECTRÓNICA
+Equipos On/Off
+•	Cambio de placa electrónica 
+•	Reparación de placa 
+•	Cambio de display 
+•	Cambio de receptor infrarrojo 
+•	Cambio de control remoto 
+•	Configuración electrónica 
+Equipos Inverter
+•	Cambio de placa inverter 
+•	Reparación de placa inverter 
+•	Cambio de módulo IPM 
+•	Cambio de puente rectificador 
+•	Cambio de fuente switching 
+•	Cambio de reactor 
+•	Reprogramación 
+•	Actualización de software 
+5. SENSORES
+•	Cambio sensor ambiente 
+•	Cambio sensor evaporador 
+•	Cambio sensor condensador 
+•	Cambio sensor descarga 
+•	Cambio sensor succión 
+•	Calibración de sensores 
+6. VÁLVULAS
+•	Cambio válvula de servicio 
+•	Cambio válvula de expansión 
+•	Cambio válvula de 4 vías 
+•	Cambio válvula solenoide 
+•	Cambio válvula de retención 
+7. INSTALACIÓN
+•	Instalación de equipo nuevo 
+•	Desinstalación 
+•	Reinstalación 
+•	Cambio de ubicación 
+•	Instalación de soportes 
+•	Instalación de ménsulas 
+•	Instalación de bomba de condensado 
+•	Instalación de drenaje 
+•	Instalación eléctrica 
+•	Instalación de cañerías 
+•	Instalación de cable de interconexión 
+•	Puesta en marcha 
+8. CAÑERÍAS
+•	Cambio de cañerías 
+•	Reparación de cañerías 
+•	Aislación de cañerías 
+•	Cambio de aislación 
+•	Soldadura de cobre 
+•	Soldadura cobre-aluminio 
+•	Cambio de tuercas flare 
+•	Confección de flare 
+•	Reparación de pérdidas 
+9. LIMPIEZA
+•	Limpieza completa 
+•	Limpieza profunda 
+•	Lavado de evaporador 
+•	Lavado de condensador 
+•	Limpieza de turbina 
+•	Sanitización antibacteriana 
+•	Desinfección con vapor 
+•	Limpieza de drenajes 
+10. MANTENIMIENTO PREVENTIVO
+•	Mantenimiento básico 
+•	Mantenimiento preventivo 
+•	Mantenimiento correctivo 
+•	Revisión general 
+•	Medición de presiones 
+•	Medición de temperatura 
+•	Medición de consumo eléctrico 
+•	Medición de amperaje 
+•	Medición de voltaje 
+•	Medición de superheat 
+•	Medición de subcooling 
+•	Ajuste de conexiones 
+•	Ajuste de tornillería 
+•	Verificación de rendimiento 
+11. VRF / VRV
+•	Cambio de compresor inverter 
+•	Cambio de módulo inverter 
+•	Cambio de placa principal 
+•	Cambio de placas de unidades interiores 
+•	Cambio de válvulas electrónicas (EEV) 
+•	Cambio de cajas BC (Branch Controller) 
+•	Cambio de transductores 
+•	Programación del sistema 
+•	Direccionamiento de unidades 
+•	Configuración de red 
+•	Diagnóstico de comunicación 
+•	Actualización de firmware 
+12. FAN COIL
+•	Cambio de motor 
+•	Cambio de turbina 
+•	Cambio de serpentín 
+•	Cambio de válvula de agua 
+•	Cambio de actuador 
+•	Limpieza de serpentín 
+•	Limpieza de bandeja 
+•	Destape de drenaje 
+13. ROOF TOP
+•	Cambio de compresor 
+•	Cambio de ventiladores 
+•	Cambio de correas 
+•	Cambio de poleas 
+•	Cambio de filtros 
+•	Cambio de economizador 
+•	Cambio de resistencias 
+•	Cambio de intercambiadores 
+•	Cambio de quemador (si calefacciona a gas) 
+•	Programación de controlador 
+
+CÁMARAS FRIGORÍFICAS
+1. SISTEMA DE REFRIGERACIÓN
+•	Cambio de compresor 
+•	Cambio de unidad condensadora 
+•	Cambio de evaporador 
+•	Cambio de condensador 
+•	Cambio de filtro secador 
+•	Cambio de visor de líquido 
+•	Cambio de válvula de servicio 
+•	Cambio de válvula Schrader 
+•	Cambio de caño de proceso 
+•	Cambio de capilar 
+•	Cambio de válvula de expansión (TXV) 
+•	Cambio de válvula solenoide 
+•	Cambio de separador de aceite 
+•	Cambio de acumulador de succión 
+•	Cambio de recibidor de líquido 
+•	Cambio de presostato 
+•	Cambio de aceite 
+•	Recuperación de refrigerante 
+•	Carga de refrigerante 
+•	Vacío del sistema 
+•	Barrido con nitrógeno 
+•	Limpieza interna del circuito 
+•	Destape de capilar 
+•	Destape de línea de líquido 
+•	Destape de línea de succión 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura de cañerías 
+•	Reemplazo de cañerías 
+2. EVAPORADOR
+•	Cambio de evaporador 
+•	Reparación de evaporador 
+•	Cambio de resistencia de deshielo 
+•	Cambio de bandeja de desagüe 
+•	Cambio de ventiladores 
+•	Cambio de hélices 
+•	Cambio de soportes 
+•	Limpieza del evaporador 
+•	Lavado químico 
+•	Desinfección 
+3. CONDENSADOR
+•	Cambio de condensador 
+•	Cambio de ventiladores 
+•	Cambio de hélices 
+•	Cambio de soportes 
+•	Limpieza de serpentinas 
+•	Lavado químico 
+•	Enderezado de aletas 
+4. SISTEMA ELÉCTRICO
+•	Cambio de contactor 
+•	Cambio de relé 
+•	Cambio de protector térmico 
+•	Cambio de capacitor 
+•	Cambio de interruptor 
+•	Cambio de llave general 
+•	Cambio de térmica 
+•	Cambio de disyuntor 
+•	Cambio de fusibles 
+•	Cambio de borneras 
+•	Cambio de cableado 
+•	Reparación del cableado 
+•	Reparación de cortocircuito 
+•	Reparación de falso contacto 
+5. SISTEMA ELECTRÓNICO
+•	Cambio de controlador Dixell 
+•	Cambio de controlador Full Gauge 
+•	Cambio de controlador Elitech 
+•	Cambio de placa electrónica 
+•	Reparación de placa 
+•	Programación del controlador 
+•	Configuración de parámetros 
+•	Actualización del controlador 
+•	Cambio de display 
+•	Cambio de teclado 
+6. SENSORES
+•	Cambio sensor ambiente 
+•	Cambio sensor evaporador 
+•	Cambio sensor condensador 
+•	Cambio sensor de producto 
+•	Calibración de sensores 
+7. DESHIELO
+•	Cambio resistencia 
+•	Cambio fusible térmico 
+•	Cambio bimetal 
+•	Cambio temporizador de deshielo 
+•	Cambio sensor de deshielo 
+•	Reparación del sistema de deshielo 
+•	Programación de ciclos de deshielo 
+8. DRENAJE
+•	Destape de drenaje 
+•	Cambio de manguera 
+•	Cambio de sifón 
+•	Cambio de bandeja 
+•	Reparación de pérdidas 
+9. PUERTAS
+•	Cambio de burletes 
+•	Pegado de burletes 
+•	Cambio de bisagras 
+•	Cambio de manijas 
+•	Cambio de cerradura 
+•	Cambio de visor 
+•	Regulación de puertas 
+•	Reparación del cierre automático 
+•	Cambio de cortinas de PVC 
+•	Cambio de resistencia antihielo del marco 
+10. ESTRUCTURA
+•	Reparación de paneles 
+•	Cambio de panel aislante 
+•	Reparación del piso 
+•	Reparación del techo 
+•	Sellado de juntas 
+•	Cambio de perfiles 
+•	Cambio de remaches 
+•	Cambio de tornillería 
+11. ILUMINACIÓN
+•	Cambio de luminaria LED 
+•	Cambio de interruptor 
+•	Cambio de fuente 
+•	Cambio de cableado 
+•	Instalación de iluminación nueva 
+12. MANTENIMIENTO PREVENTIVO
+•	Limpieza del condensador 
+•	Limpieza del evaporador 
+•	Limpieza de ventiladores 
+•	Limpieza de drenajes 
+•	Control de presiones 
+•	Control de temperaturas 
+•	Medición de consumo eléctrico 
+•	Medición de amperaje 
+•	Ajuste de conexiones eléctricas 
+•	Ajuste de tornillería 
+•	Revisión general 
+•	Informe técnico 
+13. INSTALACIÓN
+•	Instalación de unidad condensadora 
+•	Instalación de evaporador 
+•	Instalación de controlador 
+•	Instalación de cañerías 
+•	Instalación eléctrica 
+•	Instalación de drenajes 
+•	Puesta en marcha 
+•	Balance de refrigerante 
+•	Pruebas de funcionamiento 
+
+EQUIPOS COMERCIALES
+1. SISTEMA DE REFRIGERACIÓN
+Compresor
+•	Cambio de compresor 
+•	Cambio de aceite del compresor 
+•	Reparación de conexiones del compresor 
+•	Cambio de soportes del compresor 
+Condensador
+•	Cambio de condensador 
+•	Limpieza de condensador 
+•	Lavado químico 
+•	Reparación de condensador 
+•	Enderezado de aletas 
+Evaporador
+•	Cambio de evaporador 
+•	Reparación de evaporador 
+•	Limpieza del evaporador 
+•	Lavado químico 
+Cañerías
+•	Cambio de filtro secador 
+•	Cambio de capilar 
+•	Cambio de válvula Schrader 
+•	Cambio de caño de proceso 
+•	Cambio de cañerías 
+•	Recuperación de refrigerante 
+•	Carga de refrigerante 
+•	Vacío del sistema 
+•	Barrido con nitrógeno 
+•	Limpieza interna del circuito 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura de cobre 
+•	Soldadura aluminio-cobre 
+•	Destape de capilar 
+•	Destape de línea de líquido 
+•	Destape de retorno 
+2. VENTILACIÓN
+•	Cambio motor ventilador evaporador 
+•	Cambio motor ventilador condensador 
+•	Cambio hélice 
+•	Reparación ventilador 
+•	Lubricación 
+•	Balanceo de hélice 
+•	Limpieza de ventiladores 
+3. SISTEMA ELÉCTRICO
+•	Cambio cable de alimentación 
+•	Cambio ficha 
+•	Cambio bornera 
+•	Cambio llave general 
+•	Cambio interruptor 
+•	Cambio relé 
+•	Cambio protector térmico 
+•	Cambio capacitor 
+•	Cambio contactor 
+•	Cambio fusibles 
+•	Cambio térmica 
+•	Reparación del cableado 
+•	Reparación de falso contacto 
+•	Reparación de cortocircuito 
+4. CONTROL DE TEMPERATURA
+•	Cambio termostato mecánico 
+•	Calibración del termostato 
+•	Cambio controlador digital 
+•	Cambio display 
+•	Cambio teclado 
+•	Programación del controlador 
+•	Cambio sensor ambiente 
+•	Cambio sensor evaporador 
+•	Calibración de sensores 
+5. ELECTRÓNICA
+•	Cambio placa electrónica 
+•	Reparación placa electrónica 
+•	Cambio fuente de alimentación 
+•	Cambio módulo inverter 
+•	Cambio placa inverter 
+•	Actualización de parámetros 
+6. DESHIELO
+•	Cambio resistencia 
+•	Cambio bimetal 
+•	Cambio fusible térmico 
+•	Cambio temporizador 
+•	Cambio sensor de deshielo 
+•	Reparación sistema de deshielo 
+•	Programación de ciclos 
+7. DRENAJE
+•	Destape de drenaje 
+•	Cambio manguera 
+•	Cambio bandeja de condensados 
+•	Reparación pérdidas de agua 
+•	Limpieza de drenajes 
+8. PUERTAS Y ESTRUCTURA
+•	Cambio burletes 
+•	Pegado de burletes 
+•	Cambio bisagras 
+•	Cambio manijas 
+•	Cambio cerraduras 
+•	Cambio vidrio 
+•	Cambio estantes 
+•	Cambio ruedas 
+•	Cambio patas regulables 
+•	Reparación estructura 
+•	Cambio paneles 
+•	Regulación de puertas 
+9. ILUMINACIÓN
+•	Cambio tubo LED 
+•	Cambio barra LED 
+•	Cambio fuente LED 
+•	Cambio interruptor 
+•	Reparación iluminación interna 
+10. LIMPIEZA Y MANTENIMIENTO
+•	Limpieza de condensador 
+•	Limpieza de evaporador 
+•	Limpieza interior 
+•	Sanitización 
+•	Limpieza de ventiladores 
+•	Control de temperaturas 
+•	Medición de presiones 
+•	Medición de consumo eléctrico 
+•	Medición de amperaje 
+•	Ajuste de conexiones eléctricas 
+•	Ajuste de tornillería 
+•	Informe técnico 
+
+REFRIGERACIÓN INDUSTRIAL
+1. UNIDAD CONDENSADORA
+Compresor
+•	Cambio de compresor 
+•	Reparación de compresor 
+•	Cambio de aceite 
+•	Cambio de filtro de aceite 
+•	Cambio de resistencia de cárter 
+•	Cambio de válvulas 
+•	Cambio de juntas 
+•	Cambio de retenes 
+•	Cambio de soportes 
+•	Alineación del compresor 
+Circuito frigorífico
+•	Cambio de filtro secador 
+•	Cambio de visor de líquido 
+•	Cambio de válvula Schrader 
+•	Cambio de válvula de expansión 
+•	Cambio de válvula solenoide 
+•	Cambio de presostato 
+•	Cambio de cañerías 
+•	Recuperación de refrigerante 
+•	Carga de refrigerante 
+•	Vacío del sistema 
+•	Barrido con nitrógeno 
+•	Limpieza del circuito 
+•	Búsqueda de fuga 
+•	Reparación de fuga 
+•	Soldadura de cobre 
+•	Soldadura cobre-acero 
+•	Cambio de separador de aceite 
+•	Cambio de recibidor de líquido 
+•	Cambio de acumulador de succión 
+Condensador
+•	Cambio de condensador 
+•	Limpieza del condensador 
+•	Lavado químico 
+•	Cambio de ventiladores 
+•	Cambio de motores 
+•	Cambio de hélices 
+•	Cambio de rejillas 
+•	Reparación de serpentinas 
+Eléctrico
+•	Cambio de contactor 
+•	Cambio de guardamotor 
+•	Cambio de relé 
+•	Cambio de térmica 
+•	Cambio de fusibles 
+•	Cambio de borneras 
+•	Cambio de capacitor 
+•	Reparación del cableado 
+•	Cambio de tablero eléctrico 
+Electrónica
+•	Cambio de controlador 
+•	Cambio de PLC 
+•	Cambio de placa electrónica 
+•	Cambio de display 
+•	Cambio de sensores 
+•	Reprogramación 
+•	Configuración de parámetros 
+2. EVAPORADOR
+Refrigeración
+•	Cambio de evaporador 
+•	Reparación de evaporador 
+•	Cambio de bandeja 
+•	Cambio de soportes 
+•	Cambio de cañerías 
+Deshielo
+•	Cambio de resistencia 
+•	Cambio de bimetal 
+•	Cambio de fusible térmico 
+•	Cambio de sensor 
+•	Cambio de temporizador 
+•	Reparación del sistema de deshielo 
+Ventilación
+•	Cambio de ventiladores 
+•	Cambio de motores 
+•	Cambio de hélices 
+•	Balanceo 
+•	Lubricación 
+Drenaje
+•	Destape de drenaje 
+•	Cambio de mangueras 
+•	Cambio de sifón 
+•	Reparación de pérdidas 
+Limpieza
+•	Limpieza del evaporador 
+•	Lavado químico 
+•	Sanitización 
+3. RACK DE COMPRESORES
+Compresores
+•	Cambio de compresor 
+•	Reparación de compresor 
+•	Cambio de aceite 
+•	Cambio de filtros 
+•	Sincronización de compresores 
+•	Balanceo de horas 
+•	Cambio de válvulas 
+Circuito frigorífico
+•	Cambio de colectores 
+•	Cambio de separador de aceite 
+•	Cambio de acumulador 
+•	Cambio de recibidor 
+•	Cambio de cañerías 
+•	Reparación de fugas 
+•	Soldadura 
+•	Cambio de válvulas solenoides 
+•	Cambio de válvulas de expansión 
+Automatización
+•	Cambio PLC 
+•	Programación PLC 
+•	Cambio módulos 
+•	Cambio sensores 
+•	Cambio transductores 
+•	Cambio presostatos 
+•	Configuración de alarmas 
+Eléctrico
+•	Cambio tablero 
+•	Cambio contactores 
+•	Cambio protecciones 
+•	Cambio guardamotores 
+•	Cambio cableado 
+•	Reparación eléctrica 
+4. CHILLER
+Compresor
+•	Cambio de compresor 
+•	Reparación del compresor 
+•	Cambio de aceite 
+•	Cambio de resistencia de cárter 
+Circuito frigorífico
+•	Cambio de filtro secador 
+•	Cambio de válvulas 
+•	Cambio de visor 
+•	Cambio de cañerías 
+•	Recuperación de refrigerante 
+•	Carga de refrigerante 
+•	Vacío 
+•	Barrido con nitrógeno 
+•	Búsqueda de fugas 
+•	Reparación de fugas 
+Intercambiadores
+•	Limpieza del evaporador 
+•	Limpieza del condensador 
+•	Desincrustación 
+•	Cambio de juntas 
+•	Cambio de placas 
+•	Reparación de intercambiadores 
+Bombas
+•	Cambio de bomba 
+•	Reparación de bomba 
+•	Cambio de sello mecánico 
+•	Cambio de rodamientos 
+•	Alineación bomba-motor 
+•	Cambio de acople 
+Sistema hidráulico
+•	Cambio de válvulas 
+•	Cambio de filtros 
+•	Cambio de cañerías 
+•	Reparación de pérdidas 
+•	Limpieza del circuito hidráulico 
+•	Cambio de vaso de expansión 
+Control
+•	Cambio de controlador 
+•	Cambio PLC 
+•	Cambio HMI 
+•	Cambio sensores 
+•	Calibración 
+•	Programación 
+•	Actualización de software 
+5. TORRE DE ENFRIAMIENTO
+Sistema de agua
+•	Limpieza de bandeja 
+•	Limpieza de pileta 
+•	Cambio de flotante 
+•	Cambio de válvula 
+•	Cambio de filtro 
+•	Cambio de cañerías 
+•	Reparación de pérdidas 
+Ventilación
+•	Cambio de ventilador 
+•	Cambio de motor 
+•	Cambio de transmisión 
+•	Cambio de poleas 
+•	Cambio de correas 
+•	Cambio de reductores 
+•	Balanceo 
+Relleno
+•	Cambio de relleno 
+•	Limpieza de relleno 
+•	Desincrustación 
+•	Lavado químico 
+Estructura
+•	Cambio de paneles 
+•	Reparación de fibra 
+•	Reparación metálica 
+•	Cambio de rejillas 
+•	Sellado 
+•	Pintura anticorrosiva 
+Control
+•	Cambio de sensores 
+•	Cambio PLC 
+•	Cambio tablero 
+•	Cambio contactores 
+•	Cambio variador de velocidad 
+•	Programación 

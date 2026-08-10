@@ -1,0 +1,6641 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Importador MDO</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        #status { margin-top: 20px; color: #333; font-weight: bold; }
+        .form-group { margin-bottom: 15px; }
+        input { padding: 8px; width: 100%; box-sizing: border-box; margin-top: 5px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #0076e5; color: white; border: none; border-radius: 5px; margin-top: 10px;}
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <h1>Importador de Mano de Obra (MDO) a Firestore</h1>
+    <p>Se van a importar <b>817</b> tareas a tu base de datos.</p>
+    
+    <div id="login-section">
+        <h3>Paso 1: Iniciar Sesión</h3>
+        <p>Por seguridad, necesitas iniciar sesión con tu cuenta de administrador de la app para poder guardar los datos.</p>
+        <div class="form-group">
+            <label>Usuario:</label>
+            <input type="text" id="username" placeholder="tu_usuario">
+        </div>
+        <div class="form-group">
+            <label>Contraseña:</label>
+            <input type="password" id="password" placeholder="********">
+        </div>
+        <button id="btnLogin">Iniciar Sesión</button>
+    </div>
+
+    <div id="import-section" style="display: none;">
+        <h3>Paso 2: Importar</h3>
+        <p>Sesión iniciada correctamente. Ya puedes comenzar.</p>
+        <button id="btnImportar">Comenzar Importación</button>
+    </div>
+
+    <div id="status">Esperando...</div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const data = [
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Limpieza del circuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Soldadura de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de ca\u00f1o de proceso",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Destape de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Destape de retorno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de aceite del compresor (cuando corresponda)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de rel\u00e9 PTC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de protector t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de cable de alimentaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de ficha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio de bornera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n del cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n de cortocircuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n de falso contacto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "No Inverter",
+    "tarea": "Cambio de termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "No Inverter",
+    "tarea": "Calibraci\u00f3n del termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Inverter",
+    "tarea": "Cambio de placa inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Inverter",
+    "tarea": "Cambio del m\u00f3dulo inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Inverter",
+    "tarea": "Reparaci\u00f3n del m\u00f3dulo inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Inverter",
+    "tarea": "Cambio del compresor inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de placa principal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Reparaci\u00f3n de placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de botonera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Reparaci\u00f3n del panel",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Reprogramaci\u00f3n electr\u00f3nica (si aplica)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio de resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio de fusible t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio de bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio de sensor NTC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio del ventilador del freezer",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Cambio del ventilador del refrigerador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Reparaci\u00f3n del sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Limpieza de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sistema No Frost",
+    "tarea": "Descongelamiento completo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sensores",
+    "tarea": "Cambio sensor freezer",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sensores",
+    "tarea": "Cambio sensor refrigerador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sensores",
+    "tarea": "Cambio sensor ambiente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Sensores",
+    "tarea": "Cambio sensor evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio motor ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio h\u00e9lice",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Reparaci\u00f3n ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Lubricaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Cambio v\u00e1lvula de agua",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Cambio mangueras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Cambio filtro de agua",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Reparaci\u00f3n dispensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Reparaci\u00f3n f\u00e1brica de hielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Agua",
+    "tarea": "Cambio motor ice maker",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Cambio burlete",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Pegado burlete",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Regulaci\u00f3n de puertas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Cambio bisagras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Cambio manija",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Cambio cierre autom\u00e1tico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Puertas",
+    "tarea": "Reparaci\u00f3n puerta",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio luz LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio portal\u00e1mparas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio interruptor puerta",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio estantes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio cajones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio tapa evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza completa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Sanitizaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Lavado t\u00e9cnico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio unidad condensadora",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio filtro",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Vac\u00edo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Soldadura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Destape de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio motor ventilador evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio motor ventilador condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio h\u00e9lices",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio controlador digital",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio protector",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio llave",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio controlador Dixell",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio Full Gauge",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio Elitech",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Programaci\u00f3n controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio sensor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Reparaci\u00f3n sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio burletes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio bisagras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio vidrio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio cerradura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio ruedas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio patas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza completa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Mantenimiento preventivo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Control de consumo el\u00e9ctrico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Medici\u00f3n de presiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Medici\u00f3n de temperatura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Verificaci\u00f3n de funcionamiento",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Diagn\u00f3stico en taller",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Diagn\u00f3stico a domicilio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Instalaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Reinstalaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Desinstalaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Traslado del equipo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Cambio de ubicaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Informe t\u00e9cnico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Certificado de funcionamiento",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Presupuesto sin reparaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Revisi\u00f3n preventiva",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Heladeras Comerciales",
+    "sistema": "3. Reparaciones Generales",
+    "tarea": "Visita t\u00e9cnica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Soldadura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Destape de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio rel\u00e9 PTC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio protector t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio cable alimentaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Cambio ficha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sistema El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Inverter",
+    "tarea": "Cambio termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Inverter",
+    "tarea": "Calibraci\u00f3n termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Inverter",
+    "tarea": "Cambio placa inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Inverter",
+    "tarea": "Reparaci\u00f3n m\u00f3dulo inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Inverter",
+    "tarea": "Cambio compresor inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio placa principal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio botonera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Reparaci\u00f3n electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Cambio resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Cambio fusible t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Cambio bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Cambio sensor NTC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Cambio ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Reparaci\u00f3n sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "No Frost",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sensores",
+    "tarea": "Sensor ambiente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sensores",
+    "tarea": "Sensor evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Sensores",
+    "tarea": "Sensor congelador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Cambio burlete",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Pegado burlete",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Cambio bisagras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Cambio manija",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Regulaci\u00f3n tapa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Puertas Y Tapas",
+    "tarea": "Reparaci\u00f3n tapa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio canastos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio divisores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio luz LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Interior",
+    "tarea": "Cambio interruptor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza completa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Familiares",
+    "sistema": "Limpieza",
+    "tarea": "Sanitizaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio unidad condensadora",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio filtro",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Vac\u00edo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Soldadura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio motor ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio h\u00e9lice",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Reparaci\u00f3n ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio controlador digital",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio protector",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio controlador Dixell",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio Full Gauge",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio Elitech",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Programaci\u00f3n controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio sensor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Cambio bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Deshielo",
+    "tarea": "Reparaci\u00f3n sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio burlete",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio tapa de vidrio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio cerradura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio ruedas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Estructura",
+    "tarea": "Cambio patas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Limpieza completa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Medici\u00f3n de presiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Medici\u00f3n de temperatura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Control de consumo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Freezers Comerciales",
+    "sistema": "Mantenimiento",
+    "tarea": "Mantenimiento preventivo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Reparaci\u00f3n de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de resistencia de c\u00e1rter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de soportes antivibratorios",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de v\u00e1lvulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de juntas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Compresor",
+    "tarea": "Cambio de terminales el\u00e9ctricos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula de expansi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula de 4 v\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula solenoide",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de presostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Limpieza del circuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Soldadura de cobre",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Soldadura cobre-aluminio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de separador de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de acumulador de succi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Condensador",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Condensador",
+    "tarea": "Reparaci\u00f3n del condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Condensador",
+    "tarea": "Limpieza de serpentinas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Condensador",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Condensador",
+    "tarea": "Enderezado de aletas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de motor ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de h\u00e9lice",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de rulemanes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Balanceo del ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Lubricaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Exterior (Condensadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de rejillas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Evaporador",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Evaporador",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Evaporador",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Evaporador",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Evaporador",
+    "tarea": "Desinfecci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de turbina",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de motor turbina",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Balanceo de turbina",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Lubricaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Drenaje",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Drenaje",
+    "tarea": "Cambio de manguera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Drenaje",
+    "tarea": "Cambio de bandeja de condensados",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Drenaje",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas de agua",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Drenaje",
+    "tarea": "Instalaci\u00f3n de bomba de desag\u00fce",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Filtros",
+    "tarea": "Limpieza de filtros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Filtros",
+    "tarea": "Cambio de filtros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Interior (Evaporadora)",
+    "sistema": "Filtros",
+    "tarea": "Instalaci\u00f3n de filtros nuevos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de capacitor de marcha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de capacitor permanente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de protector t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de fusibles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de t\u00e9rmica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de borneras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de alimentaci\u00f3n el\u00e9ctrica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de falso contacto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de cortocircuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Cambio de placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Reparaci\u00f3n de placa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Cambio de display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Cambio de receptor infrarrojo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Cambio de control remoto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos On/Off",
+    "tarea": "Configuraci\u00f3n electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Cambio de placa inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Reparaci\u00f3n de placa inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Cambio de m\u00f3dulo IPM",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Cambio de puente rectificador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Cambio de fuente switching",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Cambio de reactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Reprogramaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "Equipos Inverter",
+    "tarea": "Actualizaci\u00f3n de software",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor ambiente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor descarga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor succi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Calibraci\u00f3n de sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "V\u00e1lvulas",
+    "sistema": "General",
+    "tarea": "Cambio v\u00e1lvula de servicio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "V\u00e1lvulas",
+    "sistema": "General",
+    "tarea": "Cambio v\u00e1lvula de expansi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "V\u00e1lvulas",
+    "sistema": "General",
+    "tarea": "Cambio v\u00e1lvula de 4 v\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "V\u00e1lvulas",
+    "sistema": "General",
+    "tarea": "Cambio v\u00e1lvula solenoide",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "V\u00e1lvulas",
+    "sistema": "General",
+    "tarea": "Cambio v\u00e1lvula de retenci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de equipo nuevo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Desinstalaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Reinstalaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de ubicaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de m\u00e9nsulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de bomba de condensado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n el\u00e9ctrica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de cable de interconexi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Puesta en marcha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Aislaci\u00f3n de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Cambio de aislaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Soldadura de cobre",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Soldadura cobre-aluminio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Cambio de tuercas flare",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Confecci\u00f3n de flare",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ca\u00f1er\u00edas",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Limpieza completa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Limpieza profunda",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Lavado de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Lavado de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Limpieza de turbina",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Sanitizaci\u00f3n antibacteriana",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Desinfecci\u00f3n con vapor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza",
+    "sistema": "General",
+    "tarea": "Limpieza de drenajes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Mantenimiento b\u00e1sico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Mantenimiento preventivo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Mantenimiento correctivo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Revisi\u00f3n general",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de presiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de temperatura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de consumo el\u00e9ctrico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de amperaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de voltaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de superheat",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de subcooling",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Ajuste de conexiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Ajuste de torniller\u00eda",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Verificaci\u00f3n de rendimiento",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de compresor inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de m\u00f3dulo inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de placa principal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de placas de unidades interiores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvulas electr\u00f3nicas (EEV)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de cajas BC (Branch Controller)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Cambio de transductores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Direccionamiento de unidades",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Configuraci\u00f3n de red",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Diagn\u00f3stico de comunicaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Vrf / Vrv",
+    "sistema": "General",
+    "tarea": "Actualizaci\u00f3n de firmware",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Cambio de motor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Cambio de turbina",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Cambio de serpent\u00edn",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvula de agua",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Cambio de actuador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Limpieza de serpent\u00edn",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Limpieza de bandeja",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Fan Coil",
+    "sistema": "General",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de correas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de poleas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de filtros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de economizador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de resistencias",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de intercambiadores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Cambio de quemador (si calefacciona a gas)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Roof Top",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n de controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de unidad condensadora",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de visor de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvula de servicio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de ca\u00f1o de proceso",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvula de expansi\u00f3n (TXV)",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de v\u00e1lvula solenoide",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de separador de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de acumulador de succi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de recibidor de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de presostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Limpieza interna del circuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Destape de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Destape de l\u00ednea de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Destape de l\u00ednea de succi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Soldadura de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "General",
+    "tarea": "Reemplazo de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de resistencia de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de bandeja de desag\u00fce",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de h\u00e9lices",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Cambio de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "General",
+    "tarea": "Desinfecci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Cambio de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Cambio de h\u00e9lices",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Cambio de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Limpieza de serpentinas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Condensador",
+    "sistema": "General",
+    "tarea": "Enderezado de aletas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de protector t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de interruptor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de llave general",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de t\u00e9rmica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de disyuntor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de fusibles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de borneras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio de cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de cortocircuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de falso contacto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de controlador Dixell",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de controlador Full Gauge",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de controlador Elitech",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de placa",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n del controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Configuraci\u00f3n de par\u00e1metros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Actualizaci\u00f3n del controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema Electr\u00f3nico",
+    "sistema": "General",
+    "tarea": "Cambio de teclado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor ambiente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Cambio sensor de producto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sensores",
+    "sistema": "General",
+    "tarea": "Calibraci\u00f3n de sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio fusible t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio temporizador de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio sensor de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n de ciclos de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Cambio de manguera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Cambio de sif\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Cambio de bandeja",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de burletes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Pegado de burletes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de bisagras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de manijas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de cerradura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de visor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Regulaci\u00f3n de puertas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del cierre autom\u00e1tico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de cortinas de PVC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas",
+    "sistema": "General",
+    "tarea": "Cambio de resistencia antihielo del marco",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de paneles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Cambio de panel aislante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del piso",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del techo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Sellado de juntas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Cambio de perfiles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Cambio de remaches",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Estructura",
+    "sistema": "General",
+    "tarea": "Cambio de torniller\u00eda",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de luminaria LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de interruptor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de fuente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio de cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de iluminaci\u00f3n nueva",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Limpieza del condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Limpieza de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Limpieza de drenajes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Control de presiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Control de temperaturas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de consumo el\u00e9ctrico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de amperaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Ajuste de conexiones el\u00e9ctricas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Ajuste de torniller\u00eda",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Revisi\u00f3n general",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Mantenimiento Preventivo",
+    "sistema": "General",
+    "tarea": "Informe t\u00e9cnico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de unidad condensadora",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n el\u00e9ctrica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Instalaci\u00f3n de drenajes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Puesta en marcha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Balance de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Instalaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Pruebas de funcionamiento",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Compresor",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Compresor",
+    "tarea": "Cambio de aceite del compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Compresor",
+    "tarea": "Reparaci\u00f3n de conexiones del compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Compresor",
+    "tarea": "Cambio de soportes del compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Condensador",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Condensador",
+    "tarea": "Limpieza de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Condensador",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Condensador",
+    "tarea": "Reparaci\u00f3n de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Condensador",
+    "tarea": "Enderezado de aletas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Evaporador",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Evaporador",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Evaporador",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Evaporador",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Cambio de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Cambio de v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Cambio de ca\u00f1o de proceso",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Limpieza interna del circuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Soldadura de cobre",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Soldadura aluminio-cobre",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Destape de capilar",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Destape de l\u00ednea de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema De Refrigeraci\u00f3n",
+    "sistema": "Ca\u00f1er\u00edas",
+    "tarea": "Destape de retorno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio motor ventilador evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio motor ventilador condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio h\u00e9lice",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Lubricaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Balanceo de h\u00e9lice",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Ventilaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Limpieza de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio cable de alimentaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio ficha",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio bornera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio llave general",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio interruptor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio protector t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio fusibles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Cambio t\u00e9rmica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n del cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de falso contacto",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Sistema El\u00e9ctrico",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n de cortocircuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio termostato mec\u00e1nico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Calibraci\u00f3n del termostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio controlador digital",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio teclado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n del controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio sensor ambiente",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Cambio sensor evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Control De Temperatura",
+    "sistema": "General",
+    "tarea": "Calibraci\u00f3n de sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Cambio placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Cambio fuente de alimentaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Cambio m\u00f3dulo inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Cambio placa inverter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Electr\u00f3nica",
+    "sistema": "General",
+    "tarea": "Actualizaci\u00f3n de par\u00e1metros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio fusible t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio temporizador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Cambio sensor de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Deshielo",
+    "sistema": "General",
+    "tarea": "Programaci\u00f3n de ciclos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Cambio manguera",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Cambio bandeja de condensados",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n p\u00e9rdidas de agua",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Drenaje",
+    "sistema": "General",
+    "tarea": "Limpieza de drenajes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio burletes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Pegado de burletes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio bisagras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio manijas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio cerraduras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio vidrio",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio estantes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio ruedas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio patas regulables",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n estructura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Cambio paneles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Puertas Y Estructura",
+    "sistema": "General",
+    "tarea": "Regulaci\u00f3n de puertas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio tubo LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio barra LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio fuente LED",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Cambio interruptor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Iluminaci\u00f3n",
+    "sistema": "General",
+    "tarea": "Reparaci\u00f3n iluminaci\u00f3n interna",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Limpieza de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Limpieza de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Limpieza interior",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Sanitizaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Limpieza de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Control de temperaturas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de presiones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de consumo el\u00e9ctrico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Medici\u00f3n de amperaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Ajuste de conexiones el\u00e9ctricas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Ajuste de torniller\u00eda",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Limpieza Y Mantenimiento",
+    "sistema": "General",
+    "tarea": "Informe t\u00e9cnico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Reparaci\u00f3n de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de filtro de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de resistencia de c\u00e1rter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de v\u00e1lvulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de juntas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de retenes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Cambio de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Compresor",
+    "tarea": "Alineaci\u00f3n del compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de visor de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula Schrader",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula de expansi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvula solenoide",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de presostato",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Vac\u00edo del sistema",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Limpieza del circuito",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "B\u00fasqueda de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Reparaci\u00f3n de fuga",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Soldadura de cobre",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Soldadura cobre-acero",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de separador de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de recibidor de l\u00edquido",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de acumulador de succi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Cambio de condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Limpieza del condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Cambio de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Cambio de motores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Cambio de h\u00e9lices",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Cambio de rejillas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Condensador",
+    "tarea": "Reparaci\u00f3n de serpentinas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de contactor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de guardamotor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de rel\u00e9",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de t\u00e9rmica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de fusibles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de borneras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de capacitor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n del cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio de tablero el\u00e9ctrico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de PLC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de placa electr\u00f3nica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de display",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Cambio de sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Reprogramaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Unidad Condensadora",
+    "sistema": "Electr\u00f3nica",
+    "tarea": "Configuraci\u00f3n de par\u00e1metros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Reparaci\u00f3n de evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de bandeja",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de soportes",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Refrigeraci\u00f3n",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Cambio de resistencia",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Cambio de bimetal",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Cambio de fusible t\u00e9rmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Cambio de sensor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Cambio de temporizador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Deshielo",
+    "tarea": "Reparaci\u00f3n del sistema de deshielo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de ventiladores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de motores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de h\u00e9lices",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Balanceo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Lubricaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Drenaje",
+    "tarea": "Destape de drenaje",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Drenaje",
+    "tarea": "Cambio de mangueras",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Drenaje",
+    "tarea": "Cambio de sif\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Drenaje",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Limpieza",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Limpieza",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Evaporador",
+    "sistema": "Limpieza",
+    "tarea": "Sanitizaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Reparaci\u00f3n de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Cambio de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Cambio de filtros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Sincronizaci\u00f3n de compresores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Balanceo de horas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Compresores",
+    "tarea": "Cambio de v\u00e1lvulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de colectores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de separador de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de acumulador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de recibidor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Reparaci\u00f3n de fugas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Soldadura",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvulas solenoides",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvulas de expansi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Cambio PLC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Programaci\u00f3n PLC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Cambio m\u00f3dulos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Cambio sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Cambio transductores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Cambio presostatos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "Automatizaci\u00f3n",
+    "tarea": "Configuraci\u00f3n de alarmas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio tablero",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio contactores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio protecciones",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio guardamotores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Cambio cableado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Rack De Compresores",
+    "sistema": "El\u00e9ctrico",
+    "tarea": "Reparaci\u00f3n el\u00e9ctrica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Compresor",
+    "tarea": "Cambio de compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Compresor",
+    "tarea": "Reparaci\u00f3n del compresor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Compresor",
+    "tarea": "Cambio de aceite",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Compresor",
+    "tarea": "Cambio de resistencia de c\u00e1rter",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de filtro secador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de v\u00e1lvulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de visor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Recuperaci\u00f3n de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Carga de refrigerante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Vac\u00edo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Barrido con nitr\u00f3geno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "B\u00fasqueda de fugas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Circuito Frigor\u00edfico",
+    "tarea": "Reparaci\u00f3n de fugas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Limpieza del evaporador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Limpieza del condensador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Desincrustaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Cambio de juntas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Cambio de placas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Intercambiadores",
+    "tarea": "Reparaci\u00f3n de intercambiadores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Cambio de bomba",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Reparaci\u00f3n de bomba",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Cambio de sello mec\u00e1nico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Cambio de rodamientos",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Alineaci\u00f3n bomba-motor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Bombas",
+    "tarea": "Cambio de acople",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Cambio de v\u00e1lvulas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Cambio de filtros",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Limpieza del circuito hidr\u00e1ulico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Sistema Hidr\u00e1ulico",
+    "tarea": "Cambio de vaso de expansi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Cambio de controlador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Cambio PLC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Cambio HMI",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Cambio sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Calibraci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Programaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Chiller",
+    "sistema": "Control",
+    "tarea": "Actualizaci\u00f3n de software",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Limpieza de bandeja",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Limpieza de pileta",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Cambio de flotante",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Cambio de v\u00e1lvula",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Cambio de filtro",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Cambio de ca\u00f1er\u00edas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Sistema De Agua",
+    "tarea": "Reparaci\u00f3n de p\u00e9rdidas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de ventilador",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de motor",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de transmisi\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de poleas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de correas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Cambio de reductores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Ventilaci\u00f3n",
+    "tarea": "Balanceo",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Relleno",
+    "tarea": "Cambio de relleno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Relleno",
+    "tarea": "Limpieza de relleno",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Relleno",
+    "tarea": "Desincrustaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Relleno",
+    "tarea": "Lavado qu\u00edmico",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Cambio de paneles",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Reparaci\u00f3n de fibra",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Reparaci\u00f3n met\u00e1lica",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Cambio de rejillas",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Sellado",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Estructura",
+    "tarea": "Pintura anticorrosiva",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Cambio de sensores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Cambio PLC",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Cambio tablero",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Cambio contactores",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Cambio variador de velocidad",
+    "precio_sugerido": 0,
+    "activo": true
+  },
+  {
+    "rubro": "Refrigeraci\u00f3n",
+    "equipo": "Torre De Enfriamiento",
+    "sistema": "Control",
+    "tarea": "Programaci\u00f3n",
+    "precio_sugerido": 0,
+    "activo": true
+  }
+];
+        const statusEl = document.getElementById('status');
+
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            let user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value;
+            if(!user || !pass) return alert('Completa los datos');
+            
+            const email = user.includes('@') ? user : `${user}@electrofrio.com`;
+            
+            statusEl.innerHTML = 'Iniciando sesión...';
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                statusEl.innerHTML = '✅ Sesión iniciada.';
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('import-section').style.display = 'block';
+            } catch(e) {
+                console.error(e);
+                statusEl.innerHTML = '❌ Error al iniciar sesión: ' + e.message;
+            }
+        });
+
+        document.getElementById('btnImportar').addEventListener('click', async () => {
+            document.getElementById('btnImportar').disabled = true;
+            statusEl.innerHTML = '⏳ Importando... No cierres esta ventana.';
+            
+            let count = 0;
+            
+            // Chunked writes to avoid blocking or memory issues
+            for (let i = 0; i < data.length; i++) {
+                try {
+                    await db.collection('mano_de_obra').add(data[i]);
+                    count++;
+                    if(count % 10 === 0) {
+                        statusEl.innerHTML = `⏳ Importando... $817 / ${data.length}`;
+                    }
+                } catch(e) {
+                    console.error("Error on item " + i, e);
+                    statusEl.innerHTML = `❌ Error en el ítem ${i}: ` + e.message;
+                    return;
+                }
+            }
+            statusEl.innerHTML = `✅ ¡Importación completada! Se subieron $817 tareas exitosamente.`;
+        });
+    </script>
+</body>
+</html>
