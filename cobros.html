@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobros y Cuentas Corrientes - ElectroFrío</title>
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cobros ElectroFrío">
+    <link rel="shortcut icon" href="icon.png?v=3" type="image/png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            /* Tema Oscuro ElectroFrío */
+            --bg-main: #090f1d;
+            --bg-sidebar: #060b14;
+            --bg-card: #131e33;
+            --bg-card-hover: #182742;
+            --bg-input: #0a1322;
+            --border-color: #1e3352;
+            --border-focus: #00bfff;
+
+            --text-primary: #ffffff;
+            --text-secondary: #93c5fd;
+            --text-muted: #64748b;
+            --text-subtle: #475569;
+
+            --color-blue: #00bfff;
+            --color-blue-hover: #0099cc;
+            --color-green: #10b981;
+            --color-green-hover: #059669;
+            --color-whatsapp: #25D366;
+            --color-whatsapp-hover: #1ebd5a;
+            --color-yellow: #f59e0b;
+            --color-red: #ef4444;
+            --color-red-bg: rgba(239, 68, 68, 0.15);
+            --color-purple: #8b5cf6;
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.45);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-mode {
+            --bg-main: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f8fafc;
+            --border-color: #cbd5e1;
+            --border-focus: #0084ff;
+            --text-primary: #0f172a;
+            --text-secondary: #0284c7;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .header-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            object-fit: contain;
+        }
+
+        .header-brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-brand-text h1 span.badge-cobros {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-blue);
+            color: #0b1320;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background-color: var(--color-green);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: var(--color-green-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background-color: var(--color-red);
+            color: #ffffff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-whatsapp {
+            background-color: var(--color-whatsapp);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp:hover:not(:disabled) {
+            background-color: var(--color-whatsapp-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: var(--color-blue);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-icon {
+            padding: 7px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Layout Container */
+        .main-container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* KPI / Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-card:hover {
+            border-color: rgba(0, 191, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-info h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .metric-info .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .metric-info .metric-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .metric-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-card.red .metric-icon { background: rgba(239, 68, 68, 0.15); color: var(--color-red); border-color: rgba(239, 68, 68, 0.3); }
+        .metric-card.green .metric-icon { background: rgba(16, 185, 129, 0.15); color: var(--color-green); border-color: rgba(16, 185, 129, 0.3); }
+        .metric-card.blue .metric-icon { background: rgba(0, 191, 255, 0.15); color: var(--color-blue); border-color: rgba(0, 191, 255, 0.3); }
+        .metric-card.yellow .metric-icon { background: rgba(245, 158, 11, 0.15); color: var(--color-yellow); border-color: rgba(245, 158, 11, 0.3); }
+
+        /* Top Debtors Quick Panel */
+        .debtors-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .debtors-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .debtors-panel-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debtors-cards-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .debtor-chip-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--color-red);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            min-width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .debtor-chip-card:hover {
+            border-color: var(--color-red);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .debtor-chip-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .debtor-chip-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .debtor-chip-amount {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #f87171;
+        }
+
+        .debtor-chip-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2px;
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-group-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            min-width: 240px;
+            flex: 1;
+        }
+
+        .search-box-wrapper input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-box-wrapper input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        .search-box-wrapper svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            min-width: 150px;
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            border-color: var(--border-focus);
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: calc(100vh - 420px);
+        }
+
+        table.custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.82rem;
+            min-width: 1100px;
+        }
+
+        table.custom-table thead th {
+            background-color: rgba(6, 11, 20, 0.95);
+            color: var(--text-secondary);
+            padding: 12px 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        table.custom-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background-color 0.15s ease;
+        }
+
+        table.custom-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        table.custom-table td {
+            padding: 10px 14px;
+            vertical-align: middle;
+        }
+
+        /* Balance Badges */
+        .balance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.2px;
+        }
+
+        .balance-debe {
+            background: rgba(239, 68, 68, 0.18);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .balance-aldia {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .balance-afavor {
+            background: rgba(0, 191, 255, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(0, 191, 255, 0.3);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-card.modal-lg {
+            max-width: 850px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        /* Ledger / Statement in Modal */
+        .statement-header-box {
+            background: rgba(0, 191, 255, 0.05);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .statement-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .statement-table th {
+            background: var(--bg-input);
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-align: left;
+        }
+
+        .statement-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-cargo { color: #f87171; font-weight: 700; font-family: 'Outfit', sans-serif; }
+        .text-abono { color: #34d399; font-weight: 700; font-family: 'Outfit', sans-serif; }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.success { border-left: 4px solid var(--color-green); }
+        .toast.error { border-left: 4px solid var(--color-red); }
+        .toast.info { border-left: 4px solid var(--color-blue); }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="main-container" style="padding: 12px 16px 40px; gap: 16px;">
+
+        <!-- KPI / Dashboard Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card red">
+                <div class="metric-info">
+                    <h3>Total Deuda en la Calle</h3>
+                    <div class="metric-value" id="kpi-total-deuda">$ 0</div>
+                    <div class="metric-sub" id="kpi-total-deuda-sub">Calculando saldo pendiente...</div>
+                </div>
+                <div class="metric-icon">📉</div>
+            </div>
+
+            <div class="metric-card yellow">
+                <div class="metric-info">
+                    <h3>Personas que Deben Plata</h3>
+                    <div class="metric-value" id="kpi-cant-deudores">0</div>
+                    <div class="metric-sub" id="kpi-cant-deudores-sub">Clientes con saldo deudor</div>
+                </div>
+                <div class="metric-icon">⚠️</div>
+            </div>
+
+            <div class="metric-card green">
+                <div class="metric-info">
+                    <h3>Total Cobrado (Pagos)</h3>
+                    <div class="metric-value" id="kpi-total-cobrado">$ 0</div>
+                    <div class="metric-sub" id="kpi-total-cobrado-sub">Ingresos registrados</div>
+                </div>
+                <div class="metric-icon">💵</div>
+            </div>
+
+            <div class="metric-card blue">
+                <div class="metric-info">
+                    <h3>Clientes al Día / Sin Deuda</h3>
+                    <div class="metric-value" id="kpi-clientes-aldia">0</div>
+                    <div class="metric-sub" id="kpi-clientes-aldia-sub">Cuentas saldadas</div>
+                </div>
+                <div class="metric-icon">✅</div>
+            </div>
+        </div>
+
+        <!-- Ranking / Panel de Top Deudores -->
+        <div class="debtors-panel" id="top-debtors-panel">
+            <div class="debtors-panel-header">
+                <h2>
+                    <span>🚨 Cuadro de Deudores Principales</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Personas con mayor saldo a cobrar)</span>
+                </h2>
+                <span id="debtors-count-badge" style="font-size: 0.78rem; font-weight: 700; color: #f87171;">0 deudores</span>
+            </div>
+            <div class="debtors-cards-scroll" id="debtors-cards-container">
+                <div style="font-size: 0.8rem; color: var(--text-muted); padding: 10px;">Cargando lista de saldos...</div>
+            </div>
+        </div>
+
+        <!-- Filter & Control Bar con Botones de Acción -->
+        <div class="filter-panel">
+            <div class="filter-group-left">
+                <!-- Buscador -->
+                <div class="search-box-wrapper">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="filter-search" placeholder="Buscar por cliente, teléfono, código, CUIT..." oninput="applyFilters()">
+                </div>
+
+                <!-- Filtro Estado Saldo -->
+                <select id="filter-status" class="filter-select" onchange="applyFilters()">
+                    <option value="all">Todos los Estados</option>
+                    <option value="deudores" selected>🔴 Solo Deudores (Deben Plata)</option>
+                    <option value="aldia">🟢 Al Día ($ 0)</option>
+                    <option value="afavor">🔵 Con Saldo a Favor</option>
+                </select>
+
+                <!-- Ordenamiento -->
+                <select id="filter-order" class="filter-select" onchange="applyFilters()">
+                    <option value="mayor_deuda">Ordenar: Mayor Deuda</option>
+                    <option value="menor_deuda">Ordenar: Menor Deuda</option>
+                    <option value="nombre_asc">Nombre: A - Z</option>
+                    <option value="nombre_desc">Nombre: Z - A</option>
+                </select>
+
+                <!-- Botón Limpiar -->
+                <button class="btn btn-secondary btn-sm" onclick="clearFilters()" title="Restablecer filtros">
+                    <span>✕ Limpiar</span>
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <!-- Botón + Nuevo Cargo (Deuda) -->
+                <button class="btn btn-danger btn-sm" onclick="openMovementModal('cargo')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>+ Cargar Deuda</span>
+                </button>
+
+                <!-- Botón + Registrar Cobro (Pago) -->
+                <button class="btn btn-success btn-sm" onclick="openMovementModal('abono')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span>+ Registrar Cobro</span>
+                </button>
+
+                <button class="btn btn-secondary btn-sm" onclick="exportCobrosToExcel()" title="Descargar reporte en Excel">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Excel</span>
+                </button>
+                <div id="results-count-label" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
+                    0 clientes
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla Central de Clientes con Cobros -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 85px;">Código</th>
+                            <th style="width: 230px;">Cliente / Razón Social</th>
+                            <th style="width: 150px;">Teléfono & WhatsApp</th>
+                            <th style="width: 140px; text-align: right;">Total Cargos ($)</th>
+                            <th style="width: 140px; text-align: right;">Total Pagado ($)</th>
+                            <th style="width: 160px; text-align: center;">Saldo Actual</th>
+                            <th style="width: 130px; text-align: center;">Últ. Movimiento</th>
+                            <th style="text-align: center; width: 250px;">Acciones de Cobro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cobros-table-body">
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <p>Cargando información de clientes y cuentas corrientes...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =================== MODAL: NUEVO MOVIMIENTO (CARGO O ABONO) =================== -->
+    <div class="modal-overlay" id="modal-movement">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-movement-title">
+                    <span>Registrar Movimiento</span>
+                </h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-movement')">✕</button>
+            </div>
+            <form id="form-movement" onsubmit="saveMovementForm(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="mov-id">
+                    <input type="hidden" id="mov-type">
+
+                    <!-- Cliente -->
+                    <div class="form-group">
+                        <label>Cliente / Deudor *</label>
+                        <select id="mov-client-id" class="form-select" required onchange="onClientSelectChange()">
+                            <option value="">-- Selecciona un cliente --</option>
+                        </select>
+                    </div>
+
+                    <!-- Resumen del Saldo Actual del Cliente Seleccionado -->
+                    <div id="mov-client-info-box" style="display:none; background: var(--bg-input); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.8rem;">
+                        <span style="color: var(--text-muted);">Saldo actual de este cliente: </span>
+                        <strong id="mov-client-current-balance">$ 0</strong>
+                    </div>
+
+                    <!-- Monto y Fecha -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto en Pesos ($) *</label>
+                            <input type="number" step="0.01" min="0.01" id="mov-amount" class="form-input" placeholder="Ej: 45000" required style="font-size: 1.1rem; font-weight: 700; font-family: 'Outfit', sans-serif;">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Operación *</label>
+                            <input type="date" id="mov-date" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <!-- Concepto -->
+                    <div class="form-group">
+                        <label>Concepto / Detalle del Trabajo o Pago *</label>
+                        <input type="text" id="mov-concept" class="form-input" placeholder="Ej: Service Cámara Frigorífica / Pago Parcial Efectivo" required>
+                    </div>
+
+                    <!-- Método de Pago (Solo para Abonos / Cobros) -->
+                    <div class="form-row" id="mov-payment-method-row">
+                        <div class="form-group">
+                            <label>Forma de Cobro / Pago</label>
+                            <select id="mov-payment-method" class="form-select">
+                                <option value="Efectivo">💵 Efectivo</option>
+                                <option value="Transferencia">🏦 Transferencia Bancaria</option>
+                                <option value="Mercado Pago">📱 Mercado Pago</option>
+                                <option value="Cheque">🧾 Cheque</option>
+                                <option value="Tarjeta">💳 Tarjeta Débito / Crédito</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>N° Comprobante / Recibo / Factura</label>
+                            <input type="text" id="mov-receipt" class="form-input" placeholder="Ej: REC-0042 / Transf. #12893">
+                        </div>
+                    </div>
+
+                    <!-- Notas Adicionales -->
+                    <div class="form-group">
+                        <label>Observaciones / Notas</label>
+                        <textarea id="mov-notes" class="form-textarea" placeholder="Detalles de repuestos, banco de origen, acuerdos de pago, etc."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-movement')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-movement">
+                        💾 Guardar Movimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: ESTADO DE CUENTA / HISTORIAL =================== -->
+    <div class="modal-overlay" id="modal-statement">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3>
+                    <span>📜 Estado de Cuenta y Movimientos</span>
+                </h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-statement')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="statement-client-id">
+
+                <!-- Header Box with Balance -->
+                <div class="statement-header-box">
+                    <div>
+                        <h2 id="statement-client-name" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Nombre del Cliente</h2>
+                        <p id="statement-client-details" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">CLI-0000 | Tel: Sin teléfono</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Saldo Actual</div>
+                        <div id="statement-client-balance-badge" class="balance-badge balance-debe" style="font-size: 1.25rem;">$ 0.00</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <h4 style="font-size: 0.85rem; font-weight: 700;">Historial de Cargos y Pagos:</h4>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-danger btn-sm" onclick="openMovementForCurrentStatement('cargo')">+ Cargar Deuda</button>
+                        <button class="btn btn-success btn-sm" onclick="openMovementForCurrentStatement('abono')">+ Registrar Cobro</button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Movimientos del Cliente -->
+                <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); max-height: 350px; overflow-y: auto;">
+                    <table class="statement-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Fecha</th>
+                                <th style="width: 80px;">Tipo</th>
+                                <th>Concepto / Comprobante</th>
+                                <th style="width: 100px; text-align: right;">Cargo (Debe)</th>
+                                <th style="width: 100px; text-align: right;">Cobro (Haber)</th>
+                                <th style="width: 100px; text-align: right;">Saldo</th>
+                                <th style="width: 40px; text-align: center;">✕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statement-table-body">
+                            <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No hay movimientos registrados.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-statement')">Cerrar</button>
+                <button class="btn btn-whatsapp" onclick="openWhatsAppReminderFromStatement()">
+                    <span>💬 Enviar Estado por WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: RECORDATORIO DE PAGO POR WHATSAPP =================== -->
+    <div class="modal-overlay" id="modal-whatsapp-debt">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-whatsapp)" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>Enviar Recordatorio de Cobro por WhatsApp</span>
+                </h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-whatsapp-debt')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="wa-debt-client-id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="wa-debt-client-name" class="form-input" readonly style="opacity: 0.8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Número WhatsApp</label>
+                        <input type="text" id="wa-debt-client-phone" class="form-input" style="font-family: monospace;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Saldo Pendiente a Cobrar</label>
+                    <input type="text" id="wa-debt-amount-text" class="form-input" readonly style="font-weight: 700; color: #f87171; font-family: 'Outfit', sans-serif;">
+                </div>
+
+                <div class="form-group">
+                    <label>Texto del Mensaje de Recordatorio</label>
+                    <textarea id="wa-debt-message" class="form-textarea" style="min-height: 130px;"></textarea>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Puedes modificar los datos de cuenta o el mensaje antes de enviar.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-whatsapp-debt')">Cancelar</button>
+                <button class="btn btn-whatsapp" onclick="sendWhatsAppDebtMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>Abrir WhatsApp y Enviar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: INICIO DE SESIÓN / AUTENTICACIÓN =================== -->
+    <div class="modal-overlay" id="modal-auth">
+        <div class="modal-card" style="max-width: 420px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <img src="icon.png" alt="ElectroFrío" style="width: 32px; height: 32px; border-radius: 6px;" onerror="this.src='apple-touch-icon.png'">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">Ingreso a ElectroFrío</h3>
+                </div>
+            </div>
+            <form id="form-auth-login" onsubmit="handleAuthLogin(event)">
+                <div class="modal-body" style="text-align: left; gap: 14px;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+                        Inicia sesión con tu usuario o correo para acceder al módulo de Cobros y Cuentas Corrientes.
+                    </p>
+                    <div class="form-group">
+                        <label>Usuario o Correo</label>
+                        <input type="text" id="auth-user" class="form-input" placeholder="Ej: admin o tu_usuario" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="auth-pass" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <div id="auth-error-msg" style="color: var(--color-red); font-size: 0.78rem; text-align: center; display: none;"></div>
+                </div>
+                <div class="modal-footer" style="justify-content: center;">
+                    <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%;">
+                        <span>Iniciar Sesión</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contenedor Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- =================== LÓGICA JAVASCRIPT =================== -->
+    <script>
+        // --- 1. FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Estado local
+        let clientsList = [];
+        let movementsList = [];
+        let clientBalances = {}; // { [clientId]: { totalCargos, totalAbonos, balance, lastDate } }
+        let tableData = [];
+        let filteredData = [];
+
+        let unsubscribeClientes = null;
+        let unsubscribeMovimientos = null;
+
+        function formatEmail(input) {
+            if (input.includes('@')) return input;
+            return `${input}@electrofrio.com`;
+        }
+
+        // --- 2. INICIALIZACIÓN Y LISTENERS ---
+        function initCobrosModule() {
+            // Cargar de caché local para arranque instantáneo
+            const cachedClients = localStorage.getItem('electrofrio_clients');
+            const cachedMovs = localStorage.getItem('electrofrio_cobros_movs');
+            if (cachedClients) {
+                try { clientsList = JSON.parse(cachedClients); } catch(e) {}
+            }
+            if (cachedMovs) {
+                try { movementsList = JSON.parse(cachedMovs); } catch(e) {}
+            }
+
+            recomputeBalances();
+            populateClientDropdown();
+            applyFilters();
+
+            // Observador de estado de autenticación
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    hideAuthModal();
+                    syncFirestore();
+                } else {
+                    // Si no hay sesión activa en Firebase Auth, mostrar login
+                    showAuthModal();
+                }
+            });
+        }
+
+        function showAuthModal() {
+            const m = document.getElementById('modal-auth');
+            if (m) m.classList.add('show');
+        }
+
+        function hideAuthModal() {
+            const m = document.getElementById('modal-auth');
+            if (m) m.classList.remove('show');
+        }
+
+        async function handleAuthLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('auth-user').value.trim();
+            const passVal = document.getElementById('auth-pass').value;
+            const errorEl = document.getElementById('auth-error-msg');
+            const submitBtn = document.getElementById('btn-auth-submit');
+
+            if (!userVal || !passVal) return;
+
+            errorEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verificando...';
+
+            const email = formatEmail(userVal);
+            try {
+                await auth.signInWithEmailAndPassword(email, passVal);
+                hideAuthModal();
+                showToast("¡Sesión iniciada correctamente!", "success");
+            } catch (err) {
+                console.error("Error al autenticar:", err);
+                errorEl.textContent = "Usuario o contraseña incorrectos.";
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Iniciar Sesión';
+            }
+        }
+
+        function syncFirestore() {
+            if (!auth.currentUser) return;
+
+            if (unsubscribeClientes) unsubscribeClientes();
+            if (unsubscribeMovimientos) unsubscribeMovimientos();
+
+            // 1. Listener de Clientes
+            unsubscribeClientes = db.collection('clientes').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    list.push(data);
+                });
+                list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                clientsList = list;
+                localStorage.setItem('electrofrio_clients', JSON.stringify(clientsList));
+                populateClientDropdown();
+                recomputeBalances();
+                applyFilters();
+            }, err => {
+                console.error("Error al sincronizar clientes:", err);
+            });
+
+            // 2. Listener de Movimientos de Cobros
+            unsubscribeMovimientos = db.collection('cobros_movimientos').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    list.push(data);
+                });
+                // Ordenar por fecha descendente
+                list.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+                movementsList = list;
+                localStorage.setItem('electrofrio_cobros_movs', JSON.stringify(movementsList));
+                recomputeBalances();
+                applyFilters();
+            }, err => {
+                console.error("Error al sincronizar movimientos:", err);
+            });
+        }
+
+        // --- 3. CÁLCULO DE SALDOS Y KPIS ---
+        function recomputeBalances() {
+            clientBalances = {};
+
+            // Inicializar para todos los clientes
+            clientsList.forEach(c => {
+                clientBalances[c.id] = {
+                    totalCargos: 0,
+                    totalAbonos: 0,
+                    balance: 0,
+                    lastDate: null
+                };
+            });
+
+            // Sumar movimientos
+            movementsList.forEach(m => {
+                const cId = m.clientId;
+                if (!clientBalances[cId]) {
+                    clientBalances[cId] = { totalCargos: 0, totalAbonos: 0, balance: 0, lastDate: null };
+                }
+                const amt = parseFloat(m.amount) || 0;
+                if (m.type === 'cargo') {
+                    clientBalances[cId].totalCargos += amt;
+                } else if (m.type === 'abono') {
+                    clientBalances[cId].totalAbonos += amt;
+                }
+
+                if (m.date) {
+                    if (!clientBalances[cId].lastDate || new Date(m.date) > new Date(clientBalances[cId].lastDate)) {
+                        clientBalances[cId].lastDate = m.date;
+                    }
+                }
+            });
+
+            // Calcular saldo final
+            Object.keys(clientBalances).forEach(cId => {
+                const item = clientBalances[cId];
+                item.balance = item.totalCargos - item.totalAbonos;
+            });
+
+            // Construir tableData combinada
+            tableData = clientsList.map(c => {
+                const b = clientBalances[c.id] || { totalCargos: 0, totalAbonos: 0, balance: 0, lastDate: null };
+                return {
+                    id: c.id,
+                    clientCode: c.clientCode || (c.id.startsWith('CLI-') ? c.id : 'CLI-0000'),
+                    name: c.name || 'Sin Nombre',
+                    phone: c.phone || '',
+                    cuit: c.cuit || '',
+                    address: c.address || '',
+                    totalCargos: b.totalCargos,
+                    totalAbonos: b.totalAbonos,
+                    balance: b.balance,
+                    lastDate: b.lastDate
+                };
+            });
+
+            updateKPIs();
+            renderTopDebtors();
+        }
+
+        function updateKPIs() {
+            let totalDeuda = 0;
+            let cantDeudores = 0;
+            let totalCobrado = 0;
+            let clientesAlDia = 0;
+
+            tableData.forEach(c => {
+                if (c.balance > 0.01) {
+                    totalDeuda += c.balance;
+                    cantDeudores++;
+                } else if (c.balance <= 0.01) {
+                    clientesAlDia++;
+                }
+            });
+
+            movementsList.forEach(m => {
+                if (m.type === 'abono') {
+                    totalCobrado += (parseFloat(m.amount) || 0);
+                }
+            });
+
+            document.getElementById('kpi-total-deuda').textContent = formatCurrency(totalDeuda);
+            document.getElementById('kpi-total-deuda-sub').textContent = `${cantDeudores} clientes con saldo pendiente`;
+
+            document.getElementById('kpi-cant-deudores').textContent = cantDeudores;
+            document.getElementById('kpi-cant-deudores-sub').textContent = `Representa el ${tableData.length ? Math.round((cantDeudores / tableData.length)*100) : 0}% de los clientes`;
+
+            document.getElementById('kpi-total-cobrado').textContent = formatCurrency(totalCobrado);
+            document.getElementById('kpi-total-cobrado-sub').textContent = `Total cobros registrados en el sistema`;
+
+            document.getElementById('kpi-clientes-aldia').textContent = clientesAlDia;
+            document.getElementById('kpi-clientes-aldia-sub').textContent = `Cuentas en cero o con saldo a favor`;
+
+            document.getElementById('debtors-count-badge').textContent = `${cantDeudores} deudores activos`;
+        }
+
+        // Renderizar el ranking visual de Top Deudores
+        function renderTopDebtors() {
+            const container = document.getElementById('debtors-cards-container');
+            if (!container) return;
+
+            // Filtrar solo los que deben y ordenar de mayor a menor
+            const debtors = tableData.filter(c => c.balance > 0.01).sort((a, b) => b.balance - a.balance);
+
+            if (debtors.length === 0) {
+                container.innerHTML = `<div style="font-size:0.85rem; color:var(--color-green); padding:10px; font-weight:600;">🎉 ¡Excelente! No hay clientes con deudas pendientes registradas.</div>`;
+                return;
+            }
+
+            let html = '';
+            // Mostrar hasta los top 12 deudores en el carrusel
+            debtors.slice(0, 12).forEach((d, idx) => {
+                html += `
+                    <div class="debtor-chip-card" onclick="openStatementModal('${d.id}')">
+                        <div class="debtor-chip-top">
+                            <span>#${idx + 1} • ${d.clientCode}</span>
+                            <span style="color:var(--text-muted);">${d.lastDate ? formatDate(d.lastDate) : 'Sin fecha'}</span>
+                        </div>
+                        <div class="debtor-chip-name" title="${escapeAttr(d.name)}">${d.name}</div>
+                        <div class="debtor-chip-amount">${formatCurrency(d.balance)}</div>
+                        <div class="debtor-chip-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-success btn-sm" style="padding:3px 7px; font-size:0.7rem;" onclick="openMovementModal('abono', '${d.id}')">
+                                <span>💵 Cobrar</span>
+                            </button>
+                            <button class="btn btn-whatsapp btn-sm" style="padding:3px 7px; font-size:0.7rem;" onclick="openWhatsAppDebtModal('${d.id}')">
+                                <span>💬 Recordar</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // --- 4. TABLA Y FILTROS ---
+        function applyFilters() {
+            const search = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+            const statusFilter = document.getElementById('filter-status')?.value || 'all';
+            const orderFilter = document.getElementById('filter-order')?.value || 'mayor_deuda';
+
+            filteredData = tableData.filter(item => {
+                // Buscador
+                if (search) {
+                    const matchName = (item.name || '').toLowerCase().includes(search);
+                    const matchPhone = (item.phone || '').toLowerCase().includes(search);
+                    const matchCode = (item.clientCode || '').toLowerCase().includes(search);
+                    const matchCuit = (item.cuit || '').toLowerCase().includes(search);
+                    if (!matchName && !matchPhone && !matchCode && !matchCuit) return false;
+                }
+
+                // Filtro Estado
+                if (statusFilter === 'deudores' && item.balance <= 0.01) return false;
+                if (statusFilter === 'aldia' && Math.abs(item.balance) > 0.01) return false;
+                if (statusFilter === 'afavor' && item.balance >= -0.01) return false;
+
+                return true;
+            });
+
+            // Ordenamiento
+            if (orderFilter === 'mayor_deuda') {
+                filteredData.sort((a, b) => b.balance - a.balance);
+            } else if (orderFilter === 'menor_deuda') {
+                filteredData.sort((a, b) => a.balance - b.balance);
+            } else if (orderFilter === 'nombre_asc') {
+                filteredData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            } else if (orderFilter === 'nombre_desc') {
+                filteredData.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+            }
+
+            document.getElementById('results-count-label').textContent = `Mostrando ${filteredData.length} de ${tableData.length} clientes`;
+            renderTable();
+        }
+
+        function clearFilters() {
+            if (document.getElementById('filter-search')) document.getElementById('filter-search').value = '';
+            if (document.getElementById('filter-status')) document.getElementById('filter-status').value = 'all';
+            if (document.getElementById('filter-order')) document.getElementById('filter-order').value = 'mayor_deuda';
+            applyFilters();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('cobros-table-body');
+            if (!tbody) return;
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <p style="font-weight:600; font-size:0.9rem;">No se encontraron clientes con los filtros seleccionados.</p>
+                            <button class="btn btn-secondary btn-sm" onclick="clearFilters()" style="margin-top:8px;">Limpiar Filtros</button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredData.forEach(item => {
+                // Badge de Saldo
+                let balanceBadge = '';
+                if (item.balance > 0.01) {
+                    balanceBadge = `<span class="balance-badge balance-debe">🔴 Debe ${formatCurrency(item.balance)}</span>`;
+                } else if (item.balance < -0.01) {
+                    balanceBadge = `<span class="balance-badge balance-afavor">🔵 A Favor ${formatCurrency(Math.abs(item.balance))}</span>`;
+                } else {
+                    balanceBadge = `<span class="balance-badge balance-aldia">🟢 Al Día ($ 0.00)</span>`;
+                }
+
+                const lastDateStr = item.lastDate ? formatDate(item.lastDate) : '<span style="color:var(--text-subtle);">-</span>';
+
+                html += `
+                    <tr>
+                        <td style="font-weight:700; color:var(--color-blue);">${item.clientCode}</td>
+                        <td>
+                            <div style="font-weight:600; color:var(--text-primary); cursor:pointer;" onclick="openStatementModal('${item.id}')">${item.name}</div>
+                            ${item.cuit ? `<div style="font-size:0.72rem; color:var(--text-muted);">CUIT: ${item.cuit}</div>` : ''}
+                        </td>
+                        <td>
+                            <div style="font-family:monospace; font-size:0.8rem;">${item.phone || '<span style="color:var(--text-subtle);">Sin teléfono</span>'}</div>
+                        </td>
+                        <td style="text-align:right;" class="text-cargo">${formatCurrency(item.totalCargos)}</td>
+                        <td style="text-align:right;" class="text-abono">${formatCurrency(item.totalAbonos)}</td>
+                        <td style="text-align:center;">${balanceBadge}</td>
+                        <td style="text-align:center; font-size:0.78rem; color:var(--text-muted);">${lastDateStr}</td>
+                        <td style="text-align:center;">
+                            <div style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap;">
+                                <button class="btn btn-danger btn-sm" onclick="openMovementModal('cargo', '${item.id}')" title="Cargar nuevo servicio o deuda">
+                                    <span>+ Cargo</span>
+                                </button>
+                                <button class="btn btn-success btn-sm" onclick="openMovementModal('abono', '${item.id}')" title="Registrar un pago o cobro">
+                                    <span>+ Cobro</span>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="openStatementModal('${item.id}')" title="Ver cuenta corriente">
+                                    <span>📜 Historial</span>
+                                </button>
+                                ${item.balance > 0.01 ? `
+                                <button class="btn btn-whatsapp btn-sm btn-icon" onclick="openWhatsAppDebtModal('${item.id}')" title="Enviar recordatorio de deuda por WhatsApp">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                </button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // --- 5. MODAL DE NUEVO MOVIMIENTO ---
+        function populateClientDropdown() {
+            const select = document.getElementById('mov-client-id');
+            if (!select) return;
+
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- Selecciona un cliente --</option>';
+
+            clientsList.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.clientCode ? `[${c.clientCode}] ` : ''}${c.name}`;
+                select.appendChild(opt);
+            });
+
+            if (currentVal) select.value = currentVal;
+        }
+
+        function openMovementModal(type, preselectedClientId = null) {
+            const form = document.getElementById('form-movement');
+            form.reset();
+
+            document.getElementById('mov-id').value = '';
+            document.getElementById('mov-type').value = type;
+            
+            // Fecha hoy por defecto
+            document.getElementById('mov-date').value = new Date().toISOString().split('T')[0];
+
+            const titleEl = document.getElementById('modal-movement-title');
+            const submitBtn = document.getElementById('btn-save-movement');
+            const payRow = document.getElementById('mov-payment-method-row');
+
+            if (type === 'cargo') {
+                titleEl.innerHTML = `<span>➕ Cargar Deuda / Nuevo Trabajo a Cobrar</span>`;
+                submitBtn.className = 'btn btn-danger';
+                submitBtn.innerHTML = '💾 Guardar Cargo / Deuda';
+                payRow.style.display = 'none';
+                document.getElementById('mov-concept').placeholder = 'Ej: Mantenimiento Preventivo, Cambio de Motor, Carga de Gas';
+            } else {
+                titleEl.innerHTML = `<span>💵 Registrar Cobro / Ingreso de Pago</span>`;
+                submitBtn.className = 'btn btn-success';
+                submitBtn.innerHTML = '💾 Registrar Cobro';
+                payRow.style.display = 'grid';
+                document.getElementById('mov-concept').placeholder = 'Ej: Pago Total Servicio, Anticipo de Obra, Cancelación de Factura';
+            }
+
+            if (preselectedClientId) {
+                document.getElementById('mov-client-id').value = preselectedClientId;
+            }
+            onClientSelectChange();
+
+            openModal('modal-movement');
+        }
+
+        function onClientSelectChange() {
+            const cId = document.getElementById('mov-client-id').value;
+            const infoBox = document.getElementById('mov-client-info-box');
+            const balanceEl = document.getElementById('mov-client-current-balance');
+
+            if (!cId || !clientBalances[cId]) {
+                infoBox.style.display = 'none';
+                return;
+            }
+
+            const bal = clientBalances[cId].balance;
+            infoBox.style.display = 'block';
+            if (bal > 0.01) {
+                balanceEl.innerHTML = `<span style="color:#f87171;">Debe ${formatCurrency(bal)}</span>`;
+            } else if (bal < -0.01) {
+                balanceEl.innerHTML = `<span style="color:#38bdf8;">A favor ${formatCurrency(Math.abs(bal))}</span>`;
+            } else {
+                balanceEl.innerHTML = `<span style="color:#34d399;">Al día ($ 0.00)</span>`;
+            }
+        }
+
+        async function saveMovementForm(event) {
+            event.preventDefault();
+
+            const cId = document.getElementById('mov-client-id').value;
+            const type = document.getElementById('mov-type').value;
+            const amount = parseFloat(document.getElementById('mov-amount').value);
+            const date = document.getElementById('mov-date').value;
+            const concept = document.getElementById('mov-concept').value.trim();
+            const paymentMethod = document.getElementById('mov-payment-method').value;
+            const receiptNumber = document.getElementById('mov-receipt').value.trim();
+            const notes = document.getElementById('mov-notes').value.trim();
+
+            if (!cId) {
+                showToast("Por favor selecciona un cliente", "error");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showToast("Ingresa un monto válido mayor a 0", "error");
+                return;
+            }
+
+            const clientObj = clientsList.find(c => c.id === cId) || {};
+
+            const newDoc = {
+                clientId: cId,
+                clientName: clientObj.name || 'Sin Nombre',
+                clientCode: clientObj.clientCode || '',
+                type: type, // 'cargo' o 'abono'
+                amount: amount,
+                date: date,
+                concept: concept,
+                paymentMethod: type === 'abono' ? paymentMethod : '',
+                receiptNumber: receiptNumber,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const docRef = await db.collection('cobros_movimientos').add(newDoc);
+                newDoc.id = docRef.id;
+                movementsList.unshift(newDoc);
+
+                closeModal('modal-movement');
+                showToast(type === 'cargo' ? `Cargo de ${formatCurrency(amount)} guardado` : `Cobro de ${formatCurrency(amount)} registrado`, "success");
+
+                recomputeBalances();
+                applyFilters();
+
+                // Si estaba abierto el estado de cuenta de ese cliente, refrescarlo
+                const openStatementId = document.getElementById('statement-client-id').value;
+                if (openStatementId === cId) {
+                    renderStatementTable(cId);
+                }
+            } catch(err) {
+                console.error("Error al guardar movimiento:", err);
+                showToast("Error al guardar en Firestore: " + err.message, "error");
+            }
+        }
+
+        // --- 6. MODAL ESTADO DE CUENTA / HISTORIAL ---
+        function openStatementModal(clientId) {
+            const client = clientsList.find(c => c.id === clientId);
+            if (!client) return;
+
+            document.getElementById('statement-client-id').value = clientId;
+            document.getElementById('statement-client-name').textContent = client.name || 'Sin Nombre';
+            document.getElementById('statement-client-details').textContent = `${client.clientCode || client.id} | Tel: ${client.phone || 'Sin teléfono'} | Domicilio: ${client.address || 'Sin especificar'}`;
+
+            renderStatementTable(clientId);
+            openModal('modal-statement');
+        }
+
+        function renderStatementTable(clientId) {
+            const tbody = document.getElementById('statement-table-body');
+            const balanceBadge = document.getElementById('statement-client-balance-badge');
+
+            // Filtrar movimientos de este cliente y ordenar cronológicamente ascendente para el saldo evolutivo
+            const clientMovs = movementsList.filter(m => m.clientId === clientId).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let runningBalance = 0;
+            let rowsHtml = '';
+
+            if (clientMovs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:25px;">No hay movimientos registrados para este cliente.</td></tr>`;
+                balanceBadge.className = 'balance-badge balance-aldia';
+                balanceBadge.textContent = '$ 0.00 (Al Día)';
+                return;
+            }
+
+            clientMovs.forEach(m => {
+                const amt = parseFloat(m.amount) || 0;
+                let cargoStr = '-';
+                let abonoStr = '-';
+
+                if (m.type === 'cargo') {
+                    runningBalance += amt;
+                    cargoStr = formatCurrency(amt);
+                } else if (m.type === 'abono') {
+                    runningBalance -= amt;
+                    abonoStr = formatCurrency(amt);
+                }
+
+                const typeLabel = m.type === 'cargo' ? '<span style="color:#f87171; font-weight:700;">Deuda</span>' : '<span style="color:#34d399; font-weight:700;">Pago</span>';
+                const detailText = `${m.concept || 'Sin concepto'}${m.paymentMethod ? ` (${m.paymentMethod})` : ''}${m.receiptNumber ? ` - Comp: ${m.receiptNumber}` : ''}`;
+
+                rowsHtml += `
+                    <tr>
+                        <td style="font-size:0.75rem; color:var(--text-muted);">${formatDate(m.date)}</td>
+                        <td>${typeLabel}</td>
+                        <td>${detailText}</td>
+                        <td style="text-align:right;" class="text-cargo">${cargoStr}</td>
+                        <td style="text-align:right;" class="text-abono">${abonoStr}</td>
+                        <td style="text-align:right; font-weight:700; font-family:'Outfit',sans-serif;">${formatCurrency(runningBalance)}</td>
+                        <td style="text-align:center;">
+                            <button type="button" class="btn btn-danger btn-sm btn-icon" style="padding:2px 5px; font-size:0.7rem;" onclick="deleteMovement('${m.id}', '${clientId}')" title="Eliminar este movimiento">✕</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml;
+
+            // Actualizar badge de saldo en modal
+            if (runningBalance > 0.01) {
+                balanceBadge.className = 'balance-badge balance-debe';
+                balanceBadge.textContent = `Debe ${formatCurrency(runningBalance)}`;
+            } else if (runningBalance < -0.01) {
+                balanceBadge.className = 'balance-badge balance-afavor';
+                balanceBadge.textContent = `A Favor ${formatCurrency(Math.abs(runningBalance))}`;
+            } else {
+                balanceBadge.className = 'balance-badge balance-aldia';
+                balanceBadge.textContent = 'Al Día ($ 0.00)';
+            }
+        }
+
+        function openMovementForCurrentStatement(type) {
+            const cId = document.getElementById('statement-client-id').value;
+            openMovementModal(type, cId);
+        }
+
+        async function deleteMovement(movementId, clientId) {
+            if (!confirm("¿Deseas eliminar este registro de movimiento?")) return;
+
+            try {
+                await db.collection('cobros_movimientos').doc(movementId).delete();
+                movementsList = movementsList.filter(m => m.id !== movementId);
+                showToast("Movimiento eliminado", "info");
+                recomputeBalances();
+                applyFilters();
+                renderStatementTable(clientId);
+            } catch(err) {
+                console.error("Error al eliminar movimiento:", err);
+                showToast("Error al eliminar", "error");
+            }
+        }
+
+        // --- 7. MODAL RECORDATORIO WHATSAPP ---
+        function openWhatsAppDebtModal(clientId) {
+            const client = clientsList.find(c => c.id === clientId);
+            if (!client) return;
+
+            const balance = (clientBalances[clientId] ? clientBalances[clientId].balance : 0);
+
+            document.getElementById('wa-debt-client-id').value = clientId;
+            document.getElementById('wa-debt-client-name').value = client.name || 'Cliente';
+            document.getElementById('wa-debt-client-phone').value = client.phone || '';
+            document.getElementById('wa-debt-amount-text').value = formatCurrency(balance);
+
+            // Mensaje preconfigurado
+            const msg = `Hola ${client.name}, te saludamos de ElectroFrío. 👋\nQueríamos consultarte sobre el saldo pendiente de tu cuenta de ${formatCurrency(balance)} por los servicios y trabajos realizados.\n\nPara transferencias bancarias:\n🏦 Banco: Santander / Galicia\n💳 Alias: ELECTROFRIO.PAGOS\n📌 CBU: 0720123988000034567890\n\nPor favor envíanos el comprobante una vez efectuado. ¡Muchas gracias!`;
+
+            document.getElementById('wa-debt-message').value = msg;
+            openModal('modal-whatsapp-debt');
+        }
+
+        function openWhatsAppReminderFromStatement() {
+            const cId = document.getElementById('statement-client-id').value;
+            if (cId) openWhatsAppDebtModal(cId);
+        }
+
+        function sendWhatsAppDebtMessage() {
+            const rawPhone = document.getElementById('wa-debt-client-phone').value.trim();
+            const message = document.getElementById('wa-debt-message').value.trim();
+
+            let digits = rawPhone.replace(/\D/g, '');
+            if (!digits) {
+                showToast("Ingresa un número de teléfono válido", "error");
+                return;
+            }
+
+            if (!digits.startsWith('549') && digits.length >= 10) {
+                if (digits.startsWith('0')) digits = digits.substring(1);
+                digits = '549' + digits;
+            }
+
+            const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+            closeModal('modal-whatsapp-debt');
+            showToast("WhatsApp abierto en pestaña nueva", "success");
+        }
+
+        // --- 8. EXPORTAR A EXCEL ---
+        function exportCobrosToExcel() {
+            if (filteredData.length === 0) {
+                showToast("No hay registros para exportar", "error");
+                return;
+            }
+
+            const exportRows = filteredData.map(item => ({
+                "Código": item.clientCode,
+                "Cliente": item.name,
+                "Teléfono": item.phone,
+                "CUIT": item.cuit,
+                "Total Cargos ($)": item.totalCargos,
+                "Total Pagado ($)": item.totalAbonos,
+                "Saldo Actual ($)": item.balance,
+                "Estado": item.balance > 0.01 ? 'DEUDOR' : (item.balance < -0.01 ? 'A FAVOR' : 'AL DIA'),
+                "Última Fecha": item.lastDate || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Cobros y Saldos");
+
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `ElectroFrio_Cobros_Deudas_${today}.xlsx`);
+            showToast("Reporte descargado en Excel con éxito", "success");
+        }
+
+        // --- 9. HELPERS Y UTILIDADES ---
+        function formatCurrency(val) {
+            const num = parseFloat(val) || 0;
+            return '$ ' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function escapeAttr(str) {
+            return String(str || '').replace(/"/g, '&quot;');
+        }
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('show');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('show');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // --- 10. TEMA CLARO / OSCURO ---
+        function applyTheme(isLight) {
+            if (isLight) {
+                document.body.classList.add('light-mode');
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('light-mode');
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.textContent = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.contains('light-mode');
+            const next = !isLight;
+            localStorage.setItem('electrofrio_theme', next ? 'light' : 'dark');
+            applyTheme(next);
+        }
+
+        // Arranque
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('electrofrio_theme') || 'dark';
+            applyTheme(savedTheme === 'light');
+            initCobrosModule();
+        });
+    </script>
+</body>
+</html>

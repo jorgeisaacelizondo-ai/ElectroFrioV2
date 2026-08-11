@@ -2204,6 +2204,24 @@
                             </svg>
                             <span>Proveedores</span>
                         </button>
+                        <button class="nav-item" data-module="crm">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>CRM Clientes</span>
+                        </button>
+                        <button class="nav-item" data-module="cobros">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <span>Cobranza</span>
+                        </button>
                     </div>
                 </div>
 
@@ -3140,6 +3158,16 @@
                 <!-- PROVEEDORES -->
                 <div id="mod-proveedores" class="page-content hidden">
                     <iframe src="proveedores.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                </div>
+
+                <!-- CRM CLIENTES Y PROSPECTOS -->
+                <div id="mod-crm" class="page-content hidden">
+                    <iframe src="crm.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                </div>
+
+                <!-- COBROS Y CUENTAS CORRIENTES -->
+                <div id="mod-cobros" class="page-content hidden">
+                    <iframe src="cobros.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- HISTORIAL DE IMPORTACIONES -->
@@ -12135,9 +12163,9 @@
 
             let allowedModules = [];
             if (role === 'Administrador') {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'importaciones', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'configuracion'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'calendario', 'mapa', 'fichajes', 'jornales', 'database', 'colaboradores', 'clientes', 'importaciones', 'materiales', 'manodeobra', 'presupuesto', 'proveedores', 'crm', 'cobros', 'configuracion'];
             } else if (isPremium) {
-                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto', 'proveedores'];
+                allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes', 'presupuesto', 'proveedores', 'crm', 'cobros'];
             } else {
                 allowedModules = ['dashboard', 'ordenes', 'tareas', 'database', 'fichajes'];
             }
@@ -12190,7 +12218,7 @@
             // Expandir/colapsar submenú Utilidades
             const submenuUtil = document.getElementById('submenuUtilidades');
             const parentGroupUtil = document.getElementById('btnGroupUtilidades')?.closest('.nav-group');
-            if (['presupuesto', 'proveedores'].includes(moduleName)) {
+            if (['presupuesto', 'proveedores', 'crm', 'cobros'].includes(moduleName)) {
                 if (submenuUtil) submenuUtil.classList.add('open');
                 if (parentGroupUtil) parentGroupUtil.classList.add('open');
             } else {
