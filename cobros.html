@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Cobros y Cuentas Corrientes - ElectroFrío</title>
     <!-- PWA & Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -554,6 +557,99 @@
             border: 1px solid rgba(0, 191, 255, 0.3);
         }
 
+        /* Autocomplete Dropdown List */
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-focus);
+            border-radius: var(--radius-sm);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1050;
+            box-shadow: var(--shadow-lg);
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.83rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .autocomplete-item:hover {
+            background-color: rgba(0, 191, 255, 0.12);
+        }
+
+        .autocomplete-item.create-new-item {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--color-green);
+            font-weight: 600;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .autocomplete-item.create-new-item:hover {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #ffffff;
+        }
+
+        .autocomplete-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .autocomplete-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-sub {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-balance {
+            font-size: 0.72rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+
+        .selected-client-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 191, 255, 0.08);
+            border: 1px solid rgba(0, 191, 255, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            gap: 10px;
+        }
+
         /* Modals */
         .modal-overlay {
             position: fixed;
@@ -904,12 +1000,41 @@
                     <input type="hidden" id="mov-id">
                     <input type="hidden" id="mov-type">
 
-                    <!-- Cliente -->
+                    <!-- Cliente con Autocompletado y Creación Rápida -->
                     <div class="form-group">
-                        <label>Cliente / Deudor *</label>
-                        <select id="mov-client-id" class="form-select" required onchange="onClientSelectChange()">
-                            <option value="">-- Selecciona un cliente --</option>
-                        </select>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <label style="margin-bottom: 0;">Cliente / Deudor *</label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openQuickClientModal()" style="padding: 2px 8px; font-size: 0.72rem; color: var(--color-blue); border-color: rgba(0, 191, 255, 0.3);">
+                                <span>➕ Nuevo Cliente</span>
+                            </button>
+                        </div>
+
+                        <!-- ID Real del cliente seleccionado -->
+                        <input type="hidden" id="mov-client-id">
+
+                        <!-- Buscador con Autocompletado -->
+                        <div id="mov-client-search-box" class="autocomplete-container">
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="mov-client-search" class="form-input" placeholder="Escribe para buscar cliente (nombre, teléfono, código, CUIT)..." autocomplete="off" oninput="handleMovClientSearchInput()" onfocus="handleMovClientSearchFocus()" style="padding-left: 36px; padding-right: 32px; width: 100%;">
+                                <button type="button" id="btn-clear-client-search" onclick="clearSelectedClient()" title="Borrar búsqueda" style="display: none; position: absolute; right: 8px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 4px 6px;">✕</button>
+                            </div>
+                            <div id="mov-client-autocomplete-list" class="autocomplete-list"></div>
+                        </div>
+
+                        <!-- Tarjeta visual de cliente seleccionado -->
+                        <div id="mov-selected-client-badge" class="selected-client-card" style="display: none;">
+                            <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: rgba(0, 191, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">👤</div>
+                                <div style="overflow: hidden;">
+                                    <div id="mov-selected-client-name" style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nombre del Cliente</div>
+                                    <div id="mov-selected-client-sub" style="font-size: 0.74rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">CLI-0001 • Tel: 1123456789</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearSelectedClient()" style="padding: 4px 10px; font-size: 0.74rem; flex-shrink: 0;">
+                                <span>Cambiar</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Resumen del Saldo Actual del Cliente Seleccionado -->
@@ -972,6 +1097,74 @@
         </div>
     </div>
 
+    <!-- =================== MODAL: CREAR CLIENTE RÁPIDO =================== -->
+    <div class="modal-overlay" id="modal-quick-client" style="z-index: 120;">
+        <div class="modal-card" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3>
+                    <span>👤 Registrar Nuevo Cliente</span>
+                </h3>
+                <button type="button" class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-quick-client')">✕</button>
+            </div>
+            <form id="form-quick-client" onsubmit="saveQuickClient(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre / Razón Social *</label>
+                        <input type="text" id="quick-client-name" class="form-input" placeholder="Ej: Juan Pérez / Distribuidora Al Sur" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Teléfono / WhatsApp</label>
+                            <input type="text" id="quick-client-phone" class="form-input" placeholder="Ej: 11 3456-7890">
+                        </div>
+                        <div class="form-group">
+                            <label>CUIT / DNI</label>
+                            <input type="text" id="quick-client-cuit" class="form-input" placeholder="Ej: 20-34567890-9">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dirección / Domicilio</label>
+                        <input type="text" id="quick-client-address" class="form-input" placeholder="Ej: Av. Rivadavia 1234, Morón">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo / Categoría</label>
+                            <select id="quick-client-type" class="form-select">
+                                <option value="cliente">Cliente Activo</option>
+                                <option value="empresa">Empresa / Comercio</option>
+                                <option value="particular">Particular / Residencial</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Condición IVA</label>
+                            <select id="quick-client-iva" class="form-select">
+                                <option value="CONSUMIDOR FINAL">Consumidor Final</option>
+                                <option value="RESPONSABLE INSCRIPTO">Responsable Inscripto</option>
+                                <option value="MONOTRIBUTO">Monotributo</option>
+                                <option value="EXENTO">Exento</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observaciones / Notas</label>
+                        <textarea id="quick-client-notes" class="form-textarea" placeholder="Notas sobre el cliente, horarios de atención, referencias..." style="min-height: 55px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-quick-client')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-quick-client">
+                        💾 Guardar y Seleccionar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- =================== MODAL: ESTADO DE CUENTA / HISTORIAL =================== -->
     <div class="modal-overlay" id="modal-statement">
         <div class="modal-card modal-lg">
@@ -1015,7 +1208,7 @@
                                 <th style="width: 100px; text-align: right;">Cargo (Debe)</th>
                                 <th style="width: 100px; text-align: right;">Cobro (Haber)</th>
                                 <th style="width: 100px; text-align: right;">Saldo</th>
-                                <th style="width: 40px; text-align: center;">✕</th>
+                                <th style="width: 75px; text-align: center;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="statement-table-body">
@@ -1057,9 +1250,15 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Saldo Pendiente a Cobrar</label>
-                    <input type="text" id="wa-debt-amount-text" class="form-input" readonly style="font-weight: 700; color: #f87171; font-family: 'Outfit', sans-serif;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Saldo Pendiente a Cobrar</label>
+                        <input type="text" id="wa-debt-amount-text" class="form-input" readonly style="font-weight: 700; color: #f87171; font-family: 'Outfit', sans-serif;">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Trabajo / Cobro</label>
+                        <input type="text" id="wa-debt-date-text" class="form-input" readonly style="color: var(--text-primary); font-family: 'Outfit', sans-serif; font-weight: 600;">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1246,12 +1445,24 @@
                     data.id = doc.id;
                     list.push(data);
                 });
+                // Deduplicar estrictamente por ID único
+                const map = new Map();
+                list.forEach(item => {
+                    if (item && item.id) map.set(item.id, item);
+                });
+                movementsList = Array.from(map.values());
                 // Ordenar por fecha descendente
-                list.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
-                movementsList = list;
+                movementsList.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
                 localStorage.setItem('electrofrio_cobros_movs', JSON.stringify(movementsList));
                 recomputeBalances();
                 applyFilters();
+
+                // Si el modal de estado de cuenta está abierto, refrescarlo en vivo
+                const openStatementId = document.getElementById('statement-client-id')?.value;
+                const statementModal = document.getElementById('modal-statement');
+                if (openStatementId && statementModal && statementModal.classList.contains('show')) {
+                    renderStatementTable(openStatementId);
+                }
             }, err => {
                 console.error("Error al sincronizar movimientos:", err);
             });
@@ -1260,6 +1471,13 @@
         // --- 3. CÁLCULO DE SALDOS Y KPIS ---
         function recomputeBalances() {
             clientBalances = {};
+
+            // Deduplicar movimientos por seguridad
+            const map = new Map();
+            movementsList.forEach(m => {
+                if (m && m.id) map.set(m.id, m);
+            });
+            const uniqueMovs = Array.from(map.values());
 
             // Inicializar para todos los clientes
             clientsList.forEach(c => {
@@ -1271,8 +1489,8 @@
                 };
             });
 
-            // Sumar movimientos
-            movementsList.forEach(m => {
+            // Sumar movimientos únicos
+            uniqueMovs.forEach(m => {
                 const cId = m.clientId;
                 if (!clientBalances[cId]) {
                     clientBalances[cId] = { totalCargos: 0, totalAbonos: 0, balance: 0, lastDate: null };
@@ -1507,22 +1725,256 @@
             tbody.innerHTML = html;
         }
 
-        // --- 5. MODAL DE NUEVO MOVIMIENTO ---
-        function populateClientDropdown() {
-            const select = document.getElementById('mov-client-id');
-            if (!select) return;
-
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">-- Selecciona un cliente --</option>';
-
+        // --- 5. GESTIÓN Y AUTOCOMPLETADO DE CLIENTES EN MOVIMIENTO ---
+        function getNextClientCode() {
+            let maxNum = 0;
             clientsList.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = `${c.clientCode ? `[${c.clientCode}] ` : ''}${c.name}`;
-                select.appendChild(opt);
+                const code = c.clientCode || (c.id && c.id.startsWith('CLI-') ? c.id : '');
+                if (code && code.toUpperCase().startsWith('CLI-')) {
+                    const num = parseInt(code.replace(/\D/g, ''), 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
             });
+            return `CLI-${String(maxNum + 1).padStart(4, '0')}`;
+        }
 
-            if (currentVal) select.value = currentVal;
+        function populateClientDropdown() {
+            // Compatibilidad si se llama al sincronizar clientes
+            const currentSelectedId = document.getElementById('mov-client-id')?.value;
+            if (currentSelectedId) {
+                const client = clientsList.find(c => c.id === currentSelectedId);
+                if (client) {
+                    selectClientForMovement(client.id);
+                }
+            }
+        }
+
+        function handleMovClientSearchFocus() {
+            const inputVal = (document.getElementById('mov-client-search')?.value || '').trim();
+            renderMovClientAutocomplete(inputVal);
+        }
+
+        function handleMovClientSearchInput() {
+            const query = (document.getElementById('mov-client-search')?.value || '').trim();
+            const clearBtn = document.getElementById('btn-clear-client-search');
+            if (clearBtn) {
+                clearBtn.style.display = query ? 'block' : 'none';
+            }
+            renderMovClientAutocomplete(query);
+        }
+
+        function renderMovClientAutocomplete(query = '') {
+            const listEl = document.getElementById('mov-client-autocomplete-list');
+            if (!listEl) return;
+
+            const q = query.toLowerCase();
+            let matches = [];
+
+            if (!q) {
+                // Si no hay búsqueda, mostrar primeros 8 clientes
+                matches = clientsList.slice(0, 8);
+            } else {
+                matches = clientsList.filter(c => {
+                    const name = (c.name || '').toLowerCase();
+                    const code = (c.clientCode || c.id || '').toLowerCase();
+                    const phone = (c.phone || '').toLowerCase();
+                    const cuit = (c.cuit || '').toLowerCase();
+                    const addr = (c.address || '').toLowerCase();
+                    return name.includes(q) || code.includes(q) || phone.includes(q) || cuit.includes(q) || addr.includes(q);
+                }).slice(0, 10);
+            }
+
+            let html = '';
+
+            if (matches.length > 0) {
+                matches.forEach(c => {
+                    const name = c.name || 'Sin Nombre';
+                    const code = c.clientCode ? `[${c.clientCode}]` : '';
+                    const phone = c.phone ? `📞 ${c.phone}` : '';
+                    const addr = c.address ? `📍 ${c.address}` : '';
+                    const cuit = c.cuit ? `CUIT: ${c.cuit}` : '';
+
+                    const subParts = [code, phone, cuit, addr].filter(Boolean).join(' • ');
+
+                    const balObj = clientBalances[c.id];
+                    const bal = balObj ? balObj.balance : 0;
+                    let balBadge = '';
+                    if (bal > 0.01) {
+                        balBadge = `<span class="autocomplete-balance balance-debe">Debe ${formatCurrency(bal)}</span>`;
+                    } else if (bal < -0.01) {
+                        balBadge = `<span class="autocomplete-balance balance-afavor">A favor ${formatCurrency(Math.abs(bal))}</span>`;
+                    } else {
+                        balBadge = `<span class="autocomplete-balance balance-aldia">Al día</span>`;
+                    }
+
+                    html += `
+                        <div class="autocomplete-item" onclick="selectClientForMovement('${c.id}')">
+                            <div class="autocomplete-info">
+                                <span class="autocomplete-title">${name}</span>
+                                <span class="autocomplete-sub">${subParts || 'Sin datos adicionales'}</span>
+                            </div>
+                            <div>${balBadge}</div>
+                        </div>
+                    `;
+                });
+            } else if (q) {
+                html += `
+                    <div style="padding: 12px 14px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                        No se encontró ningún cliente con "<strong>${escapeAttr(query)}</strong>"
+                    </div>
+                `;
+            }
+
+            // Opción para registrar cliente nuevo
+            const escapedQ = escapeAttr(query);
+            html += `
+                <div class="autocomplete-item create-new-item" onclick="openQuickClientModal('${escapedQ}')">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.05rem;">➕</span>
+                        <span>${q ? `Registrar a <strong>"${escapedQ}"</strong> como nuevo cliente` : 'Registrar un nuevo cliente...'}</span>
+                    </div>
+                    <span style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; font-weight: 700;">+ Rápido</span>
+                </div>
+            `;
+
+            listEl.innerHTML = html;
+            listEl.style.display = 'block';
+        }
+
+        function selectClientForMovement(clientId) {
+            const client = clientsList.find(c => c.id === clientId);
+            if (!client) return;
+
+            document.getElementById('mov-client-id').value = client.id;
+
+            const searchBox = document.getElementById('mov-client-search-box');
+            const badgeBox = document.getElementById('mov-selected-client-badge');
+            const listEl = document.getElementById('mov-client-autocomplete-list');
+
+            if (searchBox) searchBox.style.display = 'none';
+            if (listEl) listEl.style.display = 'none';
+
+            if (badgeBox) {
+                document.getElementById('mov-selected-client-name').textContent = client.name || 'Sin Nombre';
+                const subText = `${client.clientCode || client.id}${client.phone ? ` • 📞 ${client.phone}` : ''}${client.address ? ` • 📍 ${client.address}` : ''}`;
+                document.getElementById('mov-selected-client-sub').textContent = subText;
+                badgeBox.style.display = 'flex';
+            }
+
+            onClientSelectChange();
+        }
+
+        function clearSelectedClient() {
+            document.getElementById('mov-client-id').value = '';
+            const searchInput = document.getElementById('mov-client-search');
+            if (searchInput) searchInput.value = '';
+
+            const clearBtn = document.getElementById('btn-clear-client-search');
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const searchBox = document.getElementById('mov-client-search-box');
+            const badgeBox = document.getElementById('mov-selected-client-badge');
+            const listEl = document.getElementById('mov-client-autocomplete-list');
+
+            if (searchBox) searchBox.style.display = 'block';
+            if (badgeBox) badgeBox.style.display = 'none';
+            if (listEl) listEl.style.display = 'none';
+
+            onClientSelectChange();
+            if (searchInput) searchInput.focus();
+        }
+
+        function openQuickClientModal(defaultName = '') {
+            const listEl = document.getElementById('mov-client-autocomplete-list');
+            if (listEl) listEl.style.display = 'none';
+
+            const form = document.getElementById('form-quick-client');
+            if (form) form.reset();
+
+            const searchVal = document.getElementById('mov-client-search')?.value.trim() || '';
+            const nameToSet = defaultName || searchVal;
+            document.getElementById('quick-client-name').value = nameToSet;
+
+            openModal('modal-quick-client');
+            setTimeout(() => {
+                if (nameToSet) {
+                    document.getElementById('quick-client-phone')?.focus();
+                } else {
+                    document.getElementById('quick-client-name')?.focus();
+                }
+            }, 100);
+        }
+
+        async function saveQuickClient(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('quick-client-name').value.trim();
+            const phone = document.getElementById('quick-client-phone').value.trim();
+            const cuit = document.getElementById('quick-client-cuit').value.trim();
+            const address = document.getElementById('quick-client-address').value.trim();
+            const crmType = document.getElementById('quick-client-type').value;
+            const iva = document.getElementById('quick-client-iva').value;
+            const notes = document.getElementById('quick-client-notes').value.trim();
+
+            if (!name) {
+                showToast("El nombre del cliente es obligatorio", "error");
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-save-quick-client');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Guardando...';
+
+            const nextCode = getNextClientCode();
+
+            const newClientObj = {
+                clientCode: nextCode,
+                name: name,
+                phone: phone,
+                cuit: cuit,
+                address: address,
+                addresses: address ? [address] : [],
+                crmType: crmType,
+                crmStage: 'ganado',
+                priority: 'normal',
+                source: 'Cobranzas',
+                iva: iva,
+                notes: notes,
+                interactions: [{
+                    date: new Date().toISOString(),
+                    type: 'note',
+                    message: 'Cliente creado desde Cobranzas',
+                    user: auth.currentUser?.email || 'Sistema'
+                }],
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const docRef = await db.collection('clientes').add(newClientObj);
+                newClientObj.id = docRef.id;
+
+                const exists = clientsList.findIndex(c => c.id === docRef.id);
+                if (exists === -1) {
+                    clientsList.unshift(newClientObj);
+                } else {
+                    clientsList[exists] = newClientObj;
+                }
+                localStorage.setItem('electrofrio_clients', JSON.stringify(clientsList));
+
+                recomputeBalances();
+                applyFilters();
+
+                closeModal('modal-quick-client');
+                showToast(`¡Cliente "${name}" (${nextCode}) registrado con éxito!`, "success");
+
+                selectClientForMovement(docRef.id);
+            } catch (err) {
+                console.error("Error al crear cliente:", err);
+                showToast("Error al guardar cliente en Firestore: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Guardar y Seleccionar';
+            }
         }
 
         function openMovementModal(type, preselectedClientId = null) {
@@ -1554,9 +2006,10 @@
             }
 
             if (preselectedClientId) {
-                document.getElementById('mov-client-id').value = preselectedClientId;
+                selectClientForMovement(preselectedClientId);
+            } else {
+                clearSelectedClient();
             }
-            onClientSelectChange();
 
             openModal('modal-movement');
         }
@@ -1582,10 +2035,16 @@
             }
         }
 
+        let isSavingMovement = false;
+
         async function saveMovementForm(event) {
             event.preventDefault();
+            if (isSavingMovement) return;
 
-            const cId = document.getElementById('mov-client-id').value;
+            const submitBtn = document.getElementById('btn-save-movement');
+            const movId = document.getElementById('mov-id').value;
+            let cId = document.getElementById('mov-client-id').value;
+            const searchVal = (document.getElementById('mov-client-search')?.value || '').trim();
             const type = document.getElementById('mov-type').value;
             const amount = parseFloat(document.getElementById('mov-amount').value);
             const date = document.getElementById('mov-date').value;
@@ -1594,50 +2053,135 @@
             const receiptNumber = document.getElementById('mov-receipt').value.trim();
             const notes = document.getElementById('mov-notes').value.trim();
 
-            if (!cId) {
-                showToast("Por favor selecciona un cliente", "error");
-                return;
-            }
             if (isNaN(amount) || amount <= 0) {
                 showToast("Ingresa un monto válido mayor a 0", "error");
                 return;
             }
 
-            const clientObj = clientsList.find(c => c.id === cId) || {};
-
-            const newDoc = {
-                clientId: cId,
-                clientName: clientObj.name || 'Sin Nombre',
-                clientCode: clientObj.clientCode || '',
-                type: type, // 'cargo' o 'abono'
-                amount: amount,
-                date: date,
-                concept: concept,
-                paymentMethod: type === 'abono' ? paymentMethod : '',
-                receiptNumber: receiptNumber,
-                notes: notes,
-                createdAt: new Date().toISOString()
-            };
+            isSavingMovement = true;
+            if (submitBtn) submitBtn.disabled = true;
 
             try {
-                const docRef = await db.collection('cobros_movimientos').add(newDoc);
-                newDoc.id = docRef.id;
-                movementsList.unshift(newDoc);
+                // Si no se hizo clic en el dropdown pero el usuario escribió un nombre en el campo de texto
+                if (!cId && searchVal) {
+                    const match = clientsList.find(c => (c.name || '').toLowerCase() === searchVal.toLowerCase());
+                    if (match) {
+                        cId = match.id;
+                        document.getElementById('mov-client-id').value = match.id;
+                    } else {
+                        // Si el cliente tipeado no existe, registrarlo de inmediato
+                        const nextCode = getNextClientCode();
+                        const newClientObj = {
+                            clientCode: nextCode,
+                            name: searchVal,
+                            phone: '',
+                            cuit: '',
+                            address: '',
+                            addresses: [],
+                            crmType: 'cliente',
+                            crmStage: 'ganado',
+                            priority: 'normal',
+                            source: 'Cobranzas',
+                            iva: 'CONSUMIDOR FINAL',
+                            notes: 'Cliente registrado automáticamente desde Cobranzas',
+                            createdAt: new Date().toISOString()
+                        };
+                        const docRef = await db.collection('clientes').add(newClientObj);
+                        newClientObj.id = docRef.id;
+                        const exIdx = clientsList.findIndex(c => c.id === docRef.id);
+                        if (exIdx === -1) clientsList.unshift(newClientObj);
+                        localStorage.setItem('electrofrio_clients', JSON.stringify(clientsList));
+                        cId = docRef.id;
+                        document.getElementById('mov-client-id').value = docRef.id;
+                    }
+                }
 
-                closeModal('modal-movement');
-                showToast(type === 'cargo' ? `Cargo de ${formatCurrency(amount)} guardado` : `Cobro de ${formatCurrency(amount)} registrado`, "success");
+                if (!cId) {
+                    showToast("Por favor escribe el nombre de un cliente", "error");
+                    const searchInput = document.getElementById('mov-client-search');
+                    if (searchInput) {
+                        searchInput.focus();
+                        handleMovClientSearchFocus();
+                    }
+                    isSavingMovement = false;
+                    if (submitBtn) submitBtn.disabled = false;
+                    return;
+                }
+
+                const clientObj = clientsList.find(c => c.id === cId) || {};
+
+                if (movId) {
+                    // Modo Edición: Actualizar movimiento existente
+                    const updateData = {
+                        clientId: cId,
+                        clientName: clientObj.name || 'Sin Nombre',
+                        clientCode: clientObj.clientCode || '',
+                        type: type,
+                        amount: amount,
+                        date: date,
+                        concept: concept,
+                        paymentMethod: type === 'abono' ? paymentMethod : '',
+                        receiptNumber: receiptNumber,
+                        notes: notes,
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    await db.collection('cobros_movimientos').doc(movId).update(updateData);
+
+                    const idx = movementsList.findIndex(m => m.id === movId);
+                    if (idx !== -1) {
+                        movementsList[idx] = { ...movementsList[idx], ...updateData };
+                    }
+                    localStorage.setItem('electrofrio_cobros_movs', JSON.stringify(movementsList));
+
+                    closeModal('modal-movement');
+                    showToast(`Monto actualizado a ${formatCurrency(amount)} correctamente`, "success");
+                } else {
+                    // Modo Creación: Nuevo movimiento
+                    const newDoc = {
+                        clientId: cId,
+                        clientName: clientObj.name || 'Sin Nombre',
+                        clientCode: clientObj.clientCode || '',
+                        type: type, // 'cargo' o 'abono'
+                        amount: amount,
+                        date: date,
+                        concept: concept,
+                        paymentMethod: type === 'abono' ? paymentMethod : '',
+                        receiptNumber: receiptNumber,
+                        notes: notes,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    const docRef = await db.collection('cobros_movimientos').add(newDoc);
+                    newDoc.id = docRef.id;
+
+                    // Deduplicar antes de agregar
+                    const existingIdx = movementsList.findIndex(m => m.id === docRef.id);
+                    if (existingIdx === -1) {
+                        movementsList.unshift(newDoc);
+                    } else {
+                        movementsList[existingIdx] = newDoc;
+                    }
+                    localStorage.setItem('electrofrio_cobros_movs', JSON.stringify(movementsList));
+
+                    closeModal('modal-movement');
+                    showToast(type === 'cargo' ? `Cargo de ${formatCurrency(amount)} guardado` : `Cobro de ${formatCurrency(amount)} registrado`, "success");
+                }
 
                 recomputeBalances();
                 applyFilters();
 
                 // Si estaba abierto el estado de cuenta de ese cliente, refrescarlo
-                const openStatementId = document.getElementById('statement-client-id').value;
-                if (openStatementId === cId) {
+                const openStatementId = document.getElementById('statement-client-id')?.value;
+                if (openStatementId && openStatementId === cId) {
                     renderStatementTable(cId);
                 }
             } catch(err) {
                 console.error("Error al guardar movimiento:", err);
                 showToast("Error al guardar en Firestore: " + err.message, "error");
+            } finally {
+                isSavingMovement = false;
+                if (submitBtn) submitBtn.disabled = false;
             }
         }
 
@@ -1658,8 +2202,12 @@
             const tbody = document.getElementById('statement-table-body');
             const balanceBadge = document.getElementById('statement-client-balance-badge');
 
-            // Filtrar movimientos de este cliente y ordenar cronológicamente ascendente para el saldo evolutivo
-            const clientMovs = movementsList.filter(m => m.clientId === clientId).sort((a, b) => new Date(a.date) - new Date(b.date));
+            // Filtrar movimientos de este cliente, deduplicar estrictamente por ID único
+            const map = new Map();
+            movementsList.filter(m => m.clientId === clientId).forEach(m => {
+                if (m && m.id) map.set(m.id, m);
+            });
+            const clientMovs = Array.from(map.values()).sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0));
 
             let runningBalance = 0;
             let rowsHtml = '';
@@ -1696,7 +2244,10 @@
                         <td style="text-align:right;" class="text-abono">${abonoStr}</td>
                         <td style="text-align:right; font-weight:700; font-family:'Outfit',sans-serif;">${formatCurrency(runningBalance)}</td>
                         <td style="text-align:center;">
-                            <button type="button" class="btn btn-danger btn-sm btn-icon" style="padding:2px 5px; font-size:0.7rem;" onclick="deleteMovement('${m.id}', '${clientId}')" title="Eliminar este movimiento">✕</button>
+                            <div style="display:flex; gap:4px; justify-content:center; align-items:center;">
+                                <button type="button" class="btn btn-secondary btn-sm btn-icon" style="padding:2px 6px; font-size:0.72rem; color:var(--color-blue);" onclick="editMovement('${m.id}')" title="Editar monto o datos de este registro">✏️</button>
+                                <button type="button" class="btn btn-danger btn-sm btn-icon" style="padding:2px 6px; font-size:0.72rem;" onclick="deleteMovement('${m.id}', '${clientId}')" title="Eliminar este movimiento">✕</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1717,6 +2268,51 @@
             }
         }
 
+        function editMovement(movementId) {
+            const mov = movementsList.find(m => m.id === movementId);
+            if (!mov) {
+                showToast("Movimiento no encontrado", "error");
+                return;
+            }
+
+            const form = document.getElementById('form-movement');
+            form.reset();
+
+            document.getElementById('mov-id').value = mov.id;
+            document.getElementById('mov-type').value = mov.type;
+
+            // Seleccionar el cliente del movimiento
+            selectClientForMovement(mov.clientId);
+
+            // Cargar datos en el formulario
+            document.getElementById('mov-amount').value = mov.amount;
+            document.getElementById('mov-date').value = mov.date || (mov.createdAt ? mov.createdAt.split('T')[0] : '');
+            document.getElementById('mov-concept').value = mov.concept || '';
+            document.getElementById('mov-payment-method').value = mov.paymentMethod || 'Efectivo';
+            document.getElementById('mov-receipt').value = mov.receiptNumber || '';
+            document.getElementById('mov-notes').value = mov.notes || '';
+
+            const titleEl = document.getElementById('modal-movement-title');
+            const submitBtn = document.getElementById('btn-save-movement');
+            const payRow = document.getElementById('mov-payment-method-row');
+
+            if (mov.type === 'cargo') {
+                titleEl.innerHTML = `<span>✏️ Modificar Cargo / Deuda</span>`;
+                submitBtn.className = 'btn btn-danger';
+                submitBtn.innerHTML = '💾 Actualizar Monto / Cargo';
+                payRow.style.display = 'none';
+                document.getElementById('mov-concept').placeholder = 'Ej: Mantenimiento Preventivo, Cambio de Motor, Carga de Gas';
+            } else {
+                titleEl.innerHTML = `<span>✏️ Modificar Cobro / Pago Recibido</span>`;
+                submitBtn.className = 'btn btn-success';
+                submitBtn.innerHTML = '💾 Actualizar Monto / Cobro';
+                payRow.style.display = 'grid';
+                document.getElementById('mov-concept').placeholder = 'Ej: Pago Total Servicio, Anticipo de Obra, Cancelación de Factura';
+            }
+
+            openModal('modal-movement');
+        }
+
         function openMovementForCurrentStatement(type) {
             const cId = document.getElementById('statement-client-id').value;
             openMovementModal(type, cId);
@@ -1728,6 +2324,7 @@
             try {
                 await db.collection('cobros_movimientos').doc(movementId).delete();
                 movementsList = movementsList.filter(m => m.id !== movementId);
+                localStorage.setItem('electrofrio_cobros_movs', JSON.stringify(movementsList));
                 showToast("Movimiento eliminado", "info");
                 recomputeBalances();
                 applyFilters();
@@ -1745,13 +2342,47 @@
 
             const balance = (clientBalances[clientId] ? clientBalances[clientId].balance : 0);
 
+            // Obtener cargos/deudas de este cliente
+            const clientMovs = movementsList.filter(m => m.clientId === clientId);
+            const cargos = clientMovs
+                .filter(m => m.type === 'cargo')
+                .sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+
+            let detalleTrabajoStr = '';
+            let resumenFecha = 'Sin fecha registrada';
+
+            if (cargos.length === 1) {
+                const f = cargos[0].date ? formatDate(cargos[0].date) : '';
+                resumenFecha = f || 'Sin fecha';
+                detalleTrabajoStr = f ? `del trabajo realizado el día *${f}*` : `del trabajo realizado`;
+            } else if (cargos.length > 1) {
+                const uniqueDates = [...new Set(cargos.map(c => c.date ? formatDate(c.date) : '').filter(Boolean))];
+                if (uniqueDates.length === 1) {
+                    resumenFecha = uniqueDates[0];
+                    detalleTrabajoStr = `de los trabajos realizados el día *${uniqueDates[0]}*`;
+                } else if (uniqueDates.length > 1) {
+                    const fechasStr = uniqueDates.slice(0, 3).join(', ');
+                    resumenFecha = fechasStr;
+                    detalleTrabajoStr = `de los trabajos realizados en las fechas *${fechasStr}*`;
+                } else {
+                    detalleTrabajoStr = `de los trabajos realizados`;
+                }
+            } else {
+                detalleTrabajoStr = `de los trabajos realizados`;
+            }
+
             document.getElementById('wa-debt-client-id').value = clientId;
             document.getElementById('wa-debt-client-name').value = client.name || 'Cliente';
             document.getElementById('wa-debt-client-phone').value = client.phone || '';
             document.getElementById('wa-debt-amount-text').value = formatCurrency(balance);
 
-            // Mensaje preconfigurado
-            const msg = `Hola ${client.name}, te saludamos de ElectroFrío. 👋\nQueríamos consultarte sobre el saldo pendiente de tu cuenta de ${formatCurrency(balance)} por los servicios y trabajos realizados.\n\nPara transferencias bancarias:\n🏦 Banco: Santander / Galicia\n💳 Alias: ELECTROFRIO.PAGOS\n📌 CBU: 0720123988000034567890\n\nPor favor envíanos el comprobante una vez efectuado. ¡Muchas gracias!`;
+            const dateField = document.getElementById('wa-debt-date-text');
+            if (dateField) {
+                dateField.value = resumenFecha;
+            }
+
+            // Mensaje preconfigurado completo
+            const msg = `Hola *${client.name}*, te saludamos del equipo de *ElectroFrío*. 👋\n\nTe escribimos para recordarte sobre el saldo pendiente de tu cuenta de *${formatCurrency(balance)}* ${detalleTrabajoStr}.\n\n💳 *Datos para Transferencia Bancaria:*\n🏦 *Banco:* Santander / Galicia\n🔑 *Alias:* ELECTROFRIO.PAGOS\n📌 *CBU:* 0720123988000034567890\n\n📄 Por favor envíanos el comprobante por este medio una vez realizado el pago. ¡Muchas gracias!`;
 
             document.getElementById('wa-debt-message').value = msg;
             openModal('modal-whatsapp-debt');
@@ -1841,6 +2472,12 @@
         window.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-overlay')) {
                 e.target.classList.remove('show');
+            }
+            // Cerrar lista autocompletado si se hace clic fuera del contenedor
+            const searchContainer = document.getElementById('mov-client-search-box');
+            const autoList = document.getElementById('mov-client-autocomplete-list');
+            if (autoList && searchContainer && !searchContainer.contains(e.target)) {
+                autoList.style.display = 'none';
             }
         });
 
