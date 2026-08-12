@@ -2172,7 +2172,7 @@
             }
 
             // Construir enlace de WhatsApp API
-            const waUrl = `https://wa.me/${phoneInfo.cleanDigits}?text=${encodeURIComponent(message)}`;
+            const waUrl = `https://api.whatsapp.com/send?phone=${phoneInfo.cleanDigits}&text=${encodeURIComponent(message)}`;
             window.open(waUrl, '_blank');
 
             closeModal('modal-whatsapp');

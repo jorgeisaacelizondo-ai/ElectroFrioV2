@@ -854,7 +854,7 @@
         <div class="metrics-grid">
             <div class="metric-card red">
                 <div class="metric-info">
-                    <h3>Total Deuda en la Calle</h3>
+                    <h3>Total Deuda</h3>
                     <div class="metric-value" id="kpi-total-deuda">$ 0</div>
                     <div class="metric-sub" id="kpi-total-deuda-sub">Calculando saldo pendiente...</div>
                 </div>
@@ -863,7 +863,7 @@
 
             <div class="metric-card yellow">
                 <div class="metric-info">
-                    <h3>Personas que Deben Plata</h3>
+                    <h3>Deben $$ </h3>
                     <div class="metric-value" id="kpi-cant-deudores">0</div>
                     <div class="metric-sub" id="kpi-cant-deudores-sub">Clientes con saldo deudor</div>
                 </div>
@@ -909,7 +909,7 @@
                 <!-- Buscador -->
                 <div class="search-box-wrapper">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="filter-search" placeholder="Buscar por cliente, teléfono, código, CUIT..." oninput="applyFilters()">
+                    <input type="text" id="filter-search" placeholder="Buscar..." oninput="applyFilters()">
                 </div>
 
                 <!-- Filtro Estado Saldo -->
@@ -938,13 +938,13 @@
                 <!-- Botón + Nuevo Cargo (Deuda) -->
                 <button class="btn btn-danger btn-sm" onclick="openMovementModal('cargo')">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                    <span>+ Cargar Deuda</span>
+                    <span>Cargar Deuda</span>
                 </button>
 
                 <!-- Botón + Registrar Cobro (Pago) -->
                 <button class="btn btn-success btn-sm" onclick="openMovementModal('abono')">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    <span>+ Registrar Cobro</span>
+                    <span>Registrar Cobro</span>
                 </button>
 
                 <button class="btn btn-secondary btn-sm" onclick="exportCobrosToExcel()" title="Descargar reporte en Excel">
@@ -1558,16 +1558,16 @@
             });
 
             document.getElementById('kpi-total-deuda').textContent = formatCurrency(totalDeuda);
-            document.getElementById('kpi-total-deuda-sub').textContent = `${cantDeudores} clientes con saldo pendiente`;
+            document.getElementById('kpi-total-deuda-sub').textContent = `${cantDeudores} clientes`;
 
             document.getElementById('kpi-cant-deudores').textContent = cantDeudores;
-            document.getElementById('kpi-cant-deudores-sub').textContent = `Representa el ${tableData.length ? Math.round((cantDeudores / tableData.length)*100) : 0}% de los clientes`;
+            document.getElementById('kpi-cant-deudores-sub').textContent = ` ${tableData.length ? Math.round((cantDeudores / tableData.length)*100) : 0}% de clientes`;
 
             document.getElementById('kpi-total-cobrado').textContent = formatCurrency(totalCobrado);
-            document.getElementById('kpi-total-cobrado-sub').textContent = `Total cobros registrados en el sistema`;
+            document.getElementById('kpi-total-cobrado-sub').textContent = `Total cobros en el sistema`;
 
             document.getElementById('kpi-clientes-aldia').textContent = clientesAlDia;
-            document.getElementById('kpi-clientes-aldia-sub').textContent = `Cuentas en cero o con saldo a favor`;
+            document.getElementById('kpi-clientes-aldia-sub').textContent = ``;
 
             document.getElementById('debtors-count-badge').textContent = `${cantDeudores} deudores activos`;
         }
@@ -2382,7 +2382,7 @@
             }
 
             // Mensaje preconfigurado completo
-            const msg = `Hola *${client.name}*, te saludamos del equipo de *ElectroFrío*. 👋\n\nTe escribimos para recordarte sobre el saldo pendiente de tu cuenta de *${formatCurrency(balance)}* ${detalleTrabajoStr}.\n\n💳 *Datos para Transferencia Bancaria:*\n🏦 *Banco:* Santander / Galicia\n🔑 *Alias:* ELECTROFRIO.PAGOS\n📌 *CBU:* 0720123988000034567890\n\n📄 Por favor envíanos el comprobante por este medio una vez realizado el pago. ¡Muchas gracias!`;
+            const msg = `Hola *${client.name}*, te saludamos del equipo de *ElectroFrío*.\n\nTe escribimos para recordarte sobre el saldo pendiente de tu cuenta de *${formatCurrency(balance)}* ${detalleTrabajoStr}.\n\n*Datos para Transferencia Bancaria:*\n• *Banco:* BANCO NACION\n• *Alias:* ELECTROFRIOLR.BN\n• *Titular:* Arias Jorge, Victor Ignacio\n\nPor favor envíanos el comprobante por este medio una vez realizado el pago. ¡Muchas gracias!`;
 
             document.getElementById('wa-debt-message').value = msg;
             openModal('modal-whatsapp-debt');
@@ -2408,7 +2408,7 @@
                 digits = '549' + digits;
             }
 
-            const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+            const waUrl = `https://api.whatsapp.com/send?phone=${digits}&text=${encodeURIComponent(message)}`;
             window.open(waUrl, '_blank');
             closeModal('modal-whatsapp-debt');
             showToast("WhatsApp abierto en pestaña nueva", "success");
