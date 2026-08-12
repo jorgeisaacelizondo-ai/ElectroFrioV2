@@ -3217,21 +3217,21 @@
             // Generar resumen de ítems
             let itemsSummary = '';
             (b.items || []).slice(0, 8).forEach(item => {
-                itemsSummary += `▫️ ${item.quantity}x ${item.description.trim()} (${formatMoney(item.subtotal)})\n`;
+                itemsSummary += `- ${item.quantity}x ${item.description.trim()} (${formatMoney(item.subtotal)})\n`;
             });
             if ((b.items || []).length > 8) {
-                itemsSummary += `▫️ ... y ${(b.items.length - 8)} ítems adicionales.\n`;
+                itemsSummary += `- ... y ${(b.items.length - 8)} ítems adicionales.\n`;
             }
 
             const msg = `*${issuer.name || 'ELECTROFRÍO'} - Presupuesto Nº ${num}*\n\n` +
                 `Hola *${clientName}*, le enviamos el detalle de su presupuesto:\n\n` +
-                `📅 *Fecha de Emisión:* ${dateStr}\n` +
-                `⏳ *Válido hasta:* ${expireStr}\n\n` +
-                `📋 *Detalle del Trabajo y Materiales:*\n${itemsSummary}\n` +
-                `💰 *TOTAL DEL PRESUPUESTO:* *${totalStr}*\n\n` +
-                (b.observations ? `📌 *Observaciones:* ${b.observations}\n\n` : '') +
+                `- *Fecha de Emisión:* ${dateStr}\n` +
+                `- *Válido hasta:* ${expireStr}\n\n` +
+                `*Detalle del Trabajo y Materiales:*\n${itemsSummary}\n` +
+                `*TOTAL DEL PRESUPUESTO:* *${totalStr}*\n\n` +
+                (b.observations ? `*Observaciones:* ${b.observations}\n\n` : '') +
                 `Quedamos a su entera disposición ante cualquier consulta para coordinar el trabajo.\n` +
-                `¡Muchas gracias por confiar en *${issuer.name || 'ElectroFrío'}*! ❄️⚡`;
+                `¡Muchas gracias por confiar en *${issuer.name || 'ElectroFrío'}*!`;
 
             document.getElementById('wa-msg-input').value = msg;
             document.getElementById('modal-whatsapp').classList.add('active');
