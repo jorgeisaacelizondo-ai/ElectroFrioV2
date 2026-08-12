@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mano de Obra - ElectroFrío</title>
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mano de Obra ElectroFrío">
+    <link rel="shortcut icon" href="icon.png?v=3" type="image/png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- SheetJS (Excel .xlsx, .xls, .csv) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            /* Tema Oscuro ElectroFrío */
+            --bg-main: #090f1d;
+            --bg-sidebar: #060b14;
+            --bg-card: #131e33;
+            --bg-card-hover: #182742;
+            --bg-input: #0a1322;
+            --border-color: #1e3352;
+            --border-focus: #00bfff;
+
+            --text-primary: #ffffff;
+            --text-secondary: #93c5fd;
+            --text-muted: #64748b;
+            --text-subtle: #475569;
+
+            --color-blue: #00bfff;
+            --color-blue-hover: #0099cc;
+            --color-green: #10b981;
+            --color-green-hover: #059669;
+            --color-yellow: #f59e0b;
+            --color-red: #ef4444;
+            --color-purple: #8b5cf6;
+            --color-amber: #d97706;
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.45);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-mode {
+            --bg-main: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f8fafc;
+            --border-color: #cbd5e1;
+            --border-focus: #0084ff;
+            --text-primary: #0f172a;
+            --text-secondary: #0284c7;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(16, 185, 129, 0.2));
+            border: 1px solid rgba(0, 191, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-blue);
+            font-size: 1.3rem;
+        }
+
+        .header-brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-count {
+            background: rgba(0, 191, 255, 0.15);
+            color: var(--color-blue);
+            border: 1px solid rgba(0, 191, 255, 0.35);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.3px;
+        }
+
+        .header-brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 15px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-blue);
+            color: #0b1320;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background-color: #f59e0b;
+            color: #000000;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background-color: #d97706;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background-color: var(--color-red);
+            color: #ffffff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: var(--color-blue);
+        }
+
+        /* Layout Container */
+        .main-container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 16px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Filtering & Controls Section */
+        .controls-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-and-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 14px;
+            flex-grow: 1;
+            max-width: 700px;
+            transition: var(--transition);
+        }
+
+        .search-box:focus-within {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.15);
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .tools-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .form-select-sm {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .form-select-sm:focus {
+            border-color: var(--border-focus);
+        }
+
+        /* Catalog Table Card */
+        .table-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-header-bar {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .table-header-bar h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-count-badge {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            max-height: calc(100vh - 230px);
+            min-height: 300px;
+        }
+
+        table.custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.84rem;
+        }
+
+        table.custom-table thead th {
+            background-color: rgba(6, 11, 20, 0.95);
+            color: var(--text-secondary);
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        table.custom-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background-color 0.15s ease;
+        }
+
+        table.custom-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        table.custom-table td {
+            padding: 10px 16px;
+            vertical-align: middle;
+        }
+
+        /* Specific Cell Elements */
+        .code-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(0, 191, 255, 0.1);
+            color: var(--color-blue);
+            border: 1px solid rgba(0, 191, 255, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .desc-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.35;
+        }
+
+        .price-tag {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #34d399;
+            white-space: nowrap;
+        }
+
+        .category-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-weight: 500;
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.76rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            white-space: nowrap;
+        }
+
+        .action-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action-edit {
+            background: rgba(0, 191, 255, 0.1);
+            color: var(--color-blue);
+            border: 1px solid rgba(0, 191, 255, 0.25);
+            padding: 5px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action-edit:hover {
+            background: var(--color-blue);
+            color: #0b1320;
+        }
+
+        .btn-action-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-red);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 5px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+
+        .btn-action-delete:hover {
+            background: var(--color-red);
+            color: #ffffff;
+        }
+
+        /* Empty and Loading States */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-card.modal-lg {
+            max-width: 900px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-close-modal {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .btn-close-modal:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom-left-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+        }
+
+        /* Form Inputs */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.15);
+        }
+
+        .form-input[disabled], .form-input:read-only {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .locked-field-badge {
+            font-size: 0.7rem;
+            color: var(--color-yellow);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: none;
+        }
+
+        .input-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Drag & Drop Upload Zone */
+        .dropzone-container {
+            border: 2px dashed rgba(0, 191, 255, 0.35);
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(0, 191, 255, 0.03);
+            transition: var(--transition);
+        }
+
+        .dropzone-container:hover, .dropzone-container.dragover {
+            border-color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.08);
+            transform: scale(0.995);
+        }
+
+        .dropzone-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        /* Column Mapper Selector Bar */
+        .column-mapper-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .column-mapper-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .column-mapper-item label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .import-options-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 191, 255, 0.06);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            font-size: 0.82rem;
+        }
+
+        .import-summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .summary-pill {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+        }
+
+        .summary-pill .val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .summary-pill .lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .summary-pill.green .val { color: var(--color-green); }
+        .summary-pill.yellow .val { color: var(--color-yellow); }
+        .summary-pill.blue .val { color: var(--color-blue); }
+
+        .preview-table-container {
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-badge.new {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.update {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge.duplicate {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Toast Alerts */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--color-blue);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 380px;
+        }
+
+        .toast-item.success { border-left-color: var(--color-green); }
+        .toast-item.error { border-left-color: var(--color-red); }
+        .toast-item.warning { border-left-color: var(--color-yellow); }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .main-container {
+                padding: 12px 14px 40px;
+            }
+            .search-and-tools {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Principal Compacto -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="header-icon">🔧</div>
+            <div class="header-brand-text">
+                <h1>
+                    Mano de Obra
+                    <span class="badge-count" id="header-total-badge">📦 0 Servicios</span>
+                </h1>
+                </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-danger" onclick="openClearAllModal()" title="Vaciar toda la lista de mano de obra">
+                🗑️ Vaciar Lista
+            </button>
+            <button class="btn btn-secondary" onclick="exportCatalogToExcel()" title="Descargar catálogo a Excel">
+                📊 Exportar Excel
+            </button>
+            <button class="btn btn-warning" onclick="openImportModal()" title="Cargar precios desde archivo Excel o CSV">
+                📁 Importar Excel / CSV
+            </button>
+            <button class="btn btn-primary" onclick="openNewModal()" title="Crear un nuevo servicio de mano de obra">
+                ➕ Nuevo Servicio
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="main-container">
+
+        <!-- Barra de Búsqueda Predictiva -->
+        <section class="controls-card">
+            <div class="search-and-tools">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="input-search" placeholder="Buscar" oninput="handleSearchInput()">
+                    <button id="btn-clear-search" style="display:none; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem;" onclick="clearSearch()">✖</button>
+                </div>
+
+                <div class="tools-group">
+                    <select class="form-select-sm" id="select-unit-filter" onchange="applyFilters()">
+                        <option value="ALL">Todas las unidades</option>
+                        <option value="Unidad">Unidad</option>
+                        <option value="Boca">Boca</option>
+                        <option value="Metro">Metro (mts)</option>
+                        <option value="Hora">Hora</option>
+                        <option value="Global">Global / Servicio</option>
+                    </select>
+
+                    <select class="form-select-sm" id="select-sort" onchange="applyFilters()">
+                        <option value="code-asc">Código (A-Z)</option>
+                        <option value="code-desc">Código (Z-A)</option>
+                        <option value="name-asc">Nombre (A-Z)</option>
+                        <option value="price-desc">Precio (Mayor a Menor)</option>
+                        <option value="price-asc">Precio (Menor a Mayor)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla de Mano de Obra -->
+        <section class="table-card">
+            <div class="table-header-bar">
+                <h2>
+                    Listado de Precios
+                    <span class="table-count-badge" id="table-count-label">0 servicios</span>
+                </h2>
+                <div style="font-size: 0.78rem; color: var(--text-muted);" id="last-sync-time">
+                    Sincronizado en tiempo real
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table" id="table-mano-obra">
+                    <thead>
+                        <tr>
+                            <th style="width: 130px;">CÓDIGO</th>
+                            <th>PRODUCTO / MANO DE OBRA</th>
+                            <th style="width: 140px;">CATEGORÍA / RUBRO</th>
+                            <th style="width: 90px;">UNIDAD</th>
+                            <th style="width: 150px; text-align: right;">PRECIO ($ ARS)</th>
+                            <th style="width: 130px; text-align: center;">ACTUALIZADO</th>
+                            <th style="width: 110px; text-align: center;">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-mano-obra">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon">⏳</div>
+                                <h3>Cargando lista de mano de obra...</h3>
+                                <p>Obteniendo información desde la base de datos de ElectroFrío</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 1: NUEVO SERVICIO                                        -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-new">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>➕ Agregar Mano de Obra</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-new')">&times;</button>
+            </div>
+            <form id="form-new-item" onsubmit="handleSaveNew(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-codigo">
+                            Código de Producto / Servicio *
+                            <span style="font-size:0.7rem; color:var(--color-blue);">Único / Identificador</span>
+                        </label>
+                        <input type="text" id="new-codigo" class="form-input" placeholder="Ej: 01735, 99957, ELE-01" required style="text-transform: uppercase; font-family:'JetBrains Mono', monospace; font-weight:700;">
+                        <span class="input-hint">El código se usará para identificar el servicio y no podrá cambiarse posteriormente.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-descripcion">Producto / Nombre de Mano de Obra *</label>
+                        <input type="text" id="new-descripcion" class="form-input" placeholder="Ej: MDO - ELE - BOCA ELECTRICA COMPLETA" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="new-precio">Precio ($ ARS) *</label>
+                            <input type="number" id="new-precio" class="form-input" placeholder="0" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new-unidad">Unidad de Medida</label>
+                            <select id="new-unidad" class="form-select">
+                                <option value="Unidad">Unidad</option>
+                                <option value="Boca">Boca</option>
+                                <option value="Metro">Metro</option>
+                                <option value="Hora">Hora</option>
+                                <option value="Global">Global / Servicio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-categoria">Categoría / Rubro</label>
+                        <input type="text" id="new-categoria" class="form-input" placeholder="Ej: Electricidad, Mano de Obra..." value="MANO DE OBRA">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-new">Guardar en Base de Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 2: EDITAR SERVICIO (CÓDIGO BLOQUEADO)                    -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-edit">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>✏️ Editar Mano de Obra</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-edit')">&times;</button>
+            </div>
+            <form id="form-edit-item" onsubmit="handleSaveEdit(event)">
+                <input type="hidden" id="edit-doc-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit-codigo">
+                            Código de Producto
+                            <span class="locked-field-badge">🔒 Código Bloqueado (No editable)</span>
+                        </label>
+                        <input type="text" id="edit-codigo" class="form-input" disabled readonly style="font-family:'JetBrains Mono', monospace; font-weight:700;">
+                        <span class="input-hint">Por seguridad del sistema y las planillas vinculadas, el código de producto no puede modificarse.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-descripcion">Producto / Nombre de Mano de Obra *</label>
+                        <input type="text" id="edit-descripcion" class="form-input" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="edit-precio">Precio ($ ARS) *</label>
+                            <input type="number" id="edit-precio" class="form-input" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-unidad">Unidad de Medida</label>
+                            <select id="edit-unidad" class="form-select">
+                                <option value="Unidad">Unidad</option>
+                                <option value="Boca">Boca</option>
+                                <option value="Metro">Metro</option>
+                                <option value="Hora">Hora</option>
+                                <option value="Global">Global / Servicio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-categoria">Categoría / Rubro</label>
+                        <input type="text" id="edit-categoria" class="form-input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-edit" style="background-color:var(--color-green); color:#fff;">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 3: IMPORTAR DESDE EXCEL / CSV CON CONTROL Y ACTUALIZACIÓN -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-import">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h2>📁 Importar y Actualizar Precios desde Excel</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-import')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.85rem; color:var(--text-secondary);">
+                    Sube tu archivo Excel (<strong>.xlsx, .xls</strong>) o <strong>.csv</strong> de lista de precios. El sistema detectará automáticamente las columnas de <strong>Cod Producto, Producto y Costo</strong>.
+                </p>
+
+                <!-- Zona de Arrastrar y Soltar -->
+                <div class="dropzone-container" id="import-dropzone" onclick="document.getElementById('import-file-input').click()">
+                    <div class="dropzone-icon">📄</div>
+                    <p style="font-weight:700; color:var(--text-primary); margin-bottom:4px;" id="dropzone-label">Haz clic aquí o arrastra tu archivo Excel</p>
+                    <p style="font-size:0.78rem; color:var(--text-muted);">Soporta formatos .xlsx, .xls y .csv</p>
+                    <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <!-- Resumen de Auditoría Previa y Configuración de Columnas -->
+                <div id="import-analysis-box" style="display: none;">
+                    
+                    <!-- Selectores de Columnas Detectadas -->
+                    <div class="column-mapper-box">
+                        <div class="column-mapper-item">
+                            <label>Columna Código:</label>
+                            <select id="map-col-code" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                        <div class="column-mapper-item">
+                            <label>Columna Producto / Nombre:</label>
+                            <select id="map-col-desc" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                        <div class="column-mapper-item">
+                            <label>Columna Precio / Costo:</label>
+                            <select id="map-col-price" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                        <div class="column-mapper-item">
+                            <label>Columna Rubro / Categoría:</label>
+                            <select id="map-col-cat" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                    </div>
+
+                    <!-- Opción de Actualización -->
+                    <div class="import-options-bar">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary);">
+                            <input type="checkbox" id="chk-update-existing" checked onchange="reprocessParsedRows()" style="width:16px; height:16px; cursor:pointer; accent-color:var(--color-blue);">
+                            <span>🔄 Actualizar productos existentes si el código ya existe (Actualiza nombres y precios)</span>
+                        </label>
+                    </div>
+
+                    <div class="import-summary-bar">
+                        <div class="summary-pill blue">
+                            <div class="val" id="count-file-total">0</div>
+                            <div class="lbl">Total en Archivo</div>
+                        </div>
+                        <div class="summary-pill green">
+                            <div class="val" id="count-file-new">0</div>
+                            <div class="lbl">Nuevos a Crear</div>
+                        </div>
+                        <div class="summary-pill yellow">
+                            <div class="val" id="count-file-update">0</div>
+                            <div class="lbl" id="lbl-file-update">Existentes a Actualizar</div>
+                        </div>
+                    </div>
+
+                    <!-- Previsualización -->
+                    <div style="margin-top: 14px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+                        <span>Previsualización de datos a cargar:</span>
+                        <span style="font-size:0.72rem; color:var(--text-muted);" id="preview-range-text">Mostrando primeros 50 registros</span>
+                    </div>
+
+                    <div class="preview-table-container">
+                        <table class="custom-table" style="font-size: 0.78rem;">
+                            <thead>
+                                <tr>
+                                    <th>ACCIÓN</th>
+                                    <th>CÓDIGO</th>
+                                    <th>PRODUCTO / MANO DE OBRA</th>
+                                    <th>PRECIO / COSTO</th>
+                                    <th>RUBRO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-import-preview">
+                                <!-- Filas de previsualización -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import')">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-import" disabled onclick="executeBatchImport()" style="background-color:var(--color-green); color:#fff;">
+                    🚀 Confirmar e Importar a Base de Datos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 4: CONFIRMAR ELIMINACIÓN                                 -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-delete">
+        <div class="modal-card" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2>🗑️ Eliminar Mano de Obra</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-delete')">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="font-size:0.9rem; color:var(--text-primary); margin-bottom:8px;">¿Estás seguro de que deseas eliminar este servicio del catálogo?</p>
+                <div style="padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); margin-bottom: 10px;">
+                    <div style="font-family:'JetBrains Mono', monospace; font-weight:700; color:var(--color-red);" id="del-item-code">000</div>
+                    <div style="font-weight:600; font-size:0.85rem; color:var(--text-primary); margin-top:2px;" id="del-item-name">Nombre del servicio</div>
+                </div>
+                <p style="font-size:0.75rem; color:var(--text-muted);">Esta acción no se puede deshacer en la base de datos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-delete')">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete" onclick="executeDeleteItem()">Eliminar Definitivamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 5: VACIAR CATÁLOGO COMPLETO                              -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-clear-all">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>⚠️ Vaciar Lista de Mano de Obra</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-clear-all')">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">🗑️</div>
+                <h3 style="font-size: 1.1rem; color: var(--color-red); margin-bottom: 8px;">¿Eliminar toda la mano de obra?</h3>
+                <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 12px;">
+                    Esta acción eliminará <strong>todos los registros</strong> de la base de datos de Mano de Obra para que puedas comenzar de cero o subir un nuevo archivo limpio.
+                </p>
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 10px; font-size: 0.78rem; color: var(--text-muted);">
+                    Se borrarán los <strong style="color: var(--text-primary);" id="clear-count-label">0</strong> servicios actuales de Firestore.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-clear-all')">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-clear-all" onclick="executeClearAll()">
+                    Sí, Vaciar Todo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ============================================================== -->
+    <!-- JAVASCRIPT & LÓGICA DE FIREBASE Y EXCEL                        -->
+    <!-- ============================================================== -->
+    <script>
+        // --- 1. CONFIGURACIÓN FIREBASE COMPAT V9 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- 2. ESTADO GLOBAL ---
+        let manoObraData = [];          // Catálogo sincronizado desde Firestore
+        let filteredData = [];          // Catálogo visible tras aplicar búsqueda
+        let rawExcelRows = [];          // Matriz de filas sin procesar leídas de SheetJS
+        let excelHeaderRowIdx = 0;      // Índice de la fila de encabezados
+        let itemsToCommit = [];         // Items listos para guardar en Firestore
+        let itemToDeleteId = null;      // ID a eliminar
+        let unsubscribeFirestore = null;
+
+        // --- 3. TEMA CLARO / OSCURO ---
+        function applyTheme(isLight) {
+            if (isLight) {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'electrofrio_theme' || e.key === 'theme') {
+                applyTheme(e.newValue === 'light');
+            }
+        });
+
+        // --- 4. INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('electrofrio_theme') || localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme === 'light');
+
+            // Cargar de caché local para velocidad instantánea
+            const cached = localStorage.getItem('electrofrio_mano_obra');
+            if (cached) {
+                try {
+                    manoObraData = JSON.parse(cached);
+                    updateHeaderBadge();
+                    applyFilters();
+                } catch(e) {
+                    console.error("Error al cargar caché:", e);
+                }
+            }
+
+            initFirestoreSync();
+            setupDropZone();
+        });
+
+        function initFirestoreSync() {
+            if (unsubscribeFirestore) unsubscribeFirestore();
+
+            unsubscribeFirestore = db.collection('mano_obra').onSnapshot((snapshot) => {
+                const items = [];
+                snapshot.forEach(doc => {
+                    items.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                manoObraData = items;
+                localStorage.setItem('electrofrio_mano_obra', JSON.stringify(manoObraData));
+
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const lastSyncEl = document.getElementById('last-sync-time');
+                if (lastSyncEl) lastSyncEl.textContent = `Actualizado: ${timeStr}`;
+
+                updateHeaderBadge();
+                applyFilters();
+            }, (error) => {
+                console.error("Error al sincronizar mano_obra con Firestore:", error);
+                showToast("Error de conexión con la base de datos", "error");
+            });
+        }
+
+        function updateHeaderBadge() {
+            const badge = document.getElementById('header-total-badge');
+            if (badge) {
+                badge.textContent = `📦 ${manoObraData.length} Servicios`;
+            }
+        }
+
+        // --- 5. FORMATO Y HELPERS ---
+        function formatMoney(num) {
+            const val = Math.round(parseFloat(num) || 0);
+            return '$ ' + val.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function sanitizeCode(code) {
+            if (code === null || code === undefined) return '';
+            return String(code).trim().toUpperCase();
+        }
+
+        function getValidDocId(code) {
+            if (!code) return db.collection('mano_obra').doc().id;
+            return String(code).trim().replace(/\//g, '__').replace(/\\/g, '__');
+        }
+
+        function formatDate(itemOrTimestamp) {
+            if (!itemOrTimestamp) {
+                const today = new Date();
+                return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            }
+            
+            let timestamp = itemOrTimestamp;
+            if (typeof itemOrTimestamp === 'object' && !itemOrTimestamp.toDate && !itemOrTimestamp.seconds && !(itemOrTimestamp instanceof Date)) {
+                timestamp = itemOrTimestamp.updatedAt || itemOrTimestamp.fecha_actualizacion || itemOrTimestamp.createdAt;
+            }
+
+            if (typeof timestamp === 'string' && timestamp.includes('/')) {
+                return timestamp;
+            }
+
+            try {
+                let d;
+                if (timestamp && timestamp.toDate) {
+                    d = timestamp.toDate();
+                } else if (timestamp && timestamp.seconds) {
+                    d = new Date(timestamp.seconds * 1000);
+                } else if (timestamp instanceof Date) {
+                    d = timestamp;
+                } else if (timestamp) {
+                    d = new Date(timestamp);
+                } else {
+                    d = new Date();
+                }
+                
+                if (isNaN(d.getTime())) {
+                    d = new Date();
+                }
+                
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                const today = new Date();
+                return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            }
+        }
+
+        function parseExcelPrice(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return Math.round(val);
+            let s = String(val).trim().replace(/\$/g, '').trim();
+            // Formato con punto de miles y coma decimal (ej: 29.339,50 o 77749,6825)
+            if (s.includes('.') && s.includes(',')) {
+                s = s.replace(/\./g, '').replace(',', '.');
+            } else if (s.includes(',')) {
+                s = s.replace(',', '.');
+            }
+            s = s.replace(/[^0-9.-]/g, '');
+            return Math.round(parseFloat(s) || 0);
+        }
+
+        // --- 6. BÚSQUEDA Y FILTRADO ---
+        function handleSearchInput() {
+            const val = document.getElementById('input-search').value;
+            const clearBtn = document.getElementById('btn-clear-search');
+            if (clearBtn) clearBtn.style.display = val.length > 0 ? 'inline-block' : 'none';
+            applyFilters();
+        }
+
+        function clearSearch() {
+            document.getElementById('input-search').value = '';
+            const clearBtn = document.getElementById('btn-clear-search');
+            if (clearBtn) clearBtn.style.display = 'none';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchVal = (document.getElementById('input-search')?.value || '').trim().toLowerCase();
+            const unitFilter = document.getElementById('select-unit-filter')?.value || 'ALL';
+            const sortMode = document.getElementById('select-sort')?.value || 'code-asc';
+
+            filteredData = manoObraData.filter(item => {
+                const code = sanitizeCode(item.codigo || item.id || '');
+                const desc = (item.descripcion || item.producto || item.nombre || '').toLowerCase();
+                const cat = (item.categoria || item.rubro || '').toLowerCase();
+                const unit = item.unidad || 'Unidad';
+
+                // Filtro de Unidad
+                if (unitFilter !== 'ALL' && unit !== unitFilter) {
+                    return false;
+                }
+
+                // Búsqueda por Código o Nombre / Descripción / Categoría
+                if (searchVal) {
+                    const matchesCode = code.toLowerCase().includes(searchVal);
+                    const matchesDesc = desc.includes(searchVal);
+                    const matchesCat = cat.includes(searchVal);
+                    if (!matchesCode && !matchesDesc && !matchesCat) return false;
+                }
+
+                return true;
+            });
+
+            // Ordenamiento
+            filteredData.sort((a, b) => {
+                const codeA = sanitizeCode(a.codigo || a.id || '');
+                const codeB = sanitizeCode(b.codigo || b.id || '');
+                const nameA = (a.descripcion || a.producto || '').toLowerCase();
+                const nameB = (b.descripcion || b.producto || '').toLowerCase();
+                const priceA = parseFloat(a.precio) || 0;
+                const priceB = parseFloat(b.precio) || 0;
+
+                switch (sortMode) {
+                    case 'code-asc': return codeA.localeCompare(codeB, undefined, { numeric: true });
+                    case 'code-desc': return codeB.localeCompare(codeA, undefined, { numeric: true });
+                    case 'name-asc': return nameA.localeCompare(nameB);
+                    case 'price-desc': return priceB - priceA;
+                    case 'price-asc': return priceA - priceB;
+                    default: return 0;
+                }
+            });
+
+            renderCatalog();
+            updateFilteredCounts();
+        }
+
+        // --- 7. RENDERIZADO DE TABLA ---
+        function renderCatalog() {
+            const tbody = document.getElementById('tbody-mano-obra');
+            if (!tbody) return;
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <h3>No se encontraron servicios</h3>
+                            <p>Prueba buscando por código (ej: 01735, 99957) o por nombre de la mano de obra.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredData.forEach(item => {
+                const code = sanitizeCode(item.codigo || item.id || '');
+                const desc = item.descripcion || item.producto || item.nombre || '-';
+                const price = formatMoney(item.precio);
+                const cat = item.categoria || item.rubro || 'MANO DE OBRA';
+                const unit = item.unidad || 'Unidad';
+                const updateDate = formatDate(item);
+
+                html += `
+                    <tr>
+                        <td>
+                            <span class="code-badge">${escapeHtml(code)}</span>
+                        </td>
+                        <td>
+                            <div class="desc-text">${escapeHtml(desc)}</div>
+                        </td>
+                        <td>
+                            <span class="category-badge">${escapeHtml(cat)}</span>
+                        </td>
+                        <td>
+                            <span style="color: var(--text-secondary); font-size:0.8rem;">${escapeHtml(unit)}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="price-tag">${price}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="date-badge" title="Fecha de última actualización">📅 ${escapeHtml(updateDate)}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-btn-group" style="justify-content: center;">
+                                <button class="btn-action-edit" onclick="openEditModal('${item.id}')" title="Editar producto y precio (Código bloqueado)">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn-action-delete" onclick="openDeleteModal('${item.id}')" title="Eliminar servicio">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function updateFilteredCounts() {
+            const countLabel = document.getElementById('table-count-label');
+            if (countLabel) {
+                countLabel.textContent = `${filteredData.length} de ${manoObraData.length} servicios`;
+            }
+        }
+
+        // --- 8. MODAL NUEVO SERVICIO ---
+        function openNewModal() {
+            const form = document.getElementById('form-new-item');
+            if (form) form.reset();
+            document.getElementById('new-categoria').value = "MANO DE OBRA";
+            openModal('modal-new');
+            setTimeout(() => document.getElementById('new-codigo')?.focus(), 150);
+        }
+
+        async function handleSaveNew(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-new');
+            const codeInput = document.getElementById('new-codigo');
+            const descInput = document.getElementById('new-descripcion');
+            const priceInput = document.getElementById('new-precio');
+            const unitInput = document.getElementById('new-unidad');
+            const catInput = document.getElementById('new-categoria');
+
+            const rawCode = sanitizeCode(codeInput.value);
+            const desc = descInput.value.trim();
+            const price = Math.round(parseFloat(priceInput.value) || 0);
+            const unit = unitInput.value;
+            const cat = catInput.value.trim() || 'MANO DE OBRA';
+
+            if (!rawCode || !desc) {
+                showToast("Por favor complete los campos obligatorios", "warning");
+                return;
+            }
+
+            const exists = manoObraData.some(item => sanitizeCode(item.codigo || item.id) === rawCode);
+            if (exists) {
+                showToast(`El código "${rawCode}" ya existe en la base de datos. Use un código diferente.`, "error");
+                codeInput.focus();
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.textContent = "Guardando...";
+
+                const nowFormatted = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const docData = {
+                    codigo: rawCode,
+                    descripcion: desc,
+                    precio: price,
+                    unidad: unit,
+                    categoria: cat,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    fecha_actualizacion: nowFormatted
+                };
+
+                const docId = getValidDocId(rawCode);
+                await db.collection('mano_obra').doc(docId).set(docData);
+
+                showToast(`Servicio "${rawCode}" agregado con éxito`, "success");
+                closeModal('modal-new');
+            } catch (err) {
+                console.error("Error al guardar nuevo servicio:", err);
+                showToast("Error al guardar: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Guardar en Base de Datos";
+            }
+        }
+
+        // --- 9. MODAL EDITAR SERVICIO (CÓDIGO BLOQUEADO) ---
+        function openEditModal(docId) {
+            const item = manoObraData.find(x => x.id === docId);
+            if (!item) {
+                showToast("No se encontró el registro", "error");
+                return;
+            }
+
+            document.getElementById('edit-doc-id').value = item.id;
+            // El campo de código queda BLOQUEADO y deshabilitado
+            document.getElementById('edit-codigo').value = sanitizeCode(item.codigo || item.id);
+            document.getElementById('edit-descripcion').value = item.descripcion || item.producto || item.nombre || '';
+            document.getElementById('edit-precio').value = Math.round(parseFloat(item.precio) || 0);
+            document.getElementById('edit-unidad').value = item.unidad || 'Unidad';
+            document.getElementById('edit-categoria').value = item.categoria || item.rubro || 'MANO DE OBRA';
+
+            openModal('modal-edit');
+            setTimeout(() => document.getElementById('edit-descripcion')?.focus(), 150);
+        }
+
+        async function handleSaveEdit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-edit');
+            const docId = document.getElementById('edit-doc-id').value;
+            const desc = document.getElementById('edit-descripcion').value.trim();
+            const price = Math.round(parseFloat(document.getElementById('edit-precio').value) || 0);
+            const unit = document.getElementById('edit-unidad').value;
+            const cat = document.getElementById('edit-categoria').value.trim() || 'MANO DE OBRA';
+
+            if (!desc) {
+                showToast("La descripción no puede quedar vacía", "warning");
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.textContent = "Guardando cambios...";
+
+                const nowFormatted = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                await db.collection('mano_obra').doc(docId).update({
+                    descripcion: desc,
+                    precio: price,
+                    unidad: unit,
+                    categoria: cat,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    fecha_actualizacion: nowFormatted
+                });
+
+                showToast("Servicio actualizado correctamente", "success");
+                closeModal('modal-edit');
+            } catch (err) {
+                console.error("Error al actualizar servicio:", err);
+                showToast("Error al actualizar: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Guardar Cambios";
+            }
+        }
+
+        // --- 10. MODAL ELIMINAR SERVICIO ---
+        function openDeleteModal(docId) {
+            const item = manoObraData.find(x => x.id === docId);
+            if (!item) return;
+
+            itemToDeleteId = docId;
+            document.getElementById('del-item-code').textContent = sanitizeCode(item.codigo || item.id);
+            document.getElementById('del-item-name').textContent = item.descripcion || item.producto || item.nombre || '';
+
+            openModal('modal-delete');
+        }
+
+        async function executeDeleteItem() {
+            if (!itemToDeleteId) return;
+            const btn = document.getElementById('btn-confirm-delete');
+
+            try {
+                btn.disabled = true;
+                btn.textContent = "Eliminando...";
+
+                await db.collection('mano_obra').doc(itemToDeleteId).delete();
+                showToast("Servicio eliminado de la base de datos", "success");
+                closeModal('modal-delete');
+            } catch (err) {
+                console.error("Error al eliminar servicio:", err);
+                showToast("Error al eliminar: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Eliminar Definitivamente";
+                itemToDeleteId = null;
+            }
+        }
+
+        // --- 10.1. VACIAR CATÁLOGO COMPLETO DE MANO DE OBRA ---
+        function openClearAllModal() {
+            const countEl = document.getElementById('clear-count-label');
+            if (countEl) countEl.textContent = manoObraData.length;
+            openModal('modal-clear-all');
+        }
+
+        async function executeClearAll() {
+            const btn = document.getElementById('btn-confirm-clear-all');
+            try {
+                btn.disabled = true;
+                btn.textContent = "Consultando base de datos...";
+
+                const snapshot = await db.collection('mano_obra').get();
+                if (snapshot.empty) {
+                    showToast("La lista de mano de obra ya está vacía (0 registros)", "info");
+                    closeModal('modal-clear-all');
+                    return;
+                }
+
+                const totalDocs = snapshot.docs.length;
+                btn.textContent = `Eliminando 0/${totalDocs}...`;
+
+                const batchSize = 450;
+                const docs = snapshot.docs;
+                let deleted = 0;
+
+                for (let i = 0; i < docs.length; i += batchSize) {
+                    const chunk = docs.slice(i, i + batchSize);
+                    const batch = db.batch();
+                    chunk.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    deleted += chunk.length;
+                    btn.textContent = `Eliminando (${deleted}/${totalDocs})...`;
+                }
+
+                manoObraData = [];
+                filteredData = [];
+                localStorage.removeItem('electrofrio_mano_obra');
+                renderCatalog();
+                updateHeaderBadge();
+                updateFilteredCounts();
+
+                showToast(`¡Se vació la lista! Se eliminaron ${deleted} servicios correctamente.`, "success");
+                closeModal('modal-clear-all');
+            } catch (err) {
+                console.error("Error al vaciar catálogo:", err);
+                showToast("Error al vaciar catálogo: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Sí, Vaciar Todo";
+            }
+        }
+
+        // --- 11. IMPORTACIÓN Y ACTUALIZACIÓN INTELIGENTE DE EXCEL ---
+        function openImportModal() {
+            rawExcelRows = [];
+            itemsToCommit = [];
+            document.getElementById('import-file-input').value = '';
+            document.getElementById('dropzone-label').textContent = 'Haz clic aquí o arrastra tu archivo Excel';
+            document.getElementById('import-analysis-box').style.display = 'none';
+            document.getElementById('btn-confirm-import').disabled = true;
+            openModal('modal-import');
+        }
+
+        function setupDropZone() {
+            const dropzone = document.getElementById('import-dropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            showToast(`Analizando ${file.name}...`, "info");
+            document.getElementById('dropzone-label').textContent = `📄 ${file.name}`;
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    rawExcelRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+                    if (!rawExcelRows || rawExcelRows.length < 2) {
+                        showToast("El archivo está vacío o no contiene suficientes filas", "warning");
+                        return;
+                    }
+
+                    setupColumnSelectorsAndProcess(rawExcelRows);
+                } catch (err) {
+                    console.error("Error al procesar archivo Excel:", err);
+                    showToast("Error al leer el archivo Excel: " + err.message, "error");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function setupColumnSelectorsAndProcess(rows) {
+            // Buscar la fila de encabezados
+            excelHeaderRowIdx = 0;
+            for (let r = 0; r < Math.min(rows.length, 5); r++) {
+                const row = rows[r];
+                const hasCodeHeader = row.some(cell => {
+                    const str = String(cell || '').trim().toLowerCase();
+                    return str.includes('cod') || str === 'id' || str === 'codigo';
+                });
+                const hasProdHeader = row.some(cell => {
+                    const str = String(cell || '').trim().toLowerCase();
+                    return str === 'producto' || str.includes('desc') || str.includes('mano de obra');
+                });
+                if (hasCodeHeader || hasProdHeader) {
+                    excelHeaderRowIdx = r;
+                    break;
+                }
+            }
+
+            const headerRow = rows[excelHeaderRowIdx];
+
+            // Rellenar selectores de mapeo
+            const mapCode = document.getElementById('map-col-code');
+            const mapDesc = document.getElementById('map-col-desc');
+            const mapPrice = document.getElementById('map-col-price');
+            const mapCat = document.getElementById('map-col-cat');
+
+            [mapCode, mapDesc, mapPrice, mapCat].forEach(sel => sel.innerHTML = '');
+
+            headerRow.forEach((colName, idx) => {
+                const name = String(colName || `Columna ${idx + 1}`).trim();
+                const optCode = new Option(`${idx + 1}. ${name}`, idx);
+                const optDesc = new Option(`${idx + 1}. ${name}`, idx);
+                const optPrice = new Option(`${idx + 1}. ${name}`, idx);
+                const optCat = new Option(`${idx + 1}. ${name}`, idx);
+
+                mapCode.add(optCode);
+                mapDesc.add(optDesc);
+                mapPrice.add(optPrice);
+                mapCat.add(optCat);
+            });
+
+            // Opción de "Ninguno" para Rubro/Categoría
+            mapCat.add(new Option('Predeterminado (MANO DE OBRA)', -1));
+
+            // Detección inteligente inicial
+            let detectedCode = 0;
+            let detectedDesc = 1;
+            let detectedPrice = -1;
+            let detectedCat = -1;
+
+            headerRow.forEach((colName, idx) => {
+                const str = String(colName || '').trim().toLowerCase();
+
+                // 1. Código
+                if (str === 'cod producto' || str === 'cod. producto' || str === 'cod_producto' || str === 'codigo' || str === 'código' || str === 'cod') {
+                    detectedCode = idx;
+                } else if (str.includes('cod') && !str.includes('barra') && detectedCode === 0) {
+                    detectedCode = idx;
+                }
+
+                // 2. Producto / Descripción (debe ser 'producto' o 'descripcion', NO el código)
+                if (str === 'producto' || str === 'descripcion' || str === 'descripción' || str === 'detalle' || str === 'servicio' || str === 'mano de obra') {
+                    detectedDesc = idx;
+                } else if ((str.includes('desc') || str.includes('prod')) && !str.includes('cod') && !str.includes('utilidad') && detectedDesc === 1) {
+                    detectedDesc = idx;
+                }
+
+                // 3. Precio / Costo
+                if (str === 'costo' || str === 'precio' || str === 'importe' || str === 'valor' || str === '$' || str === 'costo unitario' || str === 'precio unitario') {
+                    detectedPrice = idx;
+                } else if ((str.includes('cost') || str.includes('prec')) && !str.includes('utilidad') && !str.includes('porc') && detectedPrice === -1) {
+                    detectedPrice = idx;
+                }
+
+                // 4. Rubro / Categoría
+                if (str === 'rubro' || str === 'categoria' || str === 'categoría' || str === 'sub rubro') {
+                    detectedCat = idx;
+                }
+            });
+
+            // Asignar selecciones iniciales detectadas
+            mapCode.value = detectedCode;
+            mapDesc.value = detectedDesc;
+            if (detectedPrice !== -1) mapPrice.value = detectedPrice;
+            if (detectedCat !== -1) mapCat.value = detectedCat;
+
+            reprocessParsedRows();
+        }
+
+        function reprocessParsedRows() {
+            if (!rawExcelRows || rawExcelRows.length < 2) return;
+
+            const codeCol = parseInt(document.getElementById('map-col-code').value);
+            const descCol = parseInt(document.getElementById('map-col-desc').value);
+            const priceCol = parseInt(document.getElementById('map-col-price').value);
+            const catCol = parseInt(document.getElementById('map-col-cat').value);
+            const allowUpdate = document.getElementById('chk-update-existing').checked;
+
+            // Map de productos existentes en Firestore
+            const existingItemsMap = new Map();
+            manoObraData.forEach(item => {
+                const c = sanitizeCode(item.codigo || item.id);
+                if (c) existingItemsMap.set(c, item);
+            });
+
+            const parsedRows = [];
+            itemsToCommit = [];
+            let newCount = 0;
+            let updateCount = 0;
+            let skippedCount = 0;
+
+            const seenInThisFile = new Set();
+
+            for (let i = excelHeaderRowIdx + 1; i < rawExcelRows.length; i++) {
+                const row = rawExcelRows[i];
+                if (!row || row.length === 0) continue;
+
+                let code = sanitizeCode(row[codeCol]);
+                let desc = String(row[descCol] || '').trim();
+                let priceNum = priceCol >= 0 ? parseExcelPrice(row[priceCol]) : 0;
+                let cat = catCol >= 0 ? String(row[catCol] || '').trim() : 'MANO DE OBRA';
+
+                if (!code && !desc) continue; // Fila vacía
+
+                // Si no hay código pero hay producto, generar uno auxiliar
+                if (!code && desc) {
+                    code = 'MO-' + String(i).padStart(5, '0');
+                }
+
+                if (!cat) cat = 'MANO DE OBRA';
+
+                const alreadyExists = existingItemsMap.has(code);
+                const isDuplicatedInFile = seenInThisFile.has(code);
+                seenInThisFile.add(code);
+
+                let actionStatus = 'new'; // 'new', 'update', 'skip'
+
+                if (alreadyExists) {
+                    if (allowUpdate) {
+                        actionStatus = 'update';
+                        updateCount++;
+                    } else {
+                        actionStatus = 'skip';
+                        skippedCount++;
+                    }
+                } else if (!isDuplicatedInFile) {
+                    actionStatus = 'new';
+                    newCount++;
+                } else {
+                    actionStatus = 'skip';
+                    skippedCount++;
+                }
+
+                const itemObj = {
+                    codigo: code,
+                    descripcion: desc,
+                    precio: priceNum,
+                    unidad: 'Unidad',
+                    categoria: cat,
+                    status: actionStatus
+                };
+
+                parsedRows.push(itemObj);
+
+                if (actionStatus === 'new' || actionStatus === 'update') {
+                    itemsToCommit.push(itemObj);
+                }
+            }
+
+            // Mostrar el panel de análisis
+            document.getElementById('import-analysis-box').style.display = 'block';
+            document.getElementById('count-file-total').textContent = parsedRows.length;
+            document.getElementById('count-file-new').textContent = newCount;
+            document.getElementById('count-file-update').textContent = allowUpdate ? updateCount : skippedCount;
+            document.getElementById('lbl-file-update').textContent = allowUpdate ? 'Existentes a Actualizar' : 'Duplicados Omitidos';
+
+            // Renderizar la previsualización
+            const tbodyPreview = document.getElementById('tbody-import-preview');
+            let previewHtml = '';
+
+            parsedRows.slice(0, 50).forEach(row => {
+                let badge = '';
+                if (row.status === 'new') {
+                    badge = `<span class="status-badge new">✨ Nuevo</span>`;
+                } else if (row.status === 'update') {
+                    badge = `<span class="status-badge update">🔄 Actualizar</span>`;
+                } else {
+                    badge = `<span class="status-badge duplicate">⚠️ Omitido</span>`;
+                }
+
+                previewHtml += `
+                    <tr style="${row.status === 'skip' ? 'opacity: 0.5; background: rgba(239, 68, 68, 0.04);' : ''}">
+                        <td>${badge}</td>
+                        <td><span class="code-badge">${escapeHtml(row.codigo)}</span></td>
+                        <td><strong style="color:var(--text-primary);">${escapeHtml(row.descripcion)}</strong></td>
+                        <td style="color:#34d399; font-weight:700;">${formatMoney(row.precio)}</td>
+                        <td><span class="category-badge">${escapeHtml(row.categoria)}</span></td>
+                    </tr>
+                `;
+            });
+
+            if (parsedRows.length > 50) {
+                previewHtml += `
+                    <tr>
+                        <td colspan="5" style="text-align:center; color:var(--text-muted); font-size:0.75rem; padding:10px;">
+                            ... y otros ${parsedRows.length - 50} registros más listos para procesar.
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tbodyPreview.innerHTML = previewHtml;
+
+            const btnConfirm = document.getElementById('btn-confirm-import');
+            if (itemsToCommit.length > 0) {
+                btnConfirm.disabled = false;
+                if (newCount > 0 && updateCount > 0) {
+                    btnConfirm.textContent = `🚀 Importar ${newCount} Nuevos y Actualizar ${updateCount} Existentes`;
+                } else if (newCount > 0) {
+                    btnConfirm.textContent = `🚀 Importar ${newCount} Nuevos a Base de Datos`;
+                } else {
+                    btnConfirm.textContent = `🔄 Actualizar ${updateCount} Productos Existentes`;
+                }
+            } else {
+                btnConfirm.disabled = true;
+                btnConfirm.textContent = `No hay cambios para guardar (0 seleccionados)`;
+            }
+        }
+
+        async function executeBatchImport() {
+            if (itemsToCommit.length === 0) {
+                showToast("No hay registros para importar o actualizar", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-import');
+            btn.disabled = true;
+            btn.textContent = "Guardando en Firestore...";
+
+            try {
+                const batchSize = 450;
+                const total = itemsToCommit.length;
+                let processed = 0;
+
+                const nowFormatted = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                for (let i = 0; i < total; i += batchSize) {
+                    const chunk = itemsToCommit.slice(i, i + batchSize);
+                    const batch = db.batch();
+
+                    chunk.forEach(item => {
+                        const docId = getValidDocId(item.codigo);
+                        const docRef = db.collection('mano_obra').doc(docId);
+                        batch.set(docRef, {
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            unidad: item.unidad || 'Unidad',
+                            categoria: item.categoria || 'MANO DE OBRA',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            fecha_actualizacion: nowFormatted
+                        }, { merge: true });
+                    });
+
+                    await batch.commit();
+                    processed += chunk.length;
+                    btn.textContent = `Guardando (${processed}/${total})...`;
+                }
+
+                showToast(`¡Se procesaron exitosamente ${total} productos en la base de datos!`, "success");
+                closeModal('modal-import');
+            } catch (err) {
+                console.error("Error al importar lote en Firestore:", err);
+                showToast("Error al procesar lote: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "🚀 Confirmar e Importar a Base de Datos";
+            }
+        }
+
+        // --- 12. EXPORTAR A EXCEL (.XLSX) ---
+        function exportCatalogToExcel() {
+            const dataToExport = filteredData.length > 0 ? filteredData : manoObraData;
+            if (dataToExport.length === 0) {
+                showToast("No hay datos disponibles para exportar", "warning");
+                return;
+            }
+
+            const excelRows = dataToExport.map(item => ({
+                "Cod Producto": sanitizeCode(item.codigo || item.id),
+                "Producto": item.descripcion || item.producto || item.nombre || '',
+                "Costo": Math.round(parseFloat(item.precio) || 0),
+                "Rubro": item.categoria || item.rubro || 'MANO DE OBRA',
+                "Unidad": item.unidad || 'Unidad',
+                "Fecha Actualización": formatDate(item.updatedAt || item.createdAt)
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Lista de Precio");
+
+            worksheet['!cols'] = [
+                { wch: 15 },
+                { wch: 65 },
+                { wch: 15 },
+                { wch: 20 },
+                { wch: 12 },
+                { wch: 18 }
+            ];
+
+            const nowStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `ElectroFrio_ManoDeObra_${nowStr}.xlsx`);
+            showToast("Catálogo exportado exitosamente", "success");
+        }
+
+        // --- 13. UTILIDADES DE MODALES Y TOASTS ---
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('show');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('show');
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast-item ${type}`;
+
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            if (type === 'warning') icon = '⚠️';
+
+            toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

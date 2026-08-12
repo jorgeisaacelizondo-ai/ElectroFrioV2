@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Clientes y Prospectos - ElectroFrío</title>
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CRM ElectroFrío">
+    <link rel="shortcut icon" href="icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            /* Tema Oscuro ElectroFrío */
+            --bg-main: #090f1d;
+            --bg-sidebar: #060b14;
+            --bg-card: #131e33;
+            --bg-card-hover: #182742;
+            --bg-input: #0a1322;
+            --border-color: #1e3352;
+            --border-focus: #00bfff;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #93c5fd;
+            --text-muted: #64748b;
+            --text-subtle: #475569;
+
+            --color-blue: #00bfff;
+            --color-blue-hover: #0099cc;
+            --color-green: #10b981;
+            --color-green-hover: #059669;
+            --color-whatsapp: #25D366;
+            --color-whatsapp-hover: #1ebd5a;
+            --color-yellow: #f59e0b;
+            --color-red: #ef4444;
+            --color-purple: #8b5cf6;
+            --color-indigo: #6366f1;
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.45);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-mode {
+            --bg-main: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f8fafc;
+            --border-color: #cbd5e1;
+            --border-focus: #0084ff;
+            --text-primary: #0f172a;
+            --text-secondary: #0284c7;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .header-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            object-fit: contain;
+        }
+
+        .header-brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-brand-text h1 span.badge-crm {
+            background: linear-gradient(135deg, #00bfff 0%, #3b82f6 100%);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-blue);
+            color: #0b1320;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background-color: var(--color-green);
+            color: #ffffff;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: var(--color-green-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-whatsapp {
+            background-color: var(--color-whatsapp);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp:hover:not(:disabled) {
+            background-color: var(--color-whatsapp-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: var(--color-blue);
+        }
+
+        .btn-danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: var(--color-red);
+            color: #ffffff;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-icon {
+            padding: 7px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Container */
+        .crm-container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* KPI / Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-card:hover {
+            border-color: rgba(0, 191, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-info h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .metric-info .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .metric-info .metric-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .metric-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-card.blue .metric-icon { background: rgba(0, 191, 255, 0.15); color: var(--color-blue); border-color: rgba(0, 191, 255, 0.3); }
+        .metric-card.green .metric-icon { background: rgba(16, 185, 129, 0.15); color: var(--color-green); border-color: rgba(16, 185, 129, 0.3); }
+        .metric-card.yellow .metric-icon { background: rgba(245, 158, 11, 0.15); color: var(--color-yellow); border-color: rgba(245, 158, 11, 0.3); }
+        .metric-card.purple .metric-icon { background: rgba(139, 92, 246, 0.15); color: var(--color-purple); border-color: rgba(139, 92, 246, 0.3); }
+        .metric-card.whatsapp .metric-icon { background: rgba(37, 211, 102, 0.15); color: var(--color-whatsapp); border-color: rgba(37, 211, 102, 0.3); }
+
+        /* Navigation Bar / Tabs */
+        .crm-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+        }
+
+        .crm-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+        }
+
+        .crm-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .crm-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .crm-tab-btn.active {
+            background: var(--color-blue);
+            color: #0b1320;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .crm-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box-wrapper {
+            flex: 2;
+            min-width: 260px;
+            position: relative;
+        }
+
+        .search-box-wrapper input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.83rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-box-wrapper input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        .search-box-wrapper svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            min-width: 140px;
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            border-color: var(--border-focus);
+        }
+
+        .filter-chips {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .filter-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 3px 9px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .filter-chip:hover {
+            border-color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.08);
+        }
+
+        .filter-chip.active {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: var(--color-blue);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .filter-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            padding-top: 4px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Table View */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: calc(100vh - 350px);
+        }
+
+        table.crm-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.82rem;
+            min-width: 1100px;
+        }
+
+        table.crm-table thead th {
+            background-color: rgba(6, 11, 20, 0.95);
+            color: var(--text-secondary);
+            padding: 12px 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        table.crm-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background-color 0.15s ease;
+        }
+
+        table.crm-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        table.crm-table td {
+            padding: 10px 14px;
+            vertical-align: middle;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-type-client { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-type-prospect { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        .badge-stage-nuevo { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+        .badge-stage-contactado { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-stage-presupuesto { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge-stage-negociacion { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .badge-stage-ganado { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-stage-inactivo { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .badge-priority-alta { background: rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 700; }
+        .badge-priority-media { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+        .badge-priority-baja { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; }
+
+        /* Phone Editor Cell */
+        .phone-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .phone-number-text {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .phone-quick-edit-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .phone-quick-edit-btn:hover {
+            opacity: 1;
+            color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.1);
+        }
+
+        .phone-badge-valid { color: var(--color-green); font-size: 0.8rem; }
+        .phone-badge-warning { color: var(--color-yellow); font-size: 0.8rem; }
+        .phone-badge-invalid { color: var(--color-red); font-size: 0.8rem; }
+
+        /* Kanban Board View */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .kanban-col {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .kanban-col-header {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .kanban-col-header .col-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kanban-col-header .col-count {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 7px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        .kanban-cards-container {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 120px;
+        }
+
+        .kanban-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .kanban-card:hover {
+            border-color: var(--color-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kanban-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .kanban-card-name {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .kanban-card-details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .kanban-card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* Import Section */
+        .import-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(0, 191, 255, 0.4);
+            border-radius: var(--radius-md);
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(0, 191, 255, 0.02);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.08);
+        }
+
+        .drop-zone svg {
+            color: var(--color-blue);
+            margin-bottom: 10px;
+        }
+
+        .import-preview-table-container {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        .editable-cell {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: text;
+            padding: 6px 10px;
+            outline: none;
+            border-radius: 4px;
+            border: 1px solid transparent;
+        }
+
+        .editable-cell:focus {
+            background: rgba(0, 191, 255, 0.1);
+            border-color: var(--color-blue);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-card.modal-lg {
+            max-width: 850px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.success { border-left: 4px solid var(--color-green); }
+        .toast.error { border-left: 4px solid var(--color-red); }
+        .toast.info { border-left: 4px solid var(--color-blue); }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .empty-state svg {
+            color: var(--text-subtle);
+            width: 48px;
+            height: 48px;
+        }
+
+        /* Interactive Timeline in Details Modal */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+            position: relative;
+            padding-left: 18px;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            background: var(--bg-input);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--color-blue);
+        }
+
+        .timeline-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        /* Hidden helper */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="crm-container" style="padding: 12px 16px 40px; gap: 16px;">
+        
+        <!-- KPI / Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card blue">
+                <div class="metric-info">
+                    <h3>Total Contactos</h3>
+                    <div class="metric-value" id="kpi-total">0</div>
+                    <div class="metric-sub" id="kpi-total-sub">Cargando base de datos...</div>
+                </div>
+                <div class="metric-icon">👥</div>
+            </div>
+
+            <div class="metric-card purple">
+                <div class="metric-info">
+                    <h3>Prospectos / Leads</h3>
+                    <div class="metric-value" id="kpi-prospectos">0</div>
+                    <div class="metric-sub" id="kpi-prospectos-sub">Oportunidades abiertas</div>
+                </div>
+                <div class="metric-icon">🎯</div>
+            </div>
+
+            <div class="metric-card yellow">
+                <div class="metric-info">
+                    <h3>En Seguimiento</h3>
+                    <div class="metric-value" id="kpi-seguimiento">0</div>
+                    <div class="metric-sub" id="kpi-seguimiento-sub">Presupuestos y llamados</div>
+                </div>
+                <div class="metric-icon">⏳</div>
+            </div>
+
+            <div class="metric-card green">
+                <div class="metric-info">
+                    <h3>Clientes Activos</h3>
+                    <div class="metric-value" id="kpi-clientes">0</div>
+                    <div class="metric-sub" id="kpi-clientes-sub">Cuentas confirmadas</div>
+                </div>
+                <div class="metric-icon">⭐</div>
+            </div>
+
+            <div class="metric-card whatsapp">
+                <div class="metric-info">
+                    <h3>Con WhatsApp OK</h3>
+                    <div class="metric-value" id="kpi-whatsapp">0</div>
+                    <div class="metric-sub" id="kpi-whatsapp-sub">Listos para mensajería</div>
+                </div>
+                <div class="metric-icon">💬</div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar / Tabs and Actions -->
+        <div class="crm-nav-bar">
+            <div class="crm-tabs">
+                <button class="crm-tab-btn active" id="tab-btn-table" onclick="switchView('table')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <span>Vista Tabla</span>
+                </button>
+                <button class="crm-tab-btn" id="tab-btn-kanban" onclick="switchView('kanban')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="11" rx="1"/></svg>
+                    <span>Embudo / Kanban</span>
+                </button>
+                <button class="crm-tab-btn" id="tab-btn-import" onclick="switchView('import')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Importar Excel / CSV</span>
+                </button>
+            </div>
+
+            <div class="crm-nav-right">
+                <button class="btn btn-primary btn-sm" onclick="openContactModal()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>+ Nuevo Contacto</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="exportDataToExcel()" title="Exportar la lista actual a Excel">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Exportar Excel</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="syncFirestoreData()" title="Forzar sincronización con Firestore">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    <span>Actualizar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Panel -->
+        <div class="filter-panel" id="crm-filter-panel">
+            <div class="filter-row">
+                <!-- Buscador de texto -->
+                <div class="search-box-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="filter-search" placeholder="Buscar por nombre, teléfono, domicilio, CUIT, notas..." oninput="applyFilters()">
+                </div>
+
+                <!-- Filtro Tipo -->
+                <select id="filter-type" class="filter-select" onchange="applyFilters()">
+                    <option value="all">Todos los Tipos</option>
+                    <option value="cliente">Solo Clientes</option>
+                    <option value="prospecto">Solo Prospectos</option>
+                </select>
+
+                <!-- Filtro Etapa / Pipeline -->
+                <select id="filter-stage" class="filter-select" onchange="applyFilters()">
+                    <option value="all">Todas las Etapas</option>
+                    <option value="nuevo">🆕 Nuevo / Sin Contactar</option>
+                    <option value="contactado">📞 Contactado</option>
+                    <option value="presupuesto">📄 Presupuesto Enviado</option>
+                    <option value="negociacion">🤝 En Negociación</option>
+                    <option value="ganado">✅ Ganado / Activo</option>
+                    <option value="inactivo">⏸️ Inactivo / Perdido</option>
+                </select>
+
+                <!-- Filtro Teléfono -->
+                <select id="filter-phone" class="filter-select" onchange="applyFilters()">
+                    <option value="all">Estado Teléfono: Todos</option>
+                    <option value="valid">🟢 Con WhatsApp Válido</option>
+                    <option value="has_phone">📱 Con Teléfono (Cualquiera)</option>
+                    <option value="no_phone">❌ Sin Teléfono</option>
+                </select>
+
+                <!-- Filtro Prioridad -->
+                <select id="filter-priority" class="filter-select" onchange="applyFilters()">
+                    <option value="all">Prioridad: Todas</option>
+                    <option value="alta">🔴 Alta</option>
+                    <option value="media">🟡 Media</option>
+                    <option value="baja">⚪ Baja</option>
+                </select>
+
+                <!-- Botón Limpiar Filtros -->
+                <button class="btn btn-secondary btn-sm" onclick="clearFilters()" title="Restablecer filtros">
+                    <span>✕ Limpiar</span>
+                </button>
+
+                <!-- Contador de contactos -->
+                <div id="results-count-label" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-left: auto; align-self: center;">
+                    Mostrando 0 contactos
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 1: DATA TABLE =================== -->
+        <div id="view-table" class="crm-view">
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="crm-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Código</th>
+                                <th style="width: 220px;">Nombre / Razón Social</th>
+                                <th style="width: 130px;">Tipo & Etapa</th>
+                                <th style="width: 200px;">Teléfono & WhatsApp</th>
+                                <th>Domicilio(s)</th>
+                                <th style="width: 120px;">CUIT / DNI</th>
+                                <th style="width: 150px;">Próx. Acción / Notas</th>
+                                <th style="width: 170px; text-align: center;">Acciones Directas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crm-table-body">
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                    <p>Cargando lista de clientes y prospectos desde Firestore...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 2: KANBAN EMBUTO =================== -->
+        <div id="view-kanban" class="crm-view hidden">
+            <div class="kanban-board">
+                <!-- Columna 1: Nuevos -->
+                <div class="kanban-col" id="col-stage-nuevo">
+                    <div class="kanban-col-header">
+                        <div class="col-title">🆕 Nuevos Leads</div>
+                        <div class="col-count" id="count-kanban-nuevo">0</div>
+                    </div>
+                    <div class="kanban-cards-container" id="kanban-cards-nuevo" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'nuevo')"></div>
+                </div>
+
+                <!-- Columna 2: Contactados -->
+                <div class="kanban-col" id="col-stage-contactado">
+                    <div class="kanban-col-header">
+                        <div class="col-title">📞 Contactados</div>
+                        <div class="col-count" id="count-kanban-contactado">0</div>
+                    </div>
+                    <div class="kanban-cards-container" id="kanban-cards-contactado" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'contactado')"></div>
+                </div>
+
+                <!-- Columna 3: Presupuesto -->
+                <div class="kanban-col" id="col-stage-presupuesto">
+                    <div class="kanban-col-header">
+                        <div class="col-title">📄 Presupuestados</div>
+                        <div class="col-count" id="count-kanban-presupuesto">0</div>
+                    </div>
+                    <div class="kanban-cards-container" id="kanban-cards-presupuesto" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'presupuesto')"></div>
+                </div>
+
+                <!-- Columna 4: Negociación -->
+                <div class="kanban-col" id="col-stage-negociacion">
+                    <div class="kanban-col-header">
+                        <div class="col-title">🤝 En Negociación</div>
+                        <div class="col-count" id="count-kanban-negociacion">0</div>
+                    </div>
+                    <div class="kanban-cards-container" id="kanban-cards-negociacion" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'negociacion')"></div>
+                </div>
+
+                <!-- Columna 5: Ganados / Clientes -->
+                <div class="kanban-col" id="col-stage-ganado">
+                    <div class="kanban-col-header">
+                        <div class="col-title">✅ Clientes Activos</div>
+                        <div class="col-count" id="count-kanban-ganado">0</div>
+                    </div>
+                    <div class="kanban-cards-container" id="kanban-cards-ganado" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'ganado')"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 3: IMPORTADOR EXCEL / CSV =================== -->
+        <div id="view-import" class="crm-view hidden">
+            <div class="import-section">
+                <div>
+                    <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 4px;">📥 Importar Clientes y Prospectos desde Excel / CSV</h2>
+                    <p style="font-size: 0.82rem; color: var(--text-muted);">Sube tu archivo con lista de prospectos o clientes. Podrás <strong>revisar y editar los teléfonos en pantalla antes de guardar</strong> en la base de datos.</p>
+                </div>
+
+                <!-- Drag & Drop Zone -->
+                <div class="drop-zone" id="excel-drop-zone" onclick="document.getElementById('excel-file-input').click()">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">Haz clic o arrastra tu archivo Excel (.xlsx, .xls, .csv) aquí</p>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Detectará automáticamente columnas de Nombre, Teléfono, Dirección, CUIT, etc.</p>
+                    <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <!-- Preview & Phone Editor Section (Initially Hidden) -->
+                <div id="import-preview-box" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-size: 1rem; font-weight: 700;" id="import-stats-label">Previsualización de registros</h3>
+                            <p style="font-size: 0.78rem; color: var(--text-muted);">Puedes hacer doble clic en cualquier número de teléfono o celda para corregirlo antes de importar.</p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="autoFormatAllImportPhones()">
+                                <span>⚡ Formatear a WhatsApp (+54 9)</span>
+                            </button>
+                            <button class="btn btn-primary" id="btn-confirm-import" onclick="executeBatchImport()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Confirmar e Importar a Base de Datos</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Column Mapping Row -->
+                    <div style="display: flex; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); flex-wrap: wrap; align-items: center;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Mapeo de Columnas:</span>
+                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                            <label style="font-size: 0.7rem;">Columna Nombre</label>
+                            <select id="map-name" class="form-select" onchange="remapImportPreview()"></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                            <label style="font-size: 0.7rem;">Columna Teléfono</label>
+                            <select id="map-phone" class="form-select" onchange="remapImportPreview()"></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                            <label style="font-size: 0.7rem;">Columna Dirección</label>
+                            <select id="map-address" class="form-select" onchange="remapImportPreview()"></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                            <label style="font-size: 0.7rem;">Columna CUIT / DNI</label>
+                            <select id="map-cuit" class="form-select" onchange="remapImportPreview()"></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 140px;">
+                            <label style="font-size: 0.7rem;">Importar como:</label>
+                            <select id="map-type-default" class="form-select">
+                                <option value="prospecto">Prospecto / Lead</option>
+                                <option value="cliente">Cliente Activo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Grid of pre-loaded rows -->
+                    <div class="import-preview-table-container">
+                        <table class="crm-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">#</th>
+                                    <th>Nombre / Razón Social</th>
+                                    <th style="width: 240px;">Teléfono (Editable ✍️)</th>
+                                    <th>Domicilio</th>
+                                    <th>CUIT / DNI</th>
+                                    <th>Notas</th>
+                                    <th style="width: 50px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="import-preview-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =================== MODAL: ENVIAR MENSAJE WHATSAPP =================== -->
+    <div class="modal-overlay" id="modal-whatsapp">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-whatsapp)" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>Enviar Mensaje de WhatsApp</span>
+                </h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-whatsapp')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="wa-client-id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Destinatario</label>
+                        <input type="text" id="wa-client-name" class="form-input" readonly style="opacity: 0.8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Número de WhatsApp (con código de país)</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="wa-client-phone" class="form-input" style="flex: 1; font-family: monospace;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="formatModalPhone()" title="Auto-corregir formato +54 9">⚡ Fix</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Elegir Plantilla de Mensaje</label>
+                    <select id="wa-template-select" class="form-select" onchange="applyWhatsAppTemplate()">
+                        <option value="custom">✍️ Mensaje Libre / Personalizado</option>
+                        <option value="saludo">👋 1. Saludo Inicial y Presentación</option>
+                        <option value="presupuesto">📋 2. Seguimiento de Presupuesto Enviado</option>
+                        <option value="coordinar">🔧 3. Coordinar Visita Técnica / Service</option>
+                        <option value="service_preventivo">⏰ 4. Recordatorio de Mantenimiento Preventivo</option>
+                        <option value="consulta_rapida">❓ 5. Consulta sobre su solicitud de refrigeración</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Texto del Mensaje (puedes editarlo libremente)</label>
+                    <textarea id="wa-message-text" class="form-textarea" style="min-height: 120px;" placeholder="Escribe el mensaje aquí..."></textarea>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Variables dinámicas: {nombre}, {codigo}, {empresa}</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: rgba(0, 191, 255, 0.05); padding: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(0, 191, 255, 0.2);">
+                    <input type="checkbox" id="wa-log-interaction" checked style="cursor: pointer;">
+                    <label for="wa-log-interaction" style="cursor: pointer; margin: 0; color: var(--text-primary);">Registrar automáticamente este envío en el historial del cliente</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-whatsapp')">Cancelar</button>
+                <button class="btn btn-whatsapp" onclick="launchWhatsAppDirect()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>Abrir WhatsApp y Enviar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: DETALLE Y EDICIÓN DE CLIENTE / PROSPECTO =================== -->
+    <div class="modal-overlay" id="modal-contact">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3 id="modal-contact-title">
+                    <span>Ficha de Cliente / Prospecto</span>
+                </h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeModal('modal-contact')">✕</button>
+            </div>
+            <form id="form-contact" onsubmit="saveContactForm(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="contact-id">
+
+                    <!-- Clasificación CRM -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de Contacto</label>
+                            <select id="contact-crm-type" class="form-select">
+                                <option value="prospecto">🎯 Prospecto / Lead</option>
+                                <option value="cliente">⭐ Cliente Confirmado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Etapa del Embudo (Pipeline)</label>
+                            <select id="contact-crm-stage" class="form-select">
+                                <option value="nuevo">🆕 Nuevo / Sin Contactar</option>
+                                <option value="contactado">📞 Contactado</option>
+                                <option value="presupuesto">📄 Presupuesto Enviado</option>
+                                <option value="negociacion">🤝 En Negociación</option>
+                                <option value="ganado">✅ Ganado / Activo</option>
+                                <option value="inactivo">⏸️ Inactivo / Perdido</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prioridad</label>
+                            <select id="contact-priority" class="form-select">
+                                <option value="media">🟡 Media</option>
+                                <option value="alta">🔴 Alta</option>
+                                <option value="baja">⚪ Baja</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Origen / Canal</label>
+                            <select id="contact-source" class="form-select">
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Llamada">Llamada Telefónica</option>
+                                <option value="Instagram">Instagram / Redes</option>
+                                <option value="Web">Sitio Web</option>
+                                <option value="Recomendación">Recomendación</option>
+                                <option value="Importado">Base Importada</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Datos Principales -->
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Nombre / Razón Social *</label>
+                            <input type="text" id="contact-name" class="form-input" placeholder="Ej: Juan Pérez / Supermercado El Ahorro" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Código de Cliente</label>
+                            <input type="text" id="contact-code" class="form-input" placeholder="CLI-0001" readonly style="opacity: 0.7;">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Teléfono Principal (con código de área) *</label>
+                            <div style="display: flex; gap: 6px;">
+                                <input type="text" id="contact-phone" class="form-input" placeholder="Ej: 351 1234567" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="formatContactFormPhone()" title="Corregir a formato internacional">⚡ Fix</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>CUIT / DNI</label>
+                            <input type="text" id="contact-cuit" class="form-input" placeholder="Ej: 20-12345678-9">
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <input type="email" id="contact-email" class="form-input" placeholder="cliente@correo.com">
+                        </div>
+                    </div>
+
+                    <!-- Direcciones -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label>Domicilio(s) / Sucursales</label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addAddressField()">+ Agregar Domicilio</button>
+                        </div>
+                        <div id="contact-addresses-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                    </div>
+
+                    <!-- Etiquetas / Tags -->
+                    <div class="form-group">
+                        <label>Etiquetas (separadas por coma o selecciona abajo)</label>
+                        <input type="text" id="contact-tags-input" class="form-input" placeholder="Aire Acondicionado, Comercial, Urgente...">
+                    </div>
+
+                    <!-- Próxima Acción & Seguimiento -->
+                    <div class="form-row" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Próxima Acción / Tarea Pendiente</label>
+                            <input type="text" id="contact-next-action" class="form-input" placeholder="Ej: Llamar el jueves para confirmar presupuesto...">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Próxima Acción</label>
+                            <input type="date" id="contact-next-date" class="form-input">
+                        </div>
+                    </div>
+
+                    <!-- Observaciones Generales -->
+                    <div class="form-group">
+                        <label>Notas y Observaciones Generales</label>
+                        <textarea id="contact-notes" class="form-textarea" placeholder="Detalles de equipos, preferencias de contacto, etc."></textarea>
+                    </div>
+
+                    <!-- Bitácora de Interacciones (Solo si ya existe el contacto) -->
+                    <div id="contact-history-section" class="form-group hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label>Historial de Interacciones & Mensajes</label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addManualInteractionPrompt()">+ Agregar Nota / Llamada</button>
+                        </div>
+                        <div class="timeline" id="contact-timeline-list"></div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn-sm" id="btn-delete-contact" onclick="deleteCurrentContact()" style="margin-right: auto;">
+                        🗑️ Eliminar
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-contact')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-contact">
+                        💾 Guardar Contacto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================== MODAL: INICIO DE SESIÓN / AUTENTICACIÓN =================== -->
+    <div class="modal-overlay" id="modal-auth">
+        <div class="modal-card" style="max-width: 420px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <img src="icon.png" alt="ElectroFrío" style="width: 32px; height: 32px; border-radius: 6px;" onerror="this.src='apple-touch-icon.png'">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">Ingreso a ElectroFrío</h3>
+                </div>
+            </div>
+            <form id="form-auth-login" onsubmit="handleAuthLogin(event)">
+                <div class="modal-body" style="text-align: left; gap: 14px;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+                        Inicia sesión con tu usuario o correo para acceder al módulo CRM.
+                    </p>
+                    <div class="form-group">
+                        <label>Usuario o Correo</label>
+                        <input type="text" id="auth-user" class="form-input" placeholder="Ej: admin o tu_usuario" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="auth-pass" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <div id="auth-error-msg" style="color: var(--color-red); font-size: 0.78rem; text-align: center; display: none;"></div>
+                </div>
+                <div class="modal-footer" style="justify-content: center;">
+                    <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%;">
+                        <span>Iniciar Sesión</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contenedor Toast Global -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- =================== SCRIPT JAVASCRIPT =================== -->
+    <script>
+        // --- 1. CONFIGURACIÓN FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Estado local de clientes y vista
+        let crmData = [];
+        let filteredData = [];
+        let activeView = 'table';
+        let activeTagFilter = null;
+        let importedRowsData = [];
+
+        function formatEmail(input) {
+            if (input.includes('@')) return input;
+            return `${input}@electrofrio.com`;
+        }
+
+        // --- 2. INICIALIZACIÓN & SINCRONIZACIÓN FIRESTORE ---
+        let unsubscribeClientes = null;
+
+        function initCRM() {
+            // Cargar de localStorage si existe previamente para arranque instantáneo
+            const cached = localStorage.getItem('electrofrio_clients');
+            if (cached) {
+                try {
+                    crmData = JSON.parse(cached);
+                    normalizeCrmRecords();
+                    applyFilters();
+                    updateKPIs();
+                } catch(e) {
+                    console.error("Error al parsear caché local:", e);
+                }
+            }
+
+            // Observador de autenticación
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    hideAuthModal();
+                    syncFirestoreData();
+                } else {
+                    showAuthModal();
+                }
+            });
+        }
+
+        function showAuthModal() {
+            const m = document.getElementById('modal-auth');
+            if (m) m.classList.add('show');
+        }
+
+        function hideAuthModal() {
+            const m = document.getElementById('modal-auth');
+            if (m) m.classList.remove('show');
+        }
+
+        async function handleAuthLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('auth-user').value.trim();
+            const passVal = document.getElementById('auth-pass').value;
+            const errorEl = document.getElementById('auth-error-msg');
+            const submitBtn = document.getElementById('btn-auth-submit');
+
+            if (!userVal || !passVal) return;
+
+            errorEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verificando...';
+
+            const email = formatEmail(userVal);
+            try {
+                await auth.signInWithEmailAndPassword(email, passVal);
+                hideAuthModal();
+                showToast("¡Sesión iniciada correctamente!", "success");
+            } catch (err) {
+                console.error("Error al autenticar:", err);
+                errorEl.textContent = "Usuario o contraseña incorrectos.";
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Iniciar Sesión';
+            }
+        }
+
+        function syncFirestoreData() {
+            if (!auth.currentUser) return;
+
+            if (unsubscribeClientes) unsubscribeClientes();
+
+            unsubscribeClientes = db.collection('clientes').onSnapshot((snapshot) => {
+                const list = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    list.push(data);
+                });
+
+                // Ordenar por nombre o última modificación
+                list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+                crmData = list;
+                normalizeCrmRecords();
+                localStorage.setItem('electrofrio_clients', JSON.stringify(crmData));
+                
+                applyFilters();
+                updateKPIs();
+            }, (error) => {
+                console.error("Error al sincronizar Firestore:", error);
+            });
+        }
+
+        // Garantizar que todos los registros tengan los campos CRM requeridos
+        function normalizeCrmRecords() {
+            crmData.forEach(c => {
+                if (!c.crmType) c.crmType = 'cliente';
+                if (!c.crmStage) c.crmStage = c.crmType === 'cliente' ? 'ganado' : 'nuevo';
+                if (!c.priority) c.priority = 'media';
+                if (!c.source) c.source = 'WhatsApp';
+                if (!Array.isArray(c.addresses)) {
+                    c.addresses = c.address ? [c.address] : ['Sin especificar'];
+                }
+                if (!c.address) c.address = c.addresses[0] || 'Sin especificar';
+                if (!Array.isArray(c.interactions)) c.interactions = [];
+                if (!Array.isArray(c.tags)) {
+                    c.tags = c.tags ? (typeof c.tags === 'string' ? c.tags.split(',').map(t => t.trim()) : []) : [];
+                }
+            });
+        }
+
+        // --- 3. FORMATO Y NORMALIZACIÓN DE TELÉFONOS ---
+        // Normaliza un teléfono al estándar internacional de WhatsApp (+54 9...)
+        function cleanAndFormatPhone(phoneStr) {
+            if (!phoneStr) return { raw: '', formatted: '', cleanDigits: '', isValid: false, status: 'empty' };
+
+            let str = String(phoneStr).trim();
+            // Extraer solo dígitos
+            let digits = str.replace(/\D/g, '');
+
+            if (digits.length === 0) {
+                return { raw: str, formatted: '', cleanDigits: '', isValid: false, status: 'empty' };
+            }
+
+            // Normalización para Argentina
+            // Si empieza con 549... (formato internacional completo)
+            if (digits.startsWith('549')) {
+                // OK
+            } else if (digits.startsWith('54') && digits.length >= 12) {
+                // 54 + código sin el 9
+                if (digits[2] !== '9') {
+                    digits = '549' + digits.substring(2);
+                }
+            } else if (digits.startsWith('0')) {
+                // Quitar el 0 inicial
+                digits = digits.substring(1);
+                // Si tiene 15 intermedio (ej: 11 15 1234 5678)
+                // Común en Argentina: código área 2 a 4 dígitos + 15
+                digits = digits.replace(/^(\d{2,4})15(\d{6,8})$/, '$1$2');
+                digits = '549' + digits;
+            } else if (digits.length === 10) {
+                // Típico número argentino de 10 dígitos (ej: 3511234567 o 1112345678)
+                digits = '549' + digits;
+            } else if (digits.length === 8) {
+                // Típico número local sin código de área (asumimos por defecto CABA/GBA 11 o pedimos revisar)
+                digits = '54911' + digits;
+            } else if (digits.length >= 10 && !digits.startsWith('54')) {
+                digits = '549' + digits;
+            }
+
+            const isValid = digits.length >= 11 && digits.length <= 14;
+
+            // Formato visual amigable (+54 9 XXX XXXXXX)
+            let formattedVisual = '+' + digits;
+            if (digits.startsWith('549') && digits.length >= 13) {
+                formattedVisual = `+54 9 ${digits.substring(3, 5)} ${digits.substring(5, 9)}-${digits.substring(9)}`;
+            }
+
+            return {
+                raw: str,
+                formatted: formattedVisual,
+                cleanDigits: digits,
+                isValid: isValid,
+                status: isValid ? 'valid' : 'warning'
+            };
+        }
+
+        // --- 4. VISTAS Y FILTRADO ---
+        function switchView(viewName) {
+            activeView = viewName;
+            
+            document.querySelectorAll('.crm-tab-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`tab-btn-${viewName}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            document.querySelectorAll('.crm-view').forEach(v => v.classList.add('hidden'));
+            const targetView = document.getElementById(`view-${viewName}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const filterPanel = document.getElementById('crm-filter-panel');
+            if (filterPanel) {
+                if (viewName === 'import') {
+                    filterPanel.classList.add('hidden');
+                } else {
+                    filterPanel.classList.remove('hidden');
+                }
+            }
+
+            if (viewName === 'kanban') {
+                renderKanban();
+            } else if (viewName === 'table') {
+                renderTable();
+            }
+        }
+
+        function applyFilters() {
+            const search = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+            const typeFilter = document.getElementById('filter-type')?.value || 'all';
+            const stageFilter = document.getElementById('filter-stage')?.value || 'all';
+            const phoneFilter = document.getElementById('filter-phone')?.value || 'all';
+            const priorityFilter = document.getElementById('filter-priority')?.value || 'all';
+
+            filteredData = crmData.filter(item => {
+                // Buscador de texto
+                if (search) {
+                    const matchName = (item.name || '').toLowerCase().includes(search);
+                    const matchPhone = (item.phone || '').toLowerCase().includes(search);
+                    const matchCuit = (item.cuit || '').toLowerCase().includes(search);
+                    const matchCode = (item.clientCode || item.id || '').toLowerCase().includes(search);
+                    const matchNotes = (item.notes || '').toLowerCase().includes(search);
+                    const matchAddr = (item.addresses ? item.addresses.join(' ') : (item.address || '')).toLowerCase().includes(search);
+                    const matchTags = (item.tags || []).join(' ').toLowerCase().includes(search);
+
+                    if (!matchName && !matchPhone && !matchCuit && !matchCode && !matchNotes && !matchAddr && !matchTags) {
+                        return false;
+                    }
+                }
+
+                // Filtro Tipo
+                if (typeFilter !== 'all' && item.crmType !== typeFilter) {
+                    return false;
+                }
+
+                // Filtro Etapa
+                if (stageFilter !== 'all' && item.crmStage !== stageFilter) {
+                    return false;
+                }
+
+                // Filtro Prioridad
+                if (priorityFilter !== 'all' && item.priority !== priorityFilter) {
+                    return false;
+                }
+
+                // Filtro Teléfono
+                if (phoneFilter !== 'all') {
+                    const pInfo = cleanAndFormatPhone(item.phone);
+                    if (phoneFilter === 'valid' && !pInfo.isValid) return false;
+                    if (phoneFilter === 'has_phone' && !item.phone) return false;
+                    if (phoneFilter === 'no_phone' && item.phone && item.phone !== 'Sin teléfono') return false;
+                }
+
+                // Filtro Tag Activo
+                if (activeTagFilter) {
+                    const tags = item.tags || [];
+                    if (!tags.some(t => t.toLowerCase() === activeTagFilter.toLowerCase())) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            const countEl = document.getElementById('results-count-label');
+            if (countEl) {
+                countEl.textContent = `Mostrando ${filteredData.length} de ${crmData.length} contactos`;
+            }
+
+            if (activeView === 'table') {
+                renderTable();
+            } else if (activeView === 'kanban') {
+                renderKanban();
+            }
+        }
+
+        function toggleTagFilter(tag, btnEl) {
+            if (activeTagFilter === tag) {
+                activeTagFilter = null;
+                btnEl.classList.remove('active');
+            } else {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                activeTagFilter = tag;
+                btnEl.classList.add('active');
+            }
+            applyFilters();
+        }
+
+        function clearFilters() {
+            if (document.getElementById('filter-search')) document.getElementById('filter-search').value = '';
+            if (document.getElementById('filter-type')) document.getElementById('filter-type').value = 'all';
+            if (document.getElementById('filter-stage')) document.getElementById('filter-stage').value = 'all';
+            if (document.getElementById('filter-phone')) document.getElementById('filter-phone').value = 'all';
+            if (document.getElementById('filter-priority')) document.getElementById('filter-priority').value = 'all';
+            
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            activeTagFilter = null;
+
+            applyFilters();
+        }
+
+        // --- 5. RENDERIZADO DE TABLA ---
+        function renderTable() {
+            const tbody = document.getElementById('crm-table-body');
+            if (!tbody) return;
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <p style="font-size:0.9rem; font-weight:600;">No se encontraron clientes ni prospectos con los filtros actuales.</p>
+                            <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Limpiar Filtros</button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredData.forEach(item => {
+                const code = item.clientCode || (item.id.startsWith('CLI-') ? item.id : 'CLI-0000');
+                const phoneInfo = cleanAndFormatPhone(item.phone);
+
+                // Badge de tipo y etapa
+                const isClient = item.crmType === 'cliente';
+                const typeBadge = isClient 
+                    ? `<span class="badge badge-type-client">⭐ Cliente</span>` 
+                    : `<span class="badge badge-type-prospect">🎯 Prospecto</span>`;
+
+                const stageNames = {
+                    'nuevo': '🆕 Nuevo',
+                    'contactado': '📞 Contactado',
+                    'presupuesto': '📄 Presupuesto',
+                    'negociacion': '🤝 Negociación',
+                    'ganado': '✅ Activo',
+                    'inactivo': '⏸️ Inactivo'
+                };
+                const stageBadge = `<span class="badge badge-stage-${item.crmStage || 'nuevo'}">${stageNames[item.crmStage] || 'Nuevo'}</span>`;
+
+                // Teléfono con edición rápida
+                let phoneBadgeIcon = '';
+                if (phoneInfo.isValid) {
+                    phoneBadgeIcon = `<span class="phone-badge-valid" title="Número válido para WhatsApp">🟢</span>`;
+                } else if (item.phone && item.phone !== 'Sin teléfono') {
+                    phoneBadgeIcon = `<span class="phone-badge-warning" title="Requiere verificar código de área">🟡</span>`;
+                } else {
+                    phoneBadgeIcon = `<span class="phone-badge-invalid" title="Sin teléfono">🔴</span>`;
+                }
+
+                const displayPhone = item.phone || '<span style="color:var(--text-muted); font-style:italic;">Sin teléfono</span>';
+
+                // Domicilio
+                const addrs = (Array.isArray(item.addresses) && item.addresses.length > 0) ? item.addresses : [item.address || 'Sin especificar'];
+                const addrHtml = addrs.slice(0, 2).map(a => `<div style="font-size:0.75rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:200px;">📍 ${a}</div>`).join('');
+
+                // Próxima acción o notas
+                const nextActionText = item.nextAction 
+                    ? `<div style="font-weight:600; color:var(--color-yellow); font-size:0.75rem;">📅 ${item.nextAction}</div>`
+                    : (item.notes ? `<div style="color:var(--text-muted); font-size:0.75rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:140px;">${item.notes}</div>` : '<span style="color:var(--text-subtle); font-size:0.75rem;">-</span>');
+
+                html += `
+                    <tr>
+                        <td style="font-weight:700; color:var(--color-blue); font-size:0.78rem;">${code}</td>
+                        <td>
+                            <div style="font-weight:600; color:var(--text-primary); cursor:pointer;" onclick="openContactModal('${item.id}')">${item.name || 'Sin Nombre'}</div>
+                            ${(item.tags && item.tags.length > 0) ? `<div style="display:flex; gap:4px; margin-top:2px; flex-wrap:wrap;">${item.tags.map(t => `<span style="font-size:0.65rem; background:rgba(255,255,255,0.05); padding:1px 5px; border-radius:3px; color:var(--text-secondary);">${t}</span>`).join('')}</div>` : ''}
+                        </td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                ${typeBadge}
+                                ${stageBadge}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="phone-cell">
+                                ${phoneBadgeIcon}
+                                <span class="phone-number-text">${displayPhone}</span>
+                                <button class="phone-quick-edit-btn" onclick="quickEditPhone('${item.id}', '${escapeAttr(item.phone || '')}')" title="Editar teléfono rápido">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td>${addrHtml}</td>
+                        <td style="font-size:0.78rem; font-family:monospace;">${item.cuit || '-'}</td>
+                        <td>${nextActionText}</td>
+                        <td style="text-align:center;">
+                            <div style="display:flex; gap:6px; justify-content:center;">
+                                <button class="btn btn-whatsapp btn-sm" onclick="openWhatsAppModal('${item.id}')" title="Enviar WhatsApp directo">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                    <span>Mensaje</span>
+                                </button>
+                                <button class="btn btn-secondary btn-sm btn-icon" onclick="openContactModal('${item.id}')" title="Ver ficha completa y editar">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // --- 6. RENDERIZADO DE KANBAN (EMBUDO) ---
+        function renderKanban() {
+            const stages = ['nuevo', 'contactado', 'presupuesto', 'negociacion', 'ganado'];
+            const containers = {};
+            const counts = {};
+
+            stages.forEach(st => {
+                containers[st] = document.getElementById(`kanban-cards-${st}`);
+                counts[st] = 0;
+                if (containers[st]) containers[st].innerHTML = '';
+            });
+
+            filteredData.forEach(item => {
+                const stage = item.crmStage || (item.crmType === 'cliente' ? 'ganado' : 'nuevo');
+                const targetContainer = containers[stage] || containers['nuevo'];
+                
+                if (counts[stage] !== undefined) counts[stage]++;
+
+                const phoneInfo = cleanAndFormatPhone(item.phone);
+                const code = item.clientCode || 'CLI-0000';
+
+                const card = document.createElement('div');
+                card.className = 'kanban-card';
+                card.draggable = true;
+                card.id = `card-${item.id}`;
+                card.setAttribute('ondragstart', `dragCard(event, '${item.id}')`);
+
+                card.innerHTML = `
+                    <div class="kanban-card-top">
+                        <div class="kanban-card-name" onclick="openContactModal('${item.id}')">${item.name || 'Sin nombre'}</div>
+                        <span style="font-size:0.68rem; font-weight:700; color:var(--color-blue);">${code}</span>
+                    </div>
+                    <div class="kanban-card-details">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span>📞</span> <span>${item.phone || 'Sin teléfono'}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                            <span>📍</span> <span>${item.address || 'Sin especificar'}</span>
+                        </div>
+                        ${item.nextAction ? `<div style="color:var(--color-yellow); font-weight:600; margin-top:2px;">📅 ${item.nextAction}</div>` : ''}
+                    </div>
+                    <div class="kanban-card-actions">
+                        <select class="filter-select" style="padding:2px 6px; font-size:0.7rem; min-width:auto;" onchange="updateContactStage('${item.id}', this.value)">
+                            <option value="nuevo" ${stage === 'nuevo' ? 'selected' : ''}>🆕 Nuevo</option>
+                            <option value="contactado" ${stage === 'contactado' ? 'selected' : ''}>📞 Contactado</option>
+                            <option value="presupuesto" ${stage === 'presupuesto' ? 'selected' : ''}>📄 Presupuesto</option>
+                            <option value="negociacion" ${stage === 'negociacion' ? 'selected' : ''}>🤝 Negociación</option>
+                            <option value="ganado" ${stage === 'ganado' ? 'selected' : ''}>✅ Activo</option>
+                            <option value="inactivo" ${stage === 'inactivo' ? 'selected' : ''}>⏸️ Inactivo</option>
+                        </select>
+
+                        <button class="btn btn-whatsapp btn-sm" style="padding:4px 8px; font-size:0.72rem;" onclick="openWhatsAppModal('${item.id}')" title="Enviar WhatsApp">
+                            <span>💬 Mensaje</span>
+                        </button>
+                    </div>
+                `;
+
+                if (targetContainer) targetContainer.appendChild(card);
+            });
+
+            stages.forEach(st => {
+                const countEl = document.getElementById(`count-kanban-${st}`);
+                if (countEl) countEl.textContent = counts[st] || 0;
+            });
+        }
+
+        // Drag & Drop Kanban
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dragCard(ev, contactId) {
+            ev.dataTransfer.setData("text", contactId);
+        }
+
+        function handleDrop(ev, newStage) {
+            ev.preventDefault();
+            const contactId = ev.dataTransfer.getData("text");
+            if (contactId) {
+                updateContactStage(contactId, newStage);
+            }
+        }
+
+        async function updateContactStage(contactId, newStage) {
+            const item = crmData.find(c => c.id === contactId);
+            if (!item) return;
+
+            item.crmStage = newStage;
+            if (newStage === 'ganado') {
+                item.crmType = 'cliente';
+            }
+
+            try {
+                await db.collection('clientes').doc(contactId).update({
+                    crmStage: newStage,
+                    crmType: item.crmType
+                });
+                showToast(`Estado actualizado a: ${newStage.toUpperCase()}`, "success");
+                updateKPIs();
+                if (activeView === 'kanban') renderKanban();
+                if (activeView === 'table') renderTable();
+            } catch (err) {
+                console.error("Error al actualizar etapa:", err);
+                showToast("Error al guardar en Firestore", "error");
+            }
+        }
+
+        // --- 7. ACTUALIZACIÓN DE MÉTRICAS / KPIS ---
+        function updateKPIs() {
+            const total = crmData.length;
+            const prospectos = crmData.filter(c => c.crmType === 'prospecto' || c.crmStage === 'nuevo' || c.crmStage === 'contactado').length;
+            const seguimiento = crmData.filter(c => c.crmStage === 'presupuesto' || c.crmStage === 'negociacion').length;
+            const clientes = crmData.filter(c => c.crmType === 'cliente' || c.crmStage === 'ganado').length;
+            const whatsappOk = crmData.filter(c => cleanAndFormatPhone(c.phone).isValid).length;
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-total-sub').textContent = `${clientes} clientes | ${prospectos} prospectos`;
+            
+            document.getElementById('kpi-prospectos').textContent = prospectos;
+            document.getElementById('kpi-seguimiento').textContent = seguimiento;
+            document.getElementById('kpi-clientes').textContent = clientes;
+            document.getElementById('kpi-whatsapp').textContent = whatsappOk;
+        }
+
+        // --- 8. EDICIÓN RÁPIDA DE TELÉFONO EN TABLA ---
+        async function quickEditPhone(contactId, currentPhone) {
+            const item = crmData.find(c => c.id === contactId);
+            if (!item) return;
+
+            const newPhone = prompt(`Editar número de teléfono para ${item.name}:\n(Consejo: incluye código de área ej: 351 1234567 o +54 9...)`, currentPhone);
+            if (newPhone === null) return; // Cancelado
+
+            const cleaned = cleanAndFormatPhone(newPhone);
+            item.phone = newPhone.trim();
+
+            try {
+                await db.collection('clientes').doc(contactId).update({
+                    phone: item.phone
+                });
+                showToast(`Teléfono de ${item.name} actualizado: ${item.phone}`, "success");
+                updateKPIs();
+                renderTable();
+            } catch (err) {
+                console.error("Error al guardar teléfono:", err);
+                showToast("Error al actualizar teléfono en Firestore", "error");
+            }
+        }
+
+        // --- 9. MODAL DE ENVÍO WHATSAPP ---
+        function openWhatsAppModal(contactId) {
+            const item = crmData.find(c => c.id === contactId);
+            if (!item) return;
+
+            document.getElementById('wa-client-id').value = item.id;
+            document.getElementById('wa-client-name').value = item.name || 'Sin Nombre';
+            
+            // Sugerir teléfono formateado
+            const phoneInfo = cleanAndFormatPhone(item.phone);
+            document.getElementById('wa-client-phone').value = phoneInfo.cleanDigits ? '+' + phoneInfo.cleanDigits : (item.phone || '');
+
+            document.getElementById('wa-template-select').value = 'saludo';
+            applyWhatsAppTemplate();
+
+            openModal('modal-whatsapp');
+        }
+
+        function formatModalPhone() {
+            const phoneInput = document.getElementById('wa-client-phone');
+            const info = cleanAndFormatPhone(phoneInput.value);
+            if (info.cleanDigits) {
+                phoneInput.value = '+' + info.cleanDigits;
+                showToast("Formato corregido a estándar internacional", "success");
+            } else {
+                showToast("Ingresa al menos 8 dígitos para corregir", "error");
+            }
+        }
+
+        function applyWhatsAppTemplate() {
+            const templateType = document.getElementById('wa-template-select').value;
+            const clientName = document.getElementById('wa-client-name').value || 'Cliente';
+            const clientId = document.getElementById('wa-client-id').value;
+            const item = crmData.find(c => c.id === clientId) || {};
+            const code = item.clientCode || 'CLI-0000';
+
+            let msg = '';
+            switch (templateType) {
+                case 'saludo':
+                    msg = `Hola ${clientName}, te contactamos de ElectroFrío. 👋\nQueríamos consultarte sobre tus equipos de refrigeración/aire acondicionado para brindarte el mejor asesoramiento técnico y presupuestos sin cargo. ¿En qué podemos ayudarte hoy?`;
+                    break;
+                case 'presupuesto':
+                    msg = `Hola ${clientName}, te saludamos de ElectroFrío. 📋\nNos comunicamos para hacer seguimiento del presupuesto que te enviamos recientemente. ¿Pudiste revisarlo o tienes alguna duda que te gustaría coordinar?`;
+                    break;
+                case 'coordinar':
+                    msg = `Hola ${clientName}, te escribimos de ElectroFrío para coordinar el día y horario de la visita técnica a tu domicilio/local. 🔧\n¿Qué días y franja horaria te queda más cómodo recibir a nuestro equipo?`;
+                    break;
+                case 'service_preventivo':
+                    msg = `Hola ${clientName}, esperamos que estés muy bien. ⏰\nTe recordamos desde ElectroFrío que es un excelente momento para realizar el mantenimiento preventivo y limpieza profunda de tus equipos para optimizar el consumo eléctrico y alargar su vida útil. ¿Te gustaría coordinar un turno?`;
+                    break;
+                case 'consulta_rapida':
+                    msg = `Hola ${clientName}, te escribimos de ElectroFrío en respuesta a tu consulta. Estamos a tu entera disposición para resolver cualquier duda técnica o urgencia. ¡Saludos!`;
+                    break;
+                case 'custom':
+                default:
+                    msg = `Hola ${clientName}, te contactamos desde ElectroFrío.`;
+                    break;
+            }
+
+            document.getElementById('wa-message-text').value = msg;
+        }
+
+        async function launchWhatsAppDirect() {
+            const clientId = document.getElementById('wa-client-id').value;
+            const rawPhone = document.getElementById('wa-client-phone').value;
+            const message = document.getElementById('wa-message-text').value.trim();
+            const logInteraction = document.getElementById('wa-log-interaction').checked;
+
+            const phoneInfo = cleanAndFormatPhone(rawPhone);
+            if (!phoneInfo.cleanDigits || phoneInfo.cleanDigits.length < 8) {
+                showToast("Por favor ingresa un número de teléfono válido", "error");
+                return;
+            }
+
+            // Registrar interacción en Firestore si está marcado
+            if (logInteraction && clientId) {
+                const item = crmData.find(c => c.id === clientId);
+                if (item) {
+                    if (!Array.isArray(item.interactions)) item.interactions = [];
+                    const newLog = {
+                        date: new Date().toISOString(),
+                        type: 'whatsapp',
+                        message: message.substring(0, 160) + (message.length > 160 ? '...' : ''),
+                        user: 'Sistema CRM'
+                    };
+                    item.interactions.unshift(newLog);
+                    item.lastContactDate = new Date().toISOString();
+
+                    db.collection('clientes').doc(clientId).update({
+                        interactions: item.interactions,
+                        lastContactDate: item.lastContactDate,
+                        phone: rawPhone // Guardar si lo corrigió en el modal
+                    }).catch(err => console.error("Error al registrar interacción:", err));
+                }
+            }
+
+            // Construir enlace de WhatsApp API
+            const waUrl = `https://wa.me/${phoneInfo.cleanDigits}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+
+            closeModal('modal-whatsapp');
+            showToast("WhatsApp abierto en pestaña nueva", "success");
+        }
+
+        // --- 10. MODAL FICHA COMPLETA (CREACIÓN / EDICIÓN) ---
+        function openContactModal(contactId = null) {
+            const titleEl = document.getElementById('modal-contact-title');
+            const form = document.getElementById('form-contact');
+            const addrContainer = document.getElementById('contact-addresses-container');
+            const historySection = document.getElementById('contact-history-section');
+            const btnDelete = document.getElementById('btn-delete-contact');
+
+            form.reset();
+            addrContainer.innerHTML = '';
+
+            if (contactId) {
+                const item = crmData.find(c => c.id === contactId);
+                if (!item) return;
+
+                titleEl.textContent = `Ficha: ${item.name}`;
+                document.getElementById('contact-id').value = item.id;
+                document.getElementById('contact-name').value = item.name || '';
+                document.getElementById('contact-code').value = item.clientCode || item.id;
+                document.getElementById('contact-crm-type').value = item.crmType || 'cliente';
+                document.getElementById('contact-crm-stage').value = item.crmStage || 'nuevo';
+                document.getElementById('contact-priority').value = item.priority || 'media';
+                document.getElementById('contact-source').value = item.source || 'WhatsApp';
+                document.getElementById('contact-phone').value = item.phone || '';
+                document.getElementById('contact-cuit').value = item.cuit || '';
+                document.getElementById('contact-email').value = item.email || '';
+                document.getElementById('contact-tags-input').value = (item.tags || []).join(', ');
+                document.getElementById('contact-next-action').value = item.nextAction || '';
+                document.getElementById('contact-next-date').value = item.nextActionDate || '';
+                document.getElementById('contact-notes').value = item.notes || '';
+
+                const addrs = (Array.isArray(item.addresses) && item.addresses.length > 0) ? item.addresses : [item.address || ''];
+                addrs.forEach(a => addAddressField(a));
+
+                // Mostrar historial
+                historySection.classList.remove('hidden');
+                renderTimeline(item.interactions || []);
+                btnDelete.style.display = 'block';
+            } else {
+                titleEl.textContent = 'Nuevo Cliente / Prospecto';
+                document.getElementById('contact-id').value = '';
+                document.getElementById('contact-code').value = getNextClientCode();
+                addAddressField('');
+                historySection.classList.add('hidden');
+                btnDelete.style.display = 'none';
+            }
+
+            openModal('modal-contact');
+        }
+
+        function addAddressField(val = '') {
+            const container = document.getElementById('contact-addresses-container');
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.gap = '6px';
+            div.innerHTML = `
+                <input type="text" class="form-input contact-addr-input" value="${escapeAttr(val)}" placeholder="Ej: Av. Colón 1234, Córdoba" style="flex: 1;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Quitar">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function formatContactFormPhone() {
+            const input = document.getElementById('contact-phone');
+            const info = cleanAndFormatPhone(input.value);
+            if (info.cleanDigits) {
+                input.value = '+' + info.cleanDigits;
+                showToast("Teléfono formateado para WhatsApp", "success");
+            }
+        }
+
+        function renderTimeline(interactions) {
+            const container = document.getElementById('contact-timeline-list');
+            if (!container) return;
+
+            if (interactions.length === 0) {
+                container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">No hay interacciones registradas aún.</div>`;
+                return;
+            }
+
+            let html = '';
+            interactions.forEach(int => {
+                const dateFormatted = new Date(int.date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+                const typeIcon = int.type === 'whatsapp' ? '💬 WhatsApp' : (int.type === 'call' ? '📞 Llamada' : '📝 Nota');
+                html += `
+                    <div class="timeline-item">
+                        <div class="timeline-meta">
+                            <span style="font-weight:700; color:var(--text-secondary);">${typeIcon}</span>
+                            <span>${dateFormatted}</span>
+                        </div>
+                        <div>${int.message}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function addManualInteractionPrompt() {
+            const note = prompt("Escribe el resumen de la llamada o nota de seguimiento:");
+            if (!note || !note.trim()) return;
+
+            const contactId = document.getElementById('contact-id').value;
+            const item = crmData.find(c => c.id === contactId);
+            if (!item) return;
+
+            if (!Array.isArray(item.interactions)) item.interactions = [];
+            item.interactions.unshift({
+                date: new Date().toISOString(),
+                type: 'note',
+                message: note.trim(),
+                user: 'Usuario'
+            });
+
+            renderTimeline(item.interactions);
+            showToast("Nota agregada al historial. Recuerda guardar cambios.", "info");
+        }
+
+        async function saveContactForm(event) {
+            event.preventDefault();
+
+            const editId = document.getElementById('contact-id').value;
+            const name = document.getElementById('contact-name').value.trim();
+            const crmType = document.getElementById('contact-crm-type').value;
+            const crmStage = document.getElementById('contact-crm-stage').value;
+            const priority = document.getElementById('contact-priority').value;
+            const source = document.getElementById('contact-source').value;
+            const phone = document.getElementById('contact-phone').value.trim();
+            const cuit = document.getElementById('contact-cuit').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const tagsStr = document.getElementById('contact-tags-input').value.trim();
+            const nextAction = document.getElementById('contact-next-action').value.trim();
+            const nextActionDate = document.getElementById('contact-next-date').value;
+            const notes = document.getElementById('contact-notes').value.trim();
+
+            const addrInputs = document.querySelectorAll('.contact-addr-input');
+            const addresses = Array.from(addrInputs).map(i => i.value.trim()).filter(Boolean);
+            const primaryAddr = addresses[0] || 'Sin especificar';
+
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+            try {
+                if (editId) {
+                    const idx = crmData.findIndex(c => c.id === editId);
+                    if (idx !== -1) {
+                        const updated = {
+                            ...crmData[idx],
+                            name,
+                            crmType,
+                            crmStage,
+                            priority,
+                            source,
+                            phone,
+                            cuit,
+                            email,
+                            tags,
+                            nextAction,
+                            nextActionDate,
+                            notes,
+                            address: primaryAddr,
+                            addresses: addresses.length > 0 ? addresses : [primaryAddr]
+                        };
+
+                        await db.collection('clientes').doc(editId).set(updated, { merge: true });
+                        crmData[idx] = updated;
+                        showToast("Contacto actualizado correctamente", "success");
+                    }
+                } else {
+                    const docRef = db.collection('clientes').doc();
+                    const newCode = getNextClientCode();
+                    const newObj = {
+                        id: docRef.id,
+                        clientCode: newCode,
+                        name,
+                        crmType,
+                        crmStage,
+                        priority,
+                        source,
+                        phone,
+                        cuit,
+                        email,
+                        tags,
+                        nextAction,
+                        nextActionDate,
+                        notes,
+                        address: primaryAddr,
+                        addresses: addresses.length > 0 ? addresses : [primaryAddr],
+                        interactions: [{
+                            date: new Date().toISOString(),
+                            type: 'note',
+                            message: 'Contacto creado en el CRM',
+                            user: 'Sistema'
+                        }],
+                        createdAt: new Date().toISOString()
+                    };
+
+                    await docRef.set(newObj);
+                    crmData.push(newObj);
+                    showToast("Nuevo contacto creado exitosamente", "success");
+                }
+
+                localStorage.setItem('electrofrio_clients', JSON.stringify(crmData));
+                closeModal('modal-contact');
+                applyFilters();
+                updateKPIs();
+            } catch (err) {
+                console.error("Error al guardar contacto:", err);
+                showToast("Error al guardar en Firestore: " + err.message, "error");
+            }
+        }
+
+        async function deleteCurrentContact() {
+            const contactId = document.getElementById('contact-id').value;
+            if (!contactId) return;
+
+            const item = crmData.find(c => c.id === contactId);
+            if (!confirm(`¿Estás seguro de eliminar permanentemente a "${item ? item.name : 'este contacto'}" de la base de datos?`)) {
+                return;
+            }
+
+            try {
+                await db.collection('clientes').doc(contactId).delete();
+                crmData = crmData.filter(c => c.id !== contactId);
+                localStorage.setItem('electrofrio_clients', JSON.stringify(crmData));
+                closeModal('modal-contact');
+                applyFilters();
+                updateKPIs();
+                showToast("Contacto eliminado", "success");
+            } catch (err) {
+                console.error("Error al eliminar contacto:", err);
+                showToast("Error al eliminar de Firestore", "error");
+            }
+        }
+
+        function getNextClientCode() {
+            let maxNum = 0;
+            crmData.forEach(c => {
+                const code = c.clientCode || (c.id && c.id.startsWith('CLI-') ? c.id : '');
+                if (code && code.toUpperCase().startsWith('CLI-')) {
+                    const num = parseInt(code.replace(/\D/g, ''), 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            });
+            return `CLI-${String(maxNum + 1).padStart(4, '0')}`;
+        }
+
+        // --- 11. IMPORTADOR EXCEL / CSV CON PRE-EDICIÓN DE TELÉFONOS ---
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            processExcelFile(file);
+        }
+
+        // Soporte Drag & Drop
+        const dropZone = document.getElementById('excel-drop-zone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    processExcelFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        function processExcelFile(file) {
+            showToast(`Procesando ${file.name}...`, "info");
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                    if (!jsonData || jsonData.length < 2) {
+                        showToast("El archivo está vacío o no contiene filas de datos.", "error");
+                        return;
+                    }
+
+                    const headers = jsonData[0].map(h => String(h || '').trim());
+                    const rows = jsonData.slice(1).filter(r => r.some(cell => cell !== undefined && cell !== ''));
+
+                    populateColumnSelectors(headers);
+                    importedRowsData = rows;
+                    remapImportPreview();
+
+                    document.getElementById('import-preview-box').classList.remove('hidden');
+                    showToast(`Archivo cargado: ${rows.length} filas detectadas.`, "success");
+                } catch(err) {
+                    console.error("Error al leer archivo:", err);
+                    showToast("Error al procesar el archivo Excel/CSV", "error");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateColumnSelectors(headers) {
+            const selects = ['map-name', 'map-phone', 'map-address', 'map-cuit'];
+            
+            selects.forEach(sId => {
+                const sel = document.getElementById(sId);
+                sel.innerHTML = '<option value="-1">-- Ninguna / Omitir --</option>';
+                headers.forEach((h, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = `${h} (Columna ${idx + 1})`;
+                    sel.appendChild(opt);
+                });
+            });
+
+            // Detección automática por palabras clave
+            headers.forEach((h, idx) => {
+                const low = h.toLowerCase();
+                if (low.includes('nom') || low.includes('client') || low.includes('razon') || low.includes('contacto')) {
+                    document.getElementById('map-name').value = idx;
+                }
+                if (low.includes('tel') || low.includes('cel') || low.includes('movil') || low.includes('whatsapp') || low.includes('phone')) {
+                    document.getElementById('map-phone').value = idx;
+                }
+                if (low.includes('dir') || low.includes('dom') || low.includes('calle') || low.includes('ubicac')) {
+                    document.getElementById('map-address').value = idx;
+                }
+                if (low.includes('cuit') || low.includes('dni') || low.includes('documento') || low.includes('cuil')) {
+                    document.getElementById('map-cuit').value = idx;
+                }
+            });
+        }
+
+        function remapImportPreview() {
+            const nameIdx = parseInt(document.getElementById('map-name').value, 10);
+            const phoneIdx = parseInt(document.getElementById('map-phone').value, 10);
+            const addrIdx = parseInt(document.getElementById('map-address').value, 10);
+            const cuitIdx = parseInt(document.getElementById('map-cuit').value, 10);
+
+            const tbody = document.getElementById('import-preview-body');
+            tbody.innerHTML = '';
+
+            importedRowsData.forEach((row, i) => {
+                const rawName = nameIdx !== -1 && row[nameIdx] ? String(row[nameIdx]).trim() : `Contacto Importado ${i + 1}`;
+                const rawPhone = phoneIdx !== -1 && row[phoneIdx] ? String(row[phoneIdx]).trim() : '';
+                const rawAddr = addrIdx !== -1 && row[addrIdx] ? String(row[addrIdx]).trim() : '';
+                const rawCuit = cuitIdx !== -1 && row[cuitIdx] ? String(row[cuitIdx]).trim() : '';
+
+                const tr = document.createElement('tr');
+                tr.id = `import-row-${i}`;
+                tr.innerHTML = `
+                    <td style="text-align:center; color:var(--text-muted); font-size:0.75rem;">${i + 1}</td>
+                    <td><input type="text" class="form-input editable-cell import-name" value="${escapeAttr(rawName)}" style="width:100%;"></td>
+                    <td>
+                        <div style="display:flex; gap:4px; align-items:center;">
+                            <input type="text" class="form-input editable-cell import-phone" value="${escapeAttr(rawPhone)}" style="width:100%; font-family:monospace;" placeholder="Ingresar teléfono...">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="fixSingleImportPhone(${i})" title="Corregir formato WhatsApp">⚡</button>
+                        </div>
+                    </td>
+                    <td><input type="text" class="form-input editable-cell import-addr" value="${escapeAttr(rawAddr)}" style="width:100%;"></td>
+                    <td><input type="text" class="form-input editable-cell import-cuit" value="${escapeAttr(rawCuit)}" style="width:100%; font-family:monospace;"></td>
+                    <td><input type="text" class="form-input editable-cell import-notes" value="Importado vía Excel" style="width:100%;"></td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-danger btn-sm btn-icon" onclick="this.closest('tr').remove()" title="Quitar fila">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('import-stats-label').textContent = `Previsualización: ${importedRowsData.length} registros listos para editar e importar`;
+        }
+
+        function fixSingleImportPhone(rowIndex) {
+            const row = document.getElementById(`import-row-${rowIndex}`);
+            if (!row) return;
+            const phoneInput = row.querySelector('.import-phone');
+            if (!phoneInput) return;
+
+            const info = cleanAndFormatPhone(phoneInput.value);
+            if (info.cleanDigits) {
+                phoneInput.value = '+' + info.cleanDigits;
+            }
+        }
+
+        function autoFormatAllImportPhones() {
+            const phoneInputs = document.querySelectorAll('.import-phone');
+            let count = 0;
+            phoneInputs.forEach(input => {
+                const info = cleanAndFormatPhone(input.value);
+                if (info.cleanDigits) {
+                    input.value = '+' + info.cleanDigits;
+                    count++;
+                }
+            });
+            showToast(`${count} teléfonos normalizados al formato WhatsApp (+54 9)`, "success");
+        }
+
+        async function executeBatchImport() {
+            const rows = document.querySelectorAll('#import-preview-body tr');
+            if (rows.length === 0) {
+                showToast("No hay filas para importar.", "error");
+                return;
+            }
+
+            const defaultType = document.getElementById('map-type-default').value || 'prospecto';
+            const btn = document.getElementById('btn-confirm-import');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Importando a Firestore...';
+
+            let nextNum = 0;
+            crmData.forEach(c => {
+                const code = c.clientCode || '';
+                if (code.startsWith('CLI-')) {
+                    const n = parseInt(code.replace(/\D/g, ''), 10);
+                    if (!isNaN(n) && n > nextNum) nextNum = n;
+                }
+            });
+
+            let batch = db.batch();
+            let opCount = 0;
+            let totalSaved = 0;
+
+            try {
+                for (let i = 0; i < rows.length; i++) {
+                    const r = rows[i];
+                    const name = (r.querySelector('.import-name')?.value || '').trim();
+                    const phone = (r.querySelector('.import-phone')?.value || '').trim();
+                    const addr = (r.querySelector('.import-addr')?.value || '').trim() || 'Sin especificar';
+                    const cuit = (r.querySelector('.import-cuit')?.value || '').trim();
+                    const notes = (r.querySelector('.import-notes')?.value || '').trim();
+
+                    if (!name) continue;
+
+                    nextNum++;
+                    const newCode = `CLI-${String(nextNum).padStart(4, '0')}`;
+                    const docRef = db.collection('clientes').doc();
+
+                    const newDoc = {
+                        id: docRef.id,
+                        clientCode: newCode,
+                        name: name,
+                        phone: phone || 'Sin teléfono',
+                        address: addr,
+                        addresses: [addr],
+                        cuit: cuit,
+                        notes: notes,
+                        crmType: defaultType,
+                        crmStage: defaultType === 'cliente' ? 'ganado' : 'nuevo',
+                        priority: 'media',
+                        source: 'Importado',
+                        interactions: [{
+                            date: new Date().toISOString(),
+                            type: 'note',
+                            message: 'Contacto importado desde planilla Excel/CSV',
+                            user: 'Importador CRM'
+                        }],
+                        createdAt: new Date().toISOString()
+                    };
+
+                    batch.set(docRef, newDoc);
+                    crmData.push(newDoc);
+                    opCount++;
+                    totalSaved++;
+
+                    if (opCount >= 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        opCount = 0;
+                    }
+                }
+
+                if (opCount > 0) {
+                    await batch.commit();
+                }
+
+                localStorage.setItem('electrofrio_clients', JSON.stringify(crmData));
+                showToast(`¡Éxito! Se importaron ${totalSaved} contactos a Firestore.`, "success");
+
+                // Limpiar vista de importación y volver a la tabla
+                document.getElementById('import-preview-box').classList.add('hidden');
+                document.getElementById('excel-file-input').value = '';
+                switchView('table');
+                applyFilters();
+                updateKPIs();
+            } catch(err) {
+                console.error("Error en importación batch:", err);
+                showToast("Error al guardar en Firestore: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Confirmar e Importar a Base de Datos</span>';
+            }
+        }
+
+        // --- 12. EXPORTAR A EXCEL ---
+        function exportDataToExcel() {
+            if (filteredData.length === 0) {
+                showToast("No hay registros para exportar", "error");
+                return;
+            }
+
+            const exportList = filteredData.map(c => ({
+                "Código": c.clientCode || c.id,
+                "Nombre": c.name || '',
+                "Tipo": c.crmType === 'cliente' ? 'Cliente Activo' : 'Prospecto / Lead',
+                "Etapa": c.crmStage || 'Nuevo',
+                "Teléfono": c.phone || '',
+                "Domicilio": Array.isArray(c.addresses) ? c.addresses.join(' | ') : (c.address || ''),
+                "CUIT/DNI": c.cuit || '',
+                "Email": c.email || '',
+                "Prioridad": c.priority || 'Media',
+                "Origen": c.source || 'WhatsApp',
+                "Próxima Acción": c.nextAction || '',
+                "Fecha Próx. Acción": c.nextActionDate || '',
+                "Notas": c.notes || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportList);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "CRM Clientes");
+
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `ElectroFrio_CRM_Export_${today}.xlsx`);
+            showToast("Archivo Excel descargado con éxito", "success");
+        }
+
+        // --- 13. HELPERS DE MODALES Y TOASTS ---
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('show');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('show');
+        }
+
+        // Cerrar modales con clic fuera o escape
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeAttr(str) {
+            return String(str || '').replace(/"/g, '&quot;');
+        }
+
+        // --- 14. TEMA CLARO / OSCURO ---
+        function applyCRMTheme(isLight) {
+            if (isLight) {
+                document.body.classList.add('light-mode');
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('light-mode');
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.textContent = '🌙';
+            }
+        }
+
+        function toggleCRMTheme() {
+            const isLight = document.body.classList.contains('light-mode');
+            const nextLight = !isLight;
+            localStorage.setItem('electrofrio_theme', nextLight ? 'light' : 'dark');
+            applyCRMTheme(nextLight);
+        }
+
+        // --- 15. ARRANQUE AL CARGAR PÁGINA ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('electrofrio_theme') || 'dark';
+            applyCRMTheme(savedTheme === 'light');
+            initCRM();
+        });
+    </script>
+</body>
+</html>

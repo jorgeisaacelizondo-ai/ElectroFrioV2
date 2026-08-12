@@ -1,0 +1,3513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuestos - ElectroFrío</title>
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Presupuestos ElectroFrío">
+    <link rel="shortcut icon" href="icon.png?v=3" type="image/png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- html2pdf.js for high fidelity PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            /* Tema Oscuro ElectroFrío */
+            --bg-main: #090f1d;
+            --bg-sidebar: #060b14;
+            --bg-card: #131e33;
+            --bg-card-hover: #182742;
+            --bg-input: #0a1322;
+            --border-color: #1e3352;
+            --border-focus: #00bfff;
+
+            --text-primary: #ffffff;
+            --text-secondary: #93c5fd;
+            --text-muted: #64748b;
+            --text-subtle: #475569;
+
+            --color-blue: #00bfff;
+            --color-blue-hover: #0099cc;
+            --color-green: #10b981;
+            --color-green-hover: #059669;
+            --color-whatsapp: #25D366;
+            --color-whatsapp-hover: #1ebd5a;
+            --color-yellow: #f59e0b;
+            --color-red: #ef4444;
+            --color-purple: #8b5cf6;
+            --color-amber: #d97706;
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.45);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-mode {
+            --bg-main: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f8fafc;
+            --border-color: #cbd5e1;
+            --border-focus: #0084ff;
+            --text-primary: #0f172a;
+            --text-secondary: #0284c7;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(37, 211, 102, 0.2));
+            border: 1px solid rgba(0, 191, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-blue);
+            font-size: 1.3rem;
+        }
+
+        .header-brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-count {
+            background: rgba(0, 191, 255, 0.15);
+            color: var(--color-blue);
+            border: 1px solid rgba(0, 191, 255, 0.35);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.3px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00bfff 0%, #0084ff 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 191, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .btn-success:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+        }
+        .btn-whatsapp:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--color-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: var(--color-red);
+            color: #ffffff;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: var(--radius-md);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* KPI Dashboard Stats Bar */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 16px 24px 0 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition);
+        }
+        .kpi-card:hover {
+            border-color: var(--text-secondary);
+            transform: translateY(-2px);
+        }
+
+        .kpi-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .kpi-blue { background: rgba(0, 191, 255, 0.12); color: var(--color-blue); }
+        .kpi-green { background: rgba(16, 185, 129, 0.12); color: var(--color-green); }
+        .kpi-yellow { background: rgba(245, 158, 11, 0.12); color: var(--color-yellow); }
+        .kpi-purple { background: rgba(139, 92, 246, 0.12); color: var(--color-purple); }
+
+        .kpi-label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 2px;
+        }
+
+        /* Filter and Control Bar */
+        .controls-bar {
+            padding: 16px 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .search-box input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            outline: none;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            border-color: var(--border-focus);
+        }
+
+        /* Selector de Columnas Visibles Dropdown */
+        .column-toggle-wrapper {
+            position: relative;
+        }
+
+        .column-toggle-popup {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 12px;
+            min-width: 250px;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .column-toggle-popup.show {
+            display: flex;
+        }
+
+        .column-toggle-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .column-check-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .column-check-item input[type="checkbox"] {
+            accent-color: var(--color-blue);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .col-hidden {
+            display: none !important;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            padding: 0 24px 24px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Table Card */
+        .table-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        .custom-table th {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .custom-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        .custom-table tbody tr {
+            transition: var(--transition);
+        }
+        .custom-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .status-borrador { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+        .status-pendiente { background: rgba(245, 158, 11, 0.15); color: var(--color-yellow); border: 1px solid rgba(245, 158, 11, 0.35); }
+        .status-enviado { background: rgba(0, 191, 255, 0.15); color: var(--color-blue); border: 1px solid rgba(0, 191, 255, 0.35); }
+        .status-aprobado { background: rgba(16, 185, 129, 0.15); color: var(--color-green); border: 1px solid rgba(16, 185, 129, 0.35); }
+        .status-rechazado { background: rgba(239, 68, 68, 0.15); color: var(--color-red); border: 1px solid rgba(239, 68, 68, 0.35); }
+        .status-facturado { background: rgba(139, 92, 246, 0.15); color: var(--color-purple); border: 1px solid rgba(139, 92, 246, 0.35); }
+
+        .price-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--color-blue);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .empty-state-icon {
+            font-size: 3.5rem;
+            margin-bottom: 14px;
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* ================= MODAL DE EDICIÓN / GENERADOR DE PRESUPUESTO ================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 10px;
+            z-index: 1000;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 1100px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalSlideDown 0.25s ease-out;
+        }
+
+        @keyframes modalSlideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.25);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.25);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Section Cards within Modal */
+        .form-section {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-control:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        textarea.form-control {
+            min-height: 70px;
+            resize: vertical;
+            line-height: 1.4;
+        }
+
+        /* Autocomplete Dropdown List */
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-focus);
+            border-radius: var(--radius-sm);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 1050;
+            box-shadow: var(--shadow-lg);
+            display: none;
+        }
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: var(--transition);
+        }
+        .autocomplete-item:hover {
+            background-color: rgba(0, 191, 255, 0.15);
+            color: var(--color-blue);
+        }
+        .autocomplete-title {
+            font-weight: 600;
+        }
+        .autocomplete-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Quick Chips */
+        .chips-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .chip {
+            font-size: 0.74rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .chip:hover {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: var(--color-blue);
+            color: #ffffff;
+        }
+
+        /* Items Editor Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .items-table th {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .item-input {
+            width: 100%;
+            padding: 7px 9px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .item-input:focus {
+            border-color: var(--border-focus);
+        }
+
+        .item-type-badge {
+            font-size: 0.72rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-mat { background: rgba(0, 191, 255, 0.2); color: var(--color-blue); }
+        .badge-mdo { background: rgba(16, 185, 129, 0.2); color: var(--color-green); }
+        .badge-free { background: rgba(139, 92, 246, 0.2); color: var(--color-purple); }
+
+        /* Calculation Summary Box in Editor */
+        .budget-totals-box {
+            align-self: flex-end;
+            width: 100%;
+            max-width: 380px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .total-line.highlight {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+        .total-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .total-val.grand {
+            color: var(--color-blue);
+            font-size: 1.25rem;
+        }
+
+        /* Catalog Selector Modal (Materials & Mano de Obra) */
+        .catalog-modal {
+            max-width: 900px;
+        }
+        .catalog-tabs, .issuer-tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .catalog-tab, .issuer-tab {
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .catalog-tab.active, .issuer-tab.active {
+            background: rgba(0, 191, 255, 0.15);
+            border-color: var(--color-blue);
+            color: var(--color-blue);
+        }
+
+        .catalog-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .catalog-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+        .catalog-item-card:hover {
+            border-color: var(--color-blue);
+            background: var(--bg-card-hover);
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            color: #ffffff;
+            box-shadow: var(--shadow-lg);
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.2s ease-out;
+            min-width: 260px;
+        }
+        @keyframes toastIn {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-success { border-left: 4px solid var(--color-green); }
+        .toast-error { border-left: 4px solid var(--color-red); }
+        .toast-info { border-left: 4px solid var(--color-blue); }
+
+        /* ==========================================================================
+           PLANTILLA DE IMPRESIÓN Y PDF IDÉNTICA AL FORMATO OFICIAL COMERCIAL (A4)
+           ========================================================================== */
+        #pdf-template-wrapper {
+            display: none; /* Oculto en pantalla principal, renderizado en memoria para PDF/Print */
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .pdf-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm 12mm 10mm 12mm;
+            margin: 0 auto;
+            background: #ffffff;
+            color: #000000;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Header Documento Fiscal / Comercial */
+        .pdf-header-box {
+            border: 1.5px solid #000000;
+            display: grid;
+            grid-template-columns: 1fr 54px 1.2fr;
+            min-height: 110px;
+            position: relative;
+        }
+
+        .pdf-header-left {
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        .pdf-logo-img {
+            max-height: 48px;
+            max-width: 160px;
+            object-fit: contain;
+            display: block;
+        }
+        .pdf-company-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #000000;
+            margin-top: 2px;
+            line-height: 1.1;
+        }
+        .pdf-company-sub {
+            font-size: 7.5pt;
+            color: #111111;
+            line-height: 1.25;
+        }
+
+        /* Letra X Central */
+        .pdf-header-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            border-left: 1.5px solid #000000;
+            border-right: 1.5px solid #000000;
+            background: #ffffff;
+        }
+        .pdf-letter-x-box {
+            width: 44px;
+            height: 40px;
+            border-bottom: 1.5px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24pt;
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+        }
+
+        .pdf-header-right {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            text-align: right;
+            gap: 3px;
+        }
+        .pdf-doc-title {
+            font-size: 15pt;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #000000;
+        }
+        .pdf-doc-num {
+            font-size: 14pt;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000000;
+        }
+        .pdf-doc-date {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 2px;
+        }
+        .pdf-tax-info {
+            font-size: 7pt;
+            font-weight: bold;
+            color: #222222;
+            line-height: 1.2;
+        }
+
+        /* Recuadro Datos del Cliente */
+        .pdf-client-box {
+            border: 1.5px solid #000000;
+            border-top: none;
+            padding: 6px 10px;
+            font-size: 7.5pt;
+            line-height: 1.35;
+        }
+        .pdf-client-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            gap: 8px;
+        }
+        .pdf-client-field {
+            display: flex;
+            gap: 4px;
+        }
+        .pdf-field-lbl {
+            font-weight: bold;
+            color: #000000;
+            text-transform: uppercase;
+        }
+        .pdf-field-val {
+            color: #111111;
+            text-transform: uppercase;
+        }
+
+        /* Recuadro Observaciones */
+        .pdf-obs-box {
+            border: 1.5px solid #000000;
+            border-top: none;
+            padding: 6px 10px;
+            font-size: 6.8pt;
+            line-height: 1.25;
+            text-transform: uppercase;
+        }
+
+        /* Tabla de Renglones / Items */
+        .pdf-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 7.5pt;
+        }
+        .pdf-items-table th {
+            background-color: #d2d2d2;
+            color: #000000;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px 6px;
+            border: 1px solid #000000;
+            font-size: 7.5pt;
+        }
+        .pdf-items-table td {
+            padding: 6px 6px;
+            color: #000000;
+            border-bottom: 1.5px solid #a0a0a0;
+            vertical-align: middle;
+            font-size: 7.5pt;
+        }
+
+        /* Totales y Resumen */
+        .pdf-totals-box {
+            border: 1.5px solid #000000;
+            padding: 8px 12px;
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 8pt;
+            line-height: 1.4;
+            gap: 2px;
+        }
+        .pdf-total-row {
+            display: flex;
+            width: 250px;
+            justify-content: space-between;
+        }
+        .pdf-grand-total {
+            font-size: 11pt;
+            font-weight: 900;
+            margin-top: 3px;
+        }
+
+        /* ==========================================================================
+           RESPONSIVE MOBILE & TABLET DESIGN
+           ========================================================================== */
+        .section-actions-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .items-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 14px;
+                gap: 10px;
+            }
+
+            .header-brand-text h1 {
+                font-size: 1.1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                display: flex;
+                gap: 6px;
+                justify-content: space-between;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                padding: 7px 6px;
+                font-size: 0.76rem;
+                gap: 4px;
+                justify-content: center;
+            }
+
+            .kpi-container {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 10px 14px 0 14px;
+                gap: 8px;
+            }
+
+            .kpi-card {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+
+            .kpi-icon-box {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+
+            .kpi-label {
+                font-size: 0.68rem;
+            }
+
+            .kpi-value {
+                font-size: 1.1rem;
+            }
+
+            .controls-bar {
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .search-box {
+                min-width: 100%;
+                flex: 1 1 100%;
+            }
+
+            .filter-select {
+                flex: 1;
+                min-width: 120px;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+
+            .column-toggle-wrapper {
+                flex: 1;
+                min-width: 100px;
+            }
+
+            .column-toggle-wrapper .btn {
+                width: 100%;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+
+            .column-toggle-popup {
+                position: fixed;
+                top: auto;
+                bottom: 16px;
+                left: 14px;
+                right: 14px;
+                max-height: 65vh;
+                z-index: 2100;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            }
+
+            .main-container {
+                padding: 0 14px 16px 14px;
+            }
+
+            .custom-table th, .custom-table td {
+                padding: 10px 8px;
+                font-size: 0.8rem;
+            }
+
+            /* Modales en Móvil */
+            .modal-overlay {
+                padding: 6px 4px;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                max-height: 98vh;
+                margin-bottom: 10px;
+                border-radius: var(--radius-md);
+            }
+
+            .modal-header {
+                padding: 12px 14px;
+            }
+
+            .modal-title {
+                font-size: 1.05rem;
+            }
+
+            .modal-body {
+                padding: 12px;
+                gap: 12px;
+                max-height: calc(98vh - 130px);
+            }
+
+            .modal-footer {
+                padding: 12px;
+                flex-direction: column-reverse;
+                gap: 8px;
+            }
+
+            .modal-footer > div {
+                width: 100%;
+                display: flex;
+                gap: 6px;
+            }
+
+            .modal-footer .btn {
+                flex: 1;
+                padding: 9px 8px;
+                font-size: 0.8rem;
+            }
+
+            /* Formularios en Móvil */
+            .form-section {
+                padding: 12px 10px;
+                gap: 10px;
+            }
+
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .section-actions-group {
+                width: 100%;
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .section-actions-group .btn {
+                flex: 1;
+                min-width: 90px;
+                padding: 7px 6px;
+                font-size: 0.76rem;
+                justify-content: center;
+            }
+
+            .grid-4, .grid-3, .grid-2 {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+            }
+
+            /* Tabla de Ítems en el Editor de Presupuesto */
+            .items-table-wrapper {
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-sm);
+                margin-top: 4px;
+            }
+
+            .items-table {
+                min-width: 580px;
+                margin-top: 0;
+            }
+
+            .items-table th, .items-table td {
+                padding: 6px 4px;
+            }
+
+            .budget-totals-box {
+                max-width: 100%;
+                align-self: stretch;
+                padding: 12px 14px;
+            }
+
+            .chips-container {
+                gap: 4px;
+            }
+
+            .chip {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+
+            /* Modales de Catálogo y Emisores */
+            .catalog-tabs, .issuer-tabs {
+                gap: 6px;
+            }
+
+            .catalog-tab, .issuer-tab {
+                flex: 1;
+                text-align: center;
+                padding: 7px 8px;
+                font-size: 0.78rem;
+            }
+
+            .catalog-item-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .catalog-item-card > div:last-child {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-brand-text h1 {
+                font-size: 1rem;
+            }
+
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-select {
+                min-width: 100%;
+                flex: 1 1 100%;
+            }
+        }
+
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .header, .kpi-container, .controls-bar, .main-container, .modal-overlay, .toast-container {
+                display: none !important;
+            }
+            #pdf-template-wrapper {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .pdf-page {
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 5mm !important;
+                box-shadow: none !important;
+                page-break-after: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= TOP HEADER ================= -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="header-icon">📋</div>
+            <div class="header-brand-text">
+                <h1>Presupuestos <span class="badge-count" id="badge-total-presupuestos">0</span></h1>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="toggleIssuerConfigModal()">
+                🏢 Config. Emisores (<span id="btn-count-emisores">2</span>)
+            </button>
+            <button class="btn btn-secondary" onclick="exportToExcel()">
+                📊 Exportar Excel
+            </button>
+            <button class="btn btn-primary" onclick="openNewBudgetModal()">
+                ✨ + Nuevo Presupuesto
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= KPIS / DASHBOARD RESUMEN ================= -->
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <div class="kpi-icon-box kpi-blue">📑</div>
+            <div>
+                <div class="kpi-label">Total Emitidos</div>
+                <div class="kpi-value" id="kpi-total">0</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-box kpi-yellow">⏳</div>
+            <div>
+                <div class="kpi-label">Pendientes / Enviados</div>
+                <div class="kpi-value" id="kpi-pendientes">0</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-box kpi-green">✅</div>
+            <div>
+                <div class="kpi-label">Aprobados</div>
+                <div class="kpi-value" id="kpi-aprobados">0</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-box kpi-purple">💰</div>
+            <div>
+                <div class="kpi-label">Monto Aprobado</div>
+                <div class="kpi-value" id="kpi-monto-total">$ 0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CONTROLES & FILTROS ================= -->
+    <div class="controls-bar">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="filter-search" placeholder="Buscar..." oninput="applyFilters()">
+        </div>
+
+        <select class="filter-select" id="filter-status" onchange="applyFilters()">
+            <option value="ALL">Todos los Estados</option>
+            <option value="Borrador">Borrador</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Enviado">Enviado</option>
+            <option value="Aprobado">Aprobado</option>
+            <option value="Rechazado">Rechazado</option>
+            <option value="Facturado">Facturado</option>
+        </select>
+
+        <select class="filter-select" id="filter-sort" onchange="applyFilters()">
+            <option value="date-desc">Fecha: Más recientes primero</option>
+            <option value="date-asc">Fecha: Más antiguos primero</option>
+            <option value="num-desc">Nº Presupuesto: Mayor a menor</option>
+            <option value="num-asc">Nº Presupuesto: Menor a mayor</option>
+            <option value="total-desc">Monto: Mayor a menor</option>
+            <option value="total-asc">Monto: Menor a mayor</option>
+        </select>
+
+        <!-- Selector de Columnas Visibles -->
+        <div class="column-toggle-wrapper">
+            <button class="btn btn-secondary" onclick="toggleColumnMenu(event)" title="Mostrar u ocultar columnas de la tabla">
+                👁️ Columnas
+            </button>
+            <div class="column-toggle-popup" id="column-toggle-popup">
+                <div class="column-toggle-header">
+                    <span>Columnas Visibles</span>
+                    <span style="cursor:pointer; font-size:0.75rem; color:var(--color-blue); font-weight:700;" onclick="resetColumns()">Restablecer</span>
+                </div>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="num" checked onchange="toggleColumnVisibility('num', this.checked)">
+                    <span>Nº Presupuesto</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="date" checked onchange="toggleColumnVisibility('date', this.checked)">
+                    <span>Fecha Emisión</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="expire" onchange="toggleColumnVisibility('expire', this.checked)">
+                    <span>Vencimiento</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="issuer" checked onchange="toggleColumnVisibility('issuer', this.checked)">
+                    <span>Emisor (Paez / Arias)</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="client" checked onchange="toggleColumnVisibility('client', this.checked)">
+                    <span>Cliente (Nombre/CUIT)</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="contact" checked onchange="toggleColumnVisibility('contact', this.checked)">
+                    <span>Contacto / Teléfono</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="obs" checked onchange="toggleColumnVisibility('obs', this.checked)">
+                    <span>Observaciones / Trabajo</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="items" checked onchange="toggleColumnVisibility('items', this.checked)">
+                    <span>Cant. Ítems</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="subtotal" onchange="toggleColumnVisibility('subtotal', this.checked)">
+                    <span>Subtotal ($)</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="discount" onchange="toggleColumnVisibility('discount', this.checked)">
+                    <span>Descuento ($)</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="total" checked onchange="toggleColumnVisibility('total', this.checked)">
+                    <span>Total ($)</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="status" checked onchange="toggleColumnVisibility('status', this.checked)">
+                    <span>Estado</span>
+                </label>
+                <label class="column-check-item">
+                    <input type="checkbox" data-col="actions" checked onchange="toggleColumnVisibility('actions', this.checked)">
+                    <span>Acciones</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TABLA DE HISTORIAL DE PRESUPUESTOS ================= -->
+    <main class="main-container">
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num" style="width: 120px;">Nº Presupuesto</th>
+                            <th class="col-date" style="width: 100px;">Fecha</th>
+                            <th class="col-expire" style="width: 100px;">Vencimiento</th>
+                            <th class="col-issuer">Emisor</th>
+                            <th class="col-client">Cliente</th>
+                            <th class="col-contact">Contacto / Teléfono</th>
+                            <th class="col-obs">Observaciones / Trabajo</th>
+                            <th class="col-items" style="text-align: center; width: 90px;">Cant. Items</th>
+                            <th class="col-subtotal" style="text-align: right; width: 120px;">Subtotal</th>
+                            <th class="col-discount" style="text-align: right; width: 110px;">Descuento</th>
+                            <th class="col-total" style="text-align: right; width: 140px;">Total</th>
+                            <th class="col-status" style="text-align: center; width: 120px;">Estado</th>
+                            <th class="col-actions" style="text-align: center; width: 220px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="presupuestos-table-body">
+                        <!-- Renderizado dinámico -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-state-icon">📋</div>
+                <h3>No se encontraron presupuestos</h3>
+                <p style="margin-top: 6px;">Crea un nuevo presupuesto formal con materiales y mano de obra seleccionables.</p>
+                <button class="btn btn-primary" onclick="openNewBudgetModal()" style="margin-top: 14px;">
+                    ✨ Crear Presupuesto Ahora
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= MODAL EDITOR / GENERADOR DE PRESUPUESTO ================= -->
+    <div class="modal-overlay" id="modal-budget-editor">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span id="editor-modal-icon">📄</span>
+                    <span id="editor-modal-title">Nuevo Presupuesto</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="closeBudgetEditor()">Cerrar</button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <!-- 1. Cabecera y Datos del Comprobante -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>1. Datos del Presupuesto y Emisor</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Editable libremente antes de guardar</span>
+                    </div>
+                    <div class="grid-4">
+                        <div class="form-group">
+                            <label class="form-label">🏢 Emisor / Membrete</label>
+                            <select class="form-control" id="form-budget-issuer" onchange="onBudgetIssuerChange()" style="border-color: var(--color-blue); font-weight: 600;">
+                                <!-- Opciones dinámicas de emisores -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nº de Presupuesto</label>
+                            <input type="text" class="form-control" id="form-budget-num" placeholder="00000794" style="font-weight: 700; font-family: 'JetBrains Mono', monospace;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Emisión</label>
+                            <input type="date" class="form-control" id="form-budget-date">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Vencimiento</label>
+                            <input type="date" class="form-control" id="form-budget-expire">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Vendedor / Responsable</label>
+                            <input type="text" class="form-control" id="form-budget-seller" placeholder="PAEZ JOSE RAMIRO">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Comprobante</label>
+                            <input type="text" class="form-control" id="form-budget-letter" value="X - Documento No Válido como Factura" readonly style="opacity: 0.8;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Datos del Cliente -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>2. Datos del Cliente</span>
+                        <span style="font-size: 0.75rem; color: var(--color-blue);">💡 Busca en la base de clientes o escribe directo</span>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label class="form-label">Señor/es (Nombre o Razón Social)</label>
+                            <input type="text" class="form-control" id="form-client-name" placeholder="Escribe para buscar cliente o tipear..." autocomplete="off" oninput="handleClientSearchInput()">
+                            <div class="autocomplete-list" id="client-autocomplete-list"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Condición IVA</label>
+                            <select class="form-control" id="form-client-iva">
+                                <option value="CONSUMIDOR FINAL">CONSUMIDOR FINAL</option>
+                                <option value="MONOTRIBUTISTA">MONOTRIBUTISTA</option>
+                                <option value="RESPONSABLE INSCRIPTO">RESPONSABLE INSCRIPTO</option>
+                                <option value="EXENTO">EXENTO</option>
+                                <option value="NO RESPONSABLE">NO RESPONSABLE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CUIT / DNI</label>
+                            <input type="text" class="form-control" id="form-client-cuit" placeholder="20333945968 o DNI">
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label class="form-label">Domicilio</label>
+                            <input type="text" class="form-control" id="form-client-address" placeholder="Calle, Número, Depto">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Localidad</label>
+                            <input type="text" class="form-control" id="form-client-locality" placeholder="Capital / Dpto">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Provincia</label>
+                            <input type="text" class="form-control" id="form-client-province" placeholder="La Rioja / Buenos Aires">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Teléfonos / Celular (WhatsApp)</label>
+                            <input type="text" class="form-control" id="form-client-phone" placeholder="Ej: 3804349027 o +54 9 380 4349027">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="form-client-email" placeholder="cliente@ejemplo.com">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Observaciones y Condiciones -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>3. Observaciones y Términos del Presupuesto</span>
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-control" id="form-budget-obs" placeholder="ESTE PRESUPUESTO INCLUYE MANO DE OBRA Y MATERIALES..."></textarea>
+                    </div>
+                    <div class="chips-container">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Plantillas rápidas:</span>
+                        <div class="chip" onclick="setObsTemplate('instalacion')">❄️ Instalación Split Estándar</div>
+                        <div class="chip" onclick="setObsTemplate('service')">🔧 Service Integral</div>
+                        <div class="chip" onclick="setObsTemplate('desinstalacion')">🔁 Desinstalación / Reinstalación</div>
+                        <div class="chip" onclick="setObsTemplate('reparacion')">⚡ Reparación y Carga de Gas</div>
+                        <div class="chip" onclick="setObsTemplate('limpiar')">🧹 Vacío / Sin observaciones</div>
+                    </div>
+                </div>
+
+                <!-- 4. Renglones / Detalle de Items (Materiales y Mano de Obra) -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span>4. Detalle de Ítems (Materiales y Mano de Obra)</span>
+                        <div class="section-actions-group">
+                            <button type="button" class="btn btn-secondary" onclick="openCatalogModal('mat')" style="padding: 6px 10px; font-size: 0.8rem; background: rgba(0, 191, 255, 0.15); border-color: var(--color-blue); color: var(--color-blue);">
+                                📦 + Material
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="openCatalogModal('mdo')" style="padding: 6px 10px; font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); border-color: var(--color-green); color: var(--color-green);">
+                                🛠️ + Mano de Obra
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="addCustomItemRow()" style="padding: 6px 10px; font-size: 0.8rem;">
+                                ✍️ + Libre
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="items-table-wrapper">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px; text-align: center;">Tipo</th>
+                                    <th style="min-width: 280px;">Descripción / Detalle</th>
+                                    <th style="width: 85px; text-align: right;">Cant.</th>
+                                    <th style="width: 120px; text-align: right;">Precio Uni. ($)</th>
+                                    <th style="width: 85px; text-align: right;">% Desc</th>
+                                    <th style="width: 130px; text-align: right;">Subtotal ($)</th>
+                                    <th style="width: 50px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="budget-items-body">
+                                <!-- Renglones dinámicos -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Cuadro de Totales -->
+                    <div class="budget-totals-box">
+                        <div class="total-line">
+                            <span>CTD ITEMS (Cantidad total):</span>
+                            <span class="total-val" id="editor-total-items">0,00</span>
+                        </div>
+                        <div class="total-line">
+                            <span>SUBTOTAL:</span>
+                            <span class="total-val" id="editor-subtotal">$ 0,00</span>
+                        </div>
+                        <div class="total-line">
+                            <span>DESCUENTO:</span>
+                            <span class="total-val" id="editor-descuento">$ 0,00</span>
+                        </div>
+                        <div class="total-line highlight">
+                            <span>TOTAL:</span>
+                            <span class="total-val grand" id="editor-total-final">$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Estado del Presupuesto -->
+                <div class="form-section" style="flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div class="form-group" style="min-width: 220px;">
+                        <label class="form-label">Estado del Presupuesto</label>
+                        <select class="form-control" id="form-budget-status">
+                            <option value="Pendiente">🟡 Pendiente / A presentar</option>
+                            <option value="Enviado">🔵 Enviado por WhatsApp/Mail</option>
+                            <option value="Aprobado">🟢 Aprobado por el Cliente</option>
+                            <option value="Facturado">🟣 Facturado / Concretado</option>
+                            <option value="Rechazado">🔴 Rechazado / Cancelado</option>
+                            <option value="Borrador">⚪ Borrador</option>
+                        </select>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Presupuesto ID: <span id="form-budget-id" style="font-family: monospace;">Nuevo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-whatsapp" onclick="sendActiveBudgetWhatsApp()">
+                        💬 Enviar WhatsApp
+                    </button>
+                    <button class="btn btn-success" onclick="downloadActiveBudgetPDF()">
+                        📥 Descargar PDF
+                    </button>
+                    <button class="btn btn-secondary" onclick="printActiveBudget()">
+                        🖨️ Imprimir / Vista Previa
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="closeBudgetEditor()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="saveBudgetFromEditor()">
+                        💾 Guardar Presupuesto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL SELECTOR DE CATÁLOGO (MATERIALES Y MANO DE OBRA) ================= -->
+    <div class="modal-overlay" id="modal-catalog-picker">
+        <div class="modal-content catalog-modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📦</span>
+                    <span id="catalog-picker-title">Seleccionar del Catálogo</span>
+                </div>
+                <button class="btn btn-secondary" onclick="closeCatalogModal()">✕</button>
+            </div>
+
+            <div class="modal-body" style="padding: 16px 20px;">
+                <div class="catalog-tabs">
+                    <button class="catalog-tab active" id="tab-picker-mat" onclick="switchCatalogTab('mat')">
+                        📦 Materiales (<span id="count-picker-mat">0</span>)
+                    </button>
+                    <button class="catalog-tab" id="tab-picker-mdo" onclick="switchCatalogTab('mdo')">
+                        🛠️ Mano de Obra (<span id="count-picker-mdo">0</span>)
+                    </button>
+                </div>
+
+                <div class="search-box" style="margin-bottom: 12px;">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="catalog-search-input" placeholder="Buscar por código, descripción, marca o rubro..." oninput="filterCatalogPicker()">
+                </div>
+
+                <div class="catalog-list" id="catalog-picker-list">
+                    <!-- Items dinámicos -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCatalogModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL CONFIGURACIÓN DE MULTI-EMISORES ================= -->
+    <div class="modal-overlay" id="modal-issuer-config">
+        <div class="modal-content" style="max-width: 750px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>🏢</span>
+                    <span>Configuración de Emisores (Múltiples Membretes)</span>
+                </div>
+                <button class="btn btn-secondary" onclick="toggleIssuerConfigModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Pestañas de Emisores -->
+                <div class="issuer-tabs" id="issuer-tabs-container">
+                    <!-- Tabs generados dinámicamente -->
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);" id="issuer-editing-title">Editando Emisor 1</span>
+                    <div style="display: flex; gap: 8px;">
+                        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--color-green);">
+                            <input type="checkbox" id="cfg-issuer-is-default"> ⭐ Establecer como Predeterminado
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" style="color: var(--color-blue); font-weight: 700;">Nombre para Mostrar / Selector (ej: Paez Ramiro o Arias Ignacio)</label>
+                        <input type="text" class="form-control" id="cfg-issuer-short" placeholder="Ej: Paez Ramiro o Arias Ignacio" style="border-color: var(--color-blue);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nombre Comercial / Empresa</label>
+                        <input type="text" class="form-control" id="cfg-issuer-name" placeholder="Ej: ELECTROFRIO">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Titular / Razón Social</label>
+                        <input type="text" class="form-control" id="cfg-issuer-owner" placeholder="Ej: PAEZ JOSE RAMIRO">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Domicilio Comercial</label>
+                        <input type="text" class="form-control" id="cfg-issuer-address" placeholder="Ej: SAN MARTIN 375, CAPITAL">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono Comercial</label>
+                        <input type="text" class="form-control" id="cfg-issuer-phone" placeholder="Ej: 380 4349027">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Condición Fiscal (IVA)</label>
+                        <select class="form-control" id="cfg-issuer-iva">
+                            <option value="MONOTRIBUTISTA">MONOTRIBUTISTA</option>
+                            <option value="RESPONSABLE INSCRIPTO">RESPONSABLE INSCRIPTO</option>
+                            <option value="EXENTO">EXENTO</option>
+                            <option value="CONSUMIDOR FINAL">CONSUMIDOR FINAL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CUIT</label>
+                        <input type="text" class="form-control" id="cfg-issuer-cuit" placeholder="Ej: 20333945968">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Inicio de Actividades</label>
+                        <input type="text" class="form-control" id="cfg-issuer-start" placeholder="Ej: 19/06/2024">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ingresos Brutos (IIBB)</label>
+                        <input type="text" class="form-control" id="cfg-issuer-iibb" placeholder="Ej: 20333945968 o Convenio">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="addNewIssuerProfile()">➕ Agregar Otro Emisor</button>
+                    <button class="btn btn-danger" id="btn-delete-issuer" onclick="deleteCurrentIssuerProfile()" style="display: none;">🗑️ Eliminar</button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="toggleIssuerConfigModal()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="saveIssuerConfigFromModal()">💾 Guardar Emisores</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL ENVÍO DE WHATSAPP ================= -->
+    <div class="modal-overlay" id="modal-whatsapp">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>💬</span>
+                    <span>Enviar Presupuesto por WhatsApp</span>
+                </div>
+                <button class="btn btn-secondary" onclick="closeWhatsAppModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Número de Teléfono / Celular</label>
+                    <input type="text" class="form-control" id="wa-phone-input" placeholder="Ej: 3804349027 o +54 9 380 4349027">
+                    <small style="color: var(--text-muted); font-size: 0.76rem; margin-top: 2px;">Se normalizará automáticamente al formato internacional (+54 9...)</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mensaje a Enviar</label>
+                    <textarea class="form-control" id="wa-msg-input" style="min-height: 180px; font-family: monospace; font-size: 0.84rem;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="copyWhatsAppMessage()">📋 Copiar Texto</button>
+                <button class="btn btn-whatsapp" onclick="launchWhatsAppChat()">🚀 Abrir WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PLANTILLA DE RENDERIZADO PARA PDF / IMPRESIÓN ================= -->
+    <div id="pdf-template-wrapper">
+        <div class="pdf-page" id="pdf-page-container">
+            <div>
+                <!-- 1. Cabecera con Recuadro X y Datos del Emisor -->
+                <div class="pdf-header-box">
+                    <div class="pdf-header-left">
+                        <img src="logo.png" alt="ElectroFrío" class="pdf-logo-img" id="pdf-header-logo" onerror="this.style.display='none'">
+                        <div class="pdf-company-title" id="pdf-issuer-name">ELECTROFRIO</div>
+                        <div class="pdf-company-sub" id="pdf-issuer-owner">PAEZ JOSE RAMIRO</div>
+                        <div class="pdf-company-sub" id="pdf-issuer-addr">SAN MARTIN 375, CAPITAL</div>
+                        <div class="pdf-company-sub" id="pdf-issuer-phone">TEL: 380 4349027</div>
+                    </div>
+
+                    <div class="pdf-header-center">
+                        <div class="pdf-letter-x-box">X</div>
+                    </div>
+
+                    <div class="pdf-header-right">
+                        <div class="pdf-doc-title">PRESUPUESTO</div>
+                        <div class="pdf-doc-num" id="pdf-doc-number">Nº 00000794</div>
+                        <div class="pdf-doc-date" id="pdf-doc-date">FECHA: 10/07/2026</div>
+                        <div class="pdf-tax-info" id="pdf-issuer-tax-line1">MONOTRIBUTISTA CUIT: 20333945968</div>
+                        <div class="pdf-tax-info" id="pdf-issuer-tax-line2">INICIO ACT.: 19/06/2024 ING. BRUTOS:</div>
+                    </div>
+                </div>
+
+                <!-- 2. Recuadro Datos del Cliente -->
+                <div class="pdf-client-box">
+                    <div class="pdf-client-row">
+                        <div class="pdf-client-field" style="flex: 2;">
+                            <span class="pdf-field-lbl">SEÑOR/ES:</span>
+                            <span class="pdf-field-val" id="pdf-client-name">JORGE HERRERA</span>
+                        </div>
+                        <div class="pdf-client-field" style="flex: 1.2;">
+                            <span class="pdf-field-lbl">IVA:</span>
+                            <span class="pdf-field-val" id="pdf-client-iva">CONSUMIDOR FINAL</span>
+                        </div>
+                        <div class="pdf-client-field" style="flex: 1;">
+                            <span class="pdf-field-lbl">CUIT:</span>
+                            <span class="pdf-field-val" id="pdf-client-cuit"></span>
+                        </div>
+                    </div>
+
+                    <div class="pdf-client-row">
+                        <div class="pdf-client-field" style="flex: 2;">
+                            <span class="pdf-field-lbl">DOMICILIO:</span>
+                            <span class="pdf-field-val" id="pdf-client-address"></span>
+                        </div>
+                        <div class="pdf-client-field" style="flex: 2.2;">
+                            <span class="pdf-field-lbl">PROVINCIA:</span>
+                            <span class="pdf-field-val" id="pdf-client-province"></span>
+                        </div>
+                    </div>
+
+                    <div class="pdf-client-row">
+                        <div class="pdf-client-field" style="flex: 2;">
+                            <span class="pdf-field-lbl">LOCALIDAD:</span>
+                            <span class="pdf-field-val" id="pdf-client-locality"></span>
+                        </div>
+                        <div class="pdf-client-field" style="flex: 2.2;">
+                            <span class="pdf-field-lbl">TELEFONOS:</span>
+                            <span class="pdf-field-val" id="pdf-client-phone"></span>
+                        </div>
+                    </div>
+
+                    <div class="pdf-client-row">
+                        <div class="pdf-client-field" style="flex: 2;">
+                            <span class="pdf-field-lbl">CORREO ELECTRONICO:</span>
+                            <span class="pdf-field-val" id="pdf-client-email"></span>
+                        </div>
+                        <div class="pdf-client-field" style="flex: 2.2;">
+                            <span class="pdf-field-lbl">FECHA VENCIMIENTO:</span>
+                            <span class="pdf-field-val" id="pdf-doc-expire"></span>
+                        </div>
+                    </div>
+
+                    <div class="pdf-client-row">
+                        <div class="pdf-client-field" style="flex: 2;">
+                            <span class="pdf-field-lbl">VENDEDOR:</span>
+                            <span class="pdf-field-val" id="pdf-doc-seller"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Recuadro Observaciones -->
+                <div class="pdf-obs-box">
+                    <span class="pdf-field-lbl">OBSERVACIONES:</span>
+                    <span id="pdf-doc-obs">ESTE PRESUPUESTO INCLUYE MANO DE OBRA Y MATERIALES ESTIMADOS PARA UNA INSTALACION ESTANDAR. CUALQUIER DIFERENCIA SERA AJUSTADA DE ACUERDO A LAS MATERIALES UTILIZADOS, EL TIEMPO DE TRABAJO, LA ALTURA O DIFICULTAD DE ACCESO ESTE PRESUPUESTO NO INCLUYE LA INSTALACION ELECTRICA NI SUS MATERIALES</span>
+                </div>
+
+                <!-- 4. Tabla de Items / Renglones -->
+                <table class="pdf-items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Imagen</th>
+                            <th style="text-align: left; padding-left: 10px;">Descripcion</th>
+                            <th style="width: 55px;">Cant.</th>
+                            <th style="width: 85px;">Precio Uni.</th>
+                            <th style="width: 60px;">% Desc</th>
+                            <th style="width: 95px;">Sub Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdf-items-tbody">
+                        <!-- Renglones de presupuesto impreso -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <!-- 5. Recuadro de Totales -->
+                <div class="pdf-totals-box">
+                    <div class="pdf-total-row">
+                        <span class="pdf-field-lbl">CTD ITEMS:</span>
+                        <span class="pdf-field-val" id="pdf-tot-items">20,00</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span class="pdf-field-lbl">SUBTOTAL:</span>
+                        <span class="pdf-field-val" id="pdf-tot-subtotal">$ 273.727,00</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span class="pdf-field-lbl">DESCUENTO:</span>
+                        <span class="pdf-field-val" id="pdf-tot-desc">$ 0,00</span>
+                    </div>
+                    <div class="pdf-total-row pdf-grand-total">
+                        <span class="pdf-field-lbl" style="font-size: 11pt;">TOTAL:</span>
+                        <span class="pdf-field-val" id="pdf-tot-grand" style="font-size: 11pt; font-weight: bold;">$ 273.727,00</span>
+                    </div>
+                </div>
+
+                <!-- 6. Pie de Página -->
+                <div class="pdf-footer-credit">
+                    Generado por ElectroFrío Climatización &bull; www.electrofrio.com.ar
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ================= JAVASCRIPT PRINCIPAL ================= -->
+    <script>
+        // --- 1. CONFIGURACIÓN FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- 2. ESTADO GLOBAL ---
+        let presupuestosData = [];
+        let filteredPresupuestos = [];
+        let materialesData = [];
+        let manoObraData = [];
+        let clientesData = [];
+
+        // Lista de Emisores (Multi-Emisor)
+        let issuersList = [
+            {
+                id: "paez",
+                shortName: "Paez Ramiro",
+                name: "ELECTROFRIO",
+                owner: "PAEZ JOSE RAMIRO",
+                address: "SAN MARTIN 375, CAPITAL",
+                phone: "380 4349027",
+                iva: "MONOTRIBUTISTA",
+                cuit: "20333945968",
+                startActivity: "19/06/2024",
+                iibb: "",
+                isDefault: true
+            },
+            {
+                id: "arias",
+                shortName: "Arias Ignacio",
+                name: "ELECTROFRIO",
+                owner: "ARIAS JORGE VICTOR IGNACIO",
+                address: "SAN MARTIN 375, CAPITAL",
+                phone: "380 4349027",
+                iva: "MONOTRIBUTISTA",
+                cuit: "20358901337",
+                startActivity: "26/12/2019",
+                iibb: "000-053138-8",
+                isDefault: false
+            }
+        ];
+        let currentEditingIssuerTabId = "paez";
+
+        function getIssuerFriendlyName(iss) {
+            if (!iss) return 'ELECTROFRIO';
+            if (iss.shortName) return iss.shortName;
+            if (iss.owner) {
+                const upper = iss.owner.toUpperCase();
+                if (upper.includes("PAEZ") || upper.includes("PÁEZ")) return "Paez Ramiro";
+                if (upper.includes("ARIAS")) return "Arias Ignacio";
+                return iss.owner;
+            }
+            return iss.name || 'ELECTROFRIO';
+        }
+
+        // Estado del editor activo
+        let currentEditingBudgetId = null;
+        let currentBudgetItems = [];
+        let activeCatalogTab = 'mat';
+
+        // Textos de plantilla para observaciones
+        const OBS_TEMPLATES = {
+            instalacion: "ESTE PRESUPUESTO INCLUYE MANO DE OBRA Y MATERIALES ESTIMADOS PARA UNA INSTALACION ESTANDAR. CUALQUIER DIFERENCIA SERA AJUSTADA DE ACUERDO A LAS MATERIALES UTILIZADOS, EL TIEMPO DE TRABAJO, LA ALTURA O DIFICULTAD DE ACCESO ESTE PRESUPUESTO NO INCLUYE LA INSTALACION ELECTRICA NI SUS MATERIALES",
+            service: "ESTE PRESUPUESTO INCLUYE MANO DE OBRA Y MATERIALES ESTIMADOS PARA UN SERVICE INTEGRAL. CUALQUIER DIFERENCIA SERA AJUSTADA DE ACUERDO A LAS MATERIALES UTILIZADOS, EL TIEMPO DE TRABAJO, LA ALTURA O DIFICULTAD DE ACCESO",
+            desinstalacion: "ESTE PRESUPUESTO CONTEMPLA LA DESINSTALACION Y/O TRASLADO DEL EQUIPO CON RECOLECCION DE GAS REFRIGERANTE SEGUN CORRESPONDA. NO INCLUYE REPARACIONES DE ALBAÑILERIA NI PINTURA",
+            reparacion: "ESTE PRESUPUESTO INCLUYE REVISION TECNICA, DETECCION DE FUGA, PRESURIZACION CON NITROGENO, VACIO Y CARGA DE GAS REFRIGERANTE ESTIMADA",
+            limpiar: ""
+        };
+
+        // --- 2.1 VISIBILIDAD DE COLUMNAS DE LA TABLA ---
+        const DEFAULT_COLUMN_VISIBILITY = {
+            num: true,
+            date: true,
+            expire: false,
+            issuer: true,
+            client: true,
+            contact: true,
+            obs: true,
+            items: true,
+            subtotal: false,
+            discount: false,
+            total: true,
+            status: true,
+            actions: true
+        };
+
+        let columnVisibility = { ...DEFAULT_COLUMN_VISIBILITY };
+
+        function loadColumnVisibility() {
+            const saved = localStorage.getItem('electrofrio_budget_columns');
+            if (saved) {
+                try {
+                    columnVisibility = { ...DEFAULT_COLUMN_VISIBILITY, ...JSON.parse(saved) };
+                } catch (e) {}
+            }
+            syncColumnCheckboxes();
+            applyColumnStyles();
+        }
+
+        function saveColumnVisibility() {
+            localStorage.setItem('electrofrio_budget_columns', JSON.stringify(columnVisibility));
+        }
+
+        function syncColumnCheckboxes() {
+            Object.keys(columnVisibility).forEach(colKey => {
+                const chk = document.querySelector(`.column-check-item input[data-col="${colKey}"]`);
+                if (chk) chk.checked = !!columnVisibility[colKey];
+            });
+        }
+
+        function toggleColumnVisibility(colKey, isVisible) {
+            columnVisibility[colKey] = isVisible;
+            saveColumnVisibility();
+            applyColumnStyles();
+        }
+
+        function resetColumns() {
+            columnVisibility = { ...DEFAULT_COLUMN_VISIBILITY };
+            saveColumnVisibility();
+            syncColumnCheckboxes();
+            applyColumnStyles();
+            showToast("Columnas restablecidas por defecto", "info");
+        }
+
+        function applyColumnStyles() {
+            Object.keys(columnVisibility).forEach(colKey => {
+                const isVis = !!columnVisibility[colKey];
+                const elements = document.querySelectorAll(`.col-${colKey}`);
+                elements.forEach(el => {
+                    if (isVis) {
+                        el.classList.remove('col-hidden');
+                    } else {
+                        el.classList.add('col-hidden');
+                    }
+                });
+            });
+        }
+
+        function toggleColumnMenu(e) {
+            if (e) e.stopPropagation();
+            const popup = document.getElementById('column-toggle-popup');
+            if (popup) popup.classList.toggle('show');
+        }
+
+        // --- 3. INICIALIZACIÓN ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadIssuersConfig();
+            loadColumnVisibility();
+            loadLocalStorageCache();
+            initFirestoreSubscriptions();
+            setupClickOutsideHandlers();
+        });
+
+        function loadLocalStorageCache() {
+            try {
+                const cachedPres = localStorage.getItem('electrofrio_presupuestos');
+                if (cachedPres) {
+                    presupuestosData = JSON.parse(cachedPres);
+                    applyFilters();
+                    updateKPIs();
+                }
+                const cachedMat = localStorage.getItem('electrofrio_materiales');
+                if (cachedMat) materialesData = JSON.parse(cachedMat);
+
+                const cachedMdo = localStorage.getItem('electrofrio_mano_obra');
+                if (cachedMdo) manoObraData = JSON.parse(cachedMdo);
+
+                const cachedCli = localStorage.getItem('electrofrio_clients');
+                if (cachedCli) clientesData = JSON.parse(cachedCli);
+            } catch (e) {
+                console.warn("Error cargando caché local:", e);
+            }
+        }
+
+        // Sincronización reactiva con Firestore
+        function initFirestoreSubscriptions() {
+            // Presupuestos
+            db.collection('presupuestos').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => {
+                    list.push({ id: doc.id, ...doc.data() });
+                });
+                presupuestosData = list;
+                localStorage.setItem('electrofrio_presupuestos', JSON.stringify(presupuestosData));
+                applyFilters();
+                updateKPIs();
+            }, err => console.error("Error sync presupuestos:", err));
+
+            // Materiales
+            db.collection('materiales').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                materialesData = list;
+                localStorage.setItem('electrofrio_materiales', JSON.stringify(materialesData));
+                const badge = document.getElementById('count-picker-mat');
+                if (badge) badge.textContent = materialesData.length;
+            }, err => console.warn("Sync materiales err:", err));
+
+            // Mano de obra
+            db.collection('mano_obra').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                manoObraData = list;
+                localStorage.setItem('electrofrio_mano_obra', JSON.stringify(manoObraData));
+                const badge = document.getElementById('count-picker-mdo');
+                if (badge) badge.textContent = manoObraData.length;
+            }, err => console.warn("Sync mano_obra err:", err));
+
+            // Clientes (CRM)
+            db.collection('clientes').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                clientesData = list;
+                localStorage.setItem('electrofrio_clients', JSON.stringify(clientesData));
+            }, err => console.warn("Sync clientes err:", err));
+        }
+
+        // --- 4. FORMATO Y HELPERS ---
+        function formatMoney(amount) {
+            const val = parseFloat(amount) || 0;
+            return '$ ' + val.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatNumberDecimal(num) {
+            const val = parseFloat(num) || 0;
+            return val.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatDateToDisplay(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function getTodayIsoDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getFutureIsoDate(daysAhead = 7) {
+            const d = new Date();
+            d.setDate(d.getDate() + daysAhead);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function generateNextBudgetNumber() {
+            let maxNum = 794; // Base inicial
+            presupuestosData.forEach(p => {
+                if (p.number) {
+                    const cleanNum = parseInt(String(p.number).replace(/\D/g, '')) || 0;
+                    if (cleanNum > maxNum) maxNum = cleanNum;
+                }
+            });
+            const next = maxNum + 1;
+            return String(next).padStart(8, '0');
+        }
+
+        function getDefaultIssuer() {
+            return issuersList.find(i => i.isDefault) || issuersList[0] || {
+                name: "ELECTROFRIO",
+                owner: "PAEZ JOSE RAMIRO",
+                address: "SAN MARTIN 375, CAPITAL",
+                phone: "380 4349027",
+                iva: "MONOTRIBUTISTA",
+                cuit: "20333945968",
+                startActivity: "19/06/2024",
+                iibb: ""
+            };
+        }
+
+        function getIssuerById(id) {
+            return issuersList.find(i => i.id === id) || getDefaultIssuer();
+        }
+
+        // --- 5. FILTROS Y RENDERIZADO DE TABLA ---
+        function applyFilters() {
+            const search = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+            const statusFilter = document.getElementById('filter-status')?.value || 'ALL';
+            const sortMode = document.getElementById('filter-sort')?.value || 'date-desc';
+
+            filteredPresupuestos = presupuestosData.filter(p => {
+                // Filtro Estado
+                if (statusFilter !== 'ALL' && (p.status || 'Pendiente') !== statusFilter) {
+                    return false;
+                }
+
+                // Filtro Búsqueda
+                if (search) {
+                    const num = String(p.number || '').toLowerCase();
+                    const client = String(p.client?.name || p.clientName || '').toLowerCase();
+                    const issuer = String(p.issuer?.name || p.issuerName || '').toLowerCase();
+                    const cuit = String(p.client?.cuit || '').toLowerCase();
+                    const phone = String(p.client?.phone || '').toLowerCase();
+                    const obs = String(p.observations || '').toLowerCase();
+
+                    const match = num.includes(search) || client.includes(search) || issuer.includes(search) || cuit.includes(search) || phone.includes(search) || obs.includes(search);
+                    if (!match) return false;
+                }
+
+                return true;
+            });
+
+            // Ordenamiento
+            filteredPresupuestos.sort((a, b) => {
+                const dateA = a.date || '';
+                const dateB = b.date || '';
+                const numA = parseInt(String(a.number || 0).replace(/\D/g, '')) || 0;
+                const numB = parseInt(String(b.number || 0).replace(/\D/g, '')) || 0;
+                const totalA = parseFloat(a.total) || 0;
+                const totalB = parseFloat(b.total) || 0;
+
+                switch (sortMode) {
+                    case 'date-desc': return dateB.localeCompare(dateA) || (numB - numA);
+                    case 'date-asc': return dateA.localeCompare(dateB) || (numA - numB);
+                    case 'num-desc': return numB - numA;
+                    case 'num-asc': return numA - numB;
+                    case 'total-desc': return totalB - totalA;
+                    case 'total-asc': return totalA - totalB;
+                    default: return 0;
+                }
+            });
+
+            renderPresupuestosTable();
+            updateKPIs();
+        }
+
+        function renderPresupuestosTable() {
+            const tbody = document.getElementById('presupuestos-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const totalBadge = document.getElementById('badge-total-presupuestos');
+
+            if (totalBadge) totalBadge.textContent = presupuestosData.length;
+
+            if (filteredPresupuestos.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            let html = '';
+            filteredPresupuestos.forEach(p => {
+                const status = p.status || 'Pendiente';
+                const statusClass = `status-${status.toLowerCase()}`;
+                const clientName = p.client?.name || p.clientName || 'Cliente Ocasional';
+                const clientPhone = p.client?.phone || 'Sin teléfono';
+                const issuerDisplay = getIssuerFriendlyName(p.issuer || getIssuerById(p.issuerId));
+                const obsSummary = p.observations ? (p.observations.length > 55 ? p.observations.substring(0, 52) + '...' : p.observations) : 'Sin observaciones';
+                const itemsCount = (p.items || []).reduce((sum, item) => sum + (parseFloat(item.quantity) || 1), 0);
+                const totalFormatted = formatMoney(p.total || 0);
+                const dateFormatted = formatDateToDisplay(p.date);
+
+                html += `
+                    <tr>
+                        <td class="col-num" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--color-blue);">
+                            Nº ${p.number || '00000000'}
+                        </td>
+                        <td class="col-date" style="white-space: nowrap; font-size: 0.82rem; color: var(--text-muted);">
+                            ${dateFormatted}
+                        </td>
+                        <td class="col-expire" style="white-space: nowrap; font-size: 0.82rem; color: var(--text-muted);">
+                            ${formatDateToDisplay(p.expireDate)}
+                        </td>
+                        <td class="col-issuer">
+                            <span style="font-weight: 600; font-size: 0.84rem; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;">
+                                👤 ${issuerDisplay}
+                            </span>
+                        </td>
+                        <td class="col-client">
+                            <strong style="color: var(--text-primary); font-size: 0.9rem;">${clientName}</strong>
+                            ${p.client?.cuit ? `<br><small style="color: var(--text-muted);">CUIT: ${p.client.cuit}</small>` : ''}
+                        </td>
+                        <td class="col-contact">
+                            <span style="font-size: 0.84rem;">${clientPhone}</span>
+                        </td>
+                        <td class="col-obs" style="color: var(--text-muted); font-size: 0.8rem; max-width: 250px;">
+                            ${obsSummary}
+                        </td>
+                        <td class="col-items" style="text-align: center; font-weight: 600;">
+                            ${formatNumberDecimal(itemsCount)}
+                        </td>
+                        <td class="col-subtotal" style="text-align: right; font-size: 0.84rem;">
+                            ${formatMoney(p.subtotal || 0)}
+                        </td>
+                        <td class="col-discount" style="text-align: right; font-size: 0.84rem; color: var(--color-yellow);">
+                            ${formatMoney(p.discount || 0)}
+                        </td>
+                        <td class="col-total" style="text-align: right;">
+                            <span class="price-tag">${totalFormatted}</span>
+                        </td>
+                        <td class="col-status" style="text-align: center;">
+                            <span class="status-badge ${statusClass}">${status}</span>
+                        </td>
+                        <td class="col-actions" style="text-align: center;">
+                            <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                <button class="btn btn-secondary btn-icon" title="Editar / Ver" onclick="editBudget('${p.id}')">✏️</button>
+                                <button class="btn btn-secondary btn-icon" title="Descargar PDF" onclick="downloadBudgetById('${p.id}')">📄</button>
+                                <button class="btn btn-whatsapp btn-icon" title="Enviar WhatsApp" onclick="openWhatsAppModalForBudget('${p.id}')">💬</button>
+                                <button class="btn btn-secondary btn-icon" title="Duplicar Presupuesto" onclick="duplicateBudget('${p.id}')">📋</button>
+                                <button class="btn btn-danger btn-icon" title="Eliminar" onclick="deleteBudget('${p.id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            applyColumnStyles();
+        }
+
+        function updateKPIs() {
+            const totalCount = presupuestosData.length;
+            const pendientes = presupuestosData.filter(p => (p.status || 'Pendiente') === 'Pendiente' || p.status === 'Enviado').length;
+            const aprobados = presupuestosData.filter(p => p.status === 'Aprobado' || p.status === 'Facturado').length;
+            const montoAprobado = presupuestosData
+                .filter(p => p.status === 'Aprobado' || p.status === 'Facturado')
+                .reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+
+            document.getElementById('kpi-total').textContent = totalCount;
+            document.getElementById('kpi-pendientes').textContent = pendientes;
+            document.getElementById('kpi-aprobados').textContent = aprobados;
+            document.getElementById('kpi-monto-total').textContent = formatMoney(montoAprobado);
+        }
+
+        // --- 6. GESTIÓN DEL MODAL EDITOR DE PRESUPUESTO ---
+        function populateIssuerSelectOptions(selectedIssuerId) {
+            const selectEl = document.getElementById('form-budget-issuer');
+            if (!selectEl) return;
+
+            let html = '';
+            issuersList.forEach((iss, index) => {
+                const isSel = (selectedIssuerId ? iss.id === selectedIssuerId : iss.isDefault) ? 'selected' : '';
+                const friendly = getIssuerFriendlyName(iss);
+                html += `<option value="${iss.id}" ${isSel}>👤 ${friendly}</option>`;
+            });
+            selectEl.innerHTML = html;
+        }
+
+        function onBudgetIssuerChange() {
+            const issId = document.getElementById('form-budget-issuer').value;
+            const issuer = getIssuerById(issId);
+            if (issuer && issuer.owner) {
+                document.getElementById('form-budget-seller').value = issuer.owner;
+            }
+        }
+
+        function openNewBudgetModal() {
+            currentEditingBudgetId = null;
+            document.getElementById('editor-modal-title').textContent = 'Nuevo Presupuesto';
+            document.getElementById('editor-modal-icon').textContent = '✨';
+
+            const defaultIssuer = getDefaultIssuer();
+            populateIssuerSelectOptions(defaultIssuer.id);
+
+            // Valores por defecto
+            document.getElementById('form-budget-id').textContent = 'Nuevo';
+            document.getElementById('form-budget-num').value = generateNextBudgetNumber();
+            document.getElementById('form-budget-date').value = getTodayIsoDate();
+            document.getElementById('form-budget-expire').value = getFutureIsoDate(7);
+            document.getElementById('form-budget-seller').value = defaultIssuer.owner || 'PAEZ JOSE RAMIRO';
+
+            // Limpiar datos del cliente
+            document.getElementById('form-client-name').value = '';
+            document.getElementById('form-client-iva').value = 'CONSUMIDOR FINAL';
+            document.getElementById('form-client-cuit').value = '';
+            document.getElementById('form-client-address').value = '';
+            document.getElementById('form-client-locality').value = '';
+            document.getElementById('form-client-province').value = '';
+            document.getElementById('form-client-phone').value = '';
+            document.getElementById('form-client-email').value = '';
+
+            // Observaciones estándar
+            document.getElementById('form-budget-obs').value = OBS_TEMPLATES.instalacion;
+            document.getElementById('form-budget-status').value = 'Pendiente';
+
+            // Items iniciales vacíos
+            currentBudgetItems = [];
+            renderEditorItems();
+
+            document.getElementById('modal-budget-editor').classList.add('active');
+        }
+
+        function editBudget(id) {
+            const b = presupuestosData.find(x => x.id === id);
+            if (!b) return showToast("No se encontró el presupuesto", "error");
+
+            currentEditingBudgetId = id;
+            document.getElementById('editor-modal-title').textContent = `Editar Presupuesto Nº ${b.number || id}`;
+            document.getElementById('editor-modal-icon').textContent = '✏️';
+
+            populateIssuerSelectOptions(b.issuerId || b.issuer?.id);
+
+            document.getElementById('form-budget-id').textContent = id;
+            document.getElementById('form-budget-num').value = b.number || '';
+            document.getElementById('form-budget-date').value = b.date || getTodayIsoDate();
+            document.getElementById('form-budget-expire').value = b.expireDate || getFutureIsoDate(7);
+            document.getElementById('form-budget-seller').value = b.seller || b.issuer?.owner || 'PAEZ JOSE RAMIRO';
+
+            // Cliente
+            const cli = b.client || {};
+            document.getElementById('form-client-name').value = cli.name || b.clientName || '';
+            document.getElementById('form-client-iva').value = cli.iva || 'CONSUMIDOR FINAL';
+            document.getElementById('form-client-cuit').value = cli.cuit || '';
+            document.getElementById('form-client-address').value = cli.address || '';
+            document.getElementById('form-client-locality').value = cli.locality || '';
+            document.getElementById('form-client-province').value = cli.province || '';
+            document.getElementById('form-client-phone').value = cli.phone || '';
+            document.getElementById('form-client-email').value = cli.email || '';
+
+            // Observaciones y Estado
+            document.getElementById('form-budget-obs').value = b.observations || '';
+            document.getElementById('form-budget-status').value = b.status || 'Pendiente';
+
+            // Renglones
+            currentBudgetItems = JSON.parse(JSON.stringify(b.items || []));
+            renderEditorItems();
+
+            document.getElementById('modal-budget-editor').classList.add('active');
+        }
+
+        function closeBudgetEditor() {
+            document.getElementById('modal-budget-editor').classList.remove('active');
+        }
+
+        function setObsTemplate(key) {
+            if (OBS_TEMPLATES[key] !== undefined) {
+                document.getElementById('form-budget-obs').value = OBS_TEMPLATES[key];
+            }
+        }
+
+        // --- 7. AUTOCOMPLETADO DE CLIENTES ---
+        function handleClientSearchInput() {
+            const query = (document.getElementById('form-client-name').value || '').trim().toLowerCase();
+            const listEl = document.getElementById('client-autocomplete-list');
+
+            if (!query || query.length < 2) {
+                listEl.style.display = 'none';
+                return;
+            }
+
+            const matches = clientesData.filter(c => {
+                const name = (c.name || c.businessName || c.nombre || '').toLowerCase();
+                const cuit = (c.cuit || c.dni || '').toLowerCase();
+                const phone = (c.phone || c.telefono || '').toLowerCase();
+                return name.includes(query) || cuit.includes(query) || phone.includes(query);
+            }).slice(0, 8);
+
+            if (matches.length === 0) {
+                listEl.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            matches.forEach(c => {
+                const name = c.name || c.businessName || c.nombre || 'Sin nombre';
+                const addr = c.address || (c.addresses && c.addresses[0]) || '';
+                const cuit = c.cuit || c.dni || '';
+                const phone = c.phone || c.telefono || '';
+                html += `
+                    <div class="autocomplete-item" onclick="selectClientAutocomplete('${c.id}')">
+                        <span class="autocomplete-title">${name}</span>
+                        <span class="autocomplete-sub">${addr ? `📍 ${addr} ` : ''}${cuit ? `&bull; CUIT: ${cuit} ` : ''}${phone ? `&bull; 📞 ${phone}` : ''}</span>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+            listEl.style.display = 'block';
+        }
+
+        function selectClientAutocomplete(clientId) {
+            const c = clientesData.find(x => x.id === clientId);
+            if (!c) return;
+
+            document.getElementById('form-client-name').value = c.name || c.businessName || c.nombre || '';
+            document.getElementById('form-client-iva').value = c.iva || c.taxCondition || 'CONSUMIDOR FINAL';
+            document.getElementById('form-client-cuit').value = c.cuit || c.dni || '';
+            document.getElementById('form-client-address').value = c.address || (c.addresses && c.addresses[0]) || '';
+            document.getElementById('form-client-locality').value = c.locality || c.city || '';
+            document.getElementById('form-client-province').value = c.province || '';
+            document.getElementById('form-client-phone').value = c.phone || c.telefono || '';
+            document.getElementById('form-client-email').value = c.email || c.correo || '';
+
+            document.getElementById('client-autocomplete-list').style.display = 'none';
+        }
+
+        // --- 8. GESTIÓN DE RENGLONES EN EL EDITOR ---
+        function addCustomItemRow() {
+            currentBudgetItems.push({
+                type: 'free',
+                code: '',
+                description: '',
+                quantity: 1,
+                unitPrice: 0,
+                discountPercent: 0,
+                subtotal: 0
+            });
+            renderEditorItems();
+        }
+
+        function addItemFromCatalog(type, item) {
+            const code = item.codigo || item.id || '';
+            const desc = item.descripcion || item.producto || item.nombre || '';
+            const fullDesc = code ? `${code} - ${desc} -` : desc;
+            const price = parseFloat(item.costo || item.precio || item.tarifa || item.precio_unitario || 0);
+
+            currentBudgetItems.push({
+                type: type,
+                code: code,
+                description: fullDesc,
+                quantity: 1,
+                unitPrice: price,
+                discountPercent: 0,
+                subtotal: price
+            });
+
+            renderEditorItems();
+            closeCatalogModal();
+            showToast(`Agregado: ${desc.substring(0, 30)}...`, "success");
+        }
+
+        function removeItemRow(index) {
+            currentBudgetItems.splice(index, 1);
+            renderEditorItems();
+        }
+
+        function updateItemField(index, field, value) {
+            if (!currentBudgetItems[index]) return;
+            const item = currentBudgetItems[index];
+
+            if (field === 'description') {
+                item.description = value;
+            } else if (field === 'quantity') {
+                item.quantity = parseFloat(value) || 0;
+            } else if (field === 'unitPrice') {
+                item.unitPrice = parseFloat(value) || 0;
+            } else if (field === 'discountPercent') {
+                item.discountPercent = parseFloat(value) || 0;
+            }
+
+            const baseSub = item.quantity * item.unitPrice;
+            const descAmt = baseSub * (item.discountPercent / 100);
+            item.subtotal = Math.max(0, baseSub - descAmt);
+
+            renderEditorItems(false);
+            recalculateEditorTotals();
+        }
+
+        function renderEditorItems(fullRebuild = true) {
+            const tbody = document.getElementById('budget-items-body');
+
+            if (currentBudgetItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            No hay ítems en este presupuesto.<br>
+                            Usa los botones superiores <strong>+ Material</strong>, <strong>+ Mano de Obra</strong> o <strong>+ Renglón Libre</strong> para cargar productos y servicios.
+                        </td>
+                    </tr>
+                `;
+                recalculateEditorTotals();
+                return;
+            }
+
+            if (fullRebuild) {
+                let html = '';
+                currentBudgetItems.forEach((item, idx) => {
+                    const badgeType = item.type === 'mat' ? '<span class="item-type-badge badge-mat">📦 MAT</span>' :
+                                     (item.type === 'mdo' ? '<span class="item-type-badge badge-mdo">🛠️ MDO</span>' :
+                                     '<span class="item-type-badge badge-free">✍️ LIBRE</span>');
+
+                    const baseSub = (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0);
+                    const descAmt = baseSub * ((parseFloat(item.discountPercent) || 0) / 100);
+                    item.subtotal = Math.max(0, baseSub - descAmt);
+
+                    html += `
+                        <tr class="item-row" data-index="${idx}">
+                            <td style="text-align: center;">${badgeType}</td>
+                            <td>
+                                <input type="text" class="item-input" value="${escapeHtml(item.description)}" placeholder="Descripción del material o servicio..." onchange="updateItemField(${idx}, 'description', this.value)">
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="0" class="item-input" style="text-align: right;" value="${item.quantity}" oninput="updateItemField(${idx}, 'quantity', this.value)">
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="0" class="item-input" style="text-align: right; font-family: monospace;" value="${item.unitPrice}" oninput="updateItemField(${idx}, 'unitPrice', this.value)">
+                            </td>
+                            <td>
+                                <input type="number" step="any" min="0" max="100" class="item-input" style="text-align: right;" value="${item.discountPercent || 0}" oninput="updateItemField(${idx}, 'discountPercent', this.value)">
+                            </td>
+                            <td style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace;" id="item-subtotal-cell-${idx}">
+                                ${formatMoney(item.subtotal)}
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn btn-danger btn-icon" style="width: 28px; height: 28px; font-size: 0.75rem;" onclick="removeItemRow(${idx})" title="Eliminar ítem">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } else {
+                currentBudgetItems.forEach((item, idx) => {
+                    const cell = document.getElementById(`item-subtotal-cell-${idx}`);
+                    if (cell) cell.textContent = formatMoney(item.subtotal);
+                });
+            }
+
+            recalculateEditorTotals();
+        }
+
+        function recalculateEditorTotals() {
+            let totalItemsCount = 0;
+            let subtotalGross = 0;
+            let totalDiscountAmt = 0;
+
+            currentBudgetItems.forEach(item => {
+                const qty = parseFloat(item.quantity) || 0;
+                const unit = parseFloat(item.unitPrice) || 0;
+                const desc = parseFloat(item.discountPercent) || 0;
+
+                const gross = qty * unit;
+                const discAmt = gross * (desc / 100);
+
+                totalItemsCount += qty;
+                subtotalGross += gross;
+                totalDiscountAmt += discAmt;
+            });
+
+            const grandTotal = Math.max(0, subtotalGross - totalDiscountAmt);
+
+            document.getElementById('editor-total-items').textContent = formatNumberDecimal(totalItemsCount);
+            document.getElementById('editor-subtotal').textContent = formatMoney(subtotalGross);
+            document.getElementById('editor-descuento').textContent = formatMoney(totalDiscountAmt);
+            document.getElementById('editor-total-final').textContent = formatMoney(grandTotal);
+
+            return { totalItemsCount, subtotalGross, totalDiscountAmt, grandTotal };
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // --- 9. MODAL SELECTOR DE CATÁLOGO ---
+        function openCatalogModal(tab = 'mat') {
+            activeCatalogTab = tab;
+            document.getElementById('tab-picker-mat').classList.toggle('active', tab === 'mat');
+            document.getElementById('tab-picker-mdo').classList.toggle('active', tab === 'mdo');
+            document.getElementById('catalog-search-input').value = '';
+            document.getElementById('catalog-picker-title').textContent = tab === 'mat' ? 'Catálogo de Materiales' : 'Catálogo de Mano de Obra';
+
+            filterCatalogPicker();
+            document.getElementById('modal-catalog-picker').classList.add('active');
+        }
+
+        function closeCatalogModal() {
+            document.getElementById('modal-catalog-picker').classList.remove('active');
+        }
+
+        function switchCatalogTab(tab) {
+            activeCatalogTab = tab;
+            document.getElementById('tab-picker-mat').classList.toggle('active', tab === 'mat');
+            document.getElementById('tab-picker-mdo').classList.toggle('active', tab === 'mdo');
+            document.getElementById('catalog-picker-title').textContent = tab === 'mat' ? 'Catálogo de Materiales' : 'Catálogo de Mano de Obra';
+            filterCatalogPicker();
+        }
+
+        function filterCatalogPicker() {
+            const query = (document.getElementById('catalog-search-input').value || '').trim().toLowerCase();
+            const listEl = document.getElementById('catalog-picker-list');
+            const data = activeCatalogTab === 'mat' ? materialesData : manoObraData;
+
+            const filtered = data.filter(item => {
+                if (!query) return true;
+                const code = (item.codigo || item.id || '').toLowerCase();
+                const desc = (item.descripcion || item.producto || item.nombre || '').toLowerCase();
+                const rubro = (item.rubro || item.categoria || '').toLowerCase();
+                const marca = (item.marca || '').toLowerCase();
+                return code.includes(query) || desc.includes(query) || rubro.includes(query) || marca.includes(query);
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No se encontraron ítems que coincidan con la búsqueda.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.slice(0, 100).forEach(item => {
+                const code = item.codigo || item.id || '';
+                const desc = item.descripcion || item.producto || item.nombre || 'Sin descripción';
+                const rubro = item.rubro || item.categoria || '';
+                const price = parseFloat(item.costo || item.precio || item.tarifa || item.precio_unitario || 0);
+
+                html += `
+                    <div class="catalog-item-card">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                ${code ? `<span style="font-family: monospace; font-weight: 700; color: var(--color-blue); font-size: 0.85rem;">[${code}]</span>` : ''}
+                                <strong style="font-size: 0.9rem;">${desc}</strong>
+                            </div>
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+                                ${rubro ? `📁 ${rubro} ` : ''}${item.marca ? `&bull; Marca: ${item.marca}` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <span class="price-tag" style="font-size: 1rem;">${formatMoney(price)}</span>
+                            <button type="button" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick='addItemFromCatalog("${activeCatalogTab}", ${JSON.stringify(item)})'>
+                                + Agregar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+        }
+
+        // --- 10. GUARDAR PRESUPUESTO EN FIRESTORE ---
+        async function saveBudgetFromEditor() {
+            const selectedIssuerId = document.getElementById('form-budget-issuer').value;
+            const currentIssuer = getIssuerById(selectedIssuerId);
+
+            const number = (document.getElementById('form-budget-num').value || '').trim() || generateNextBudgetNumber();
+            const date = document.getElementById('form-budget-date').value || getTodayIsoDate();
+            const expireDate = document.getElementById('form-budget-expire').value || getFutureIsoDate(7);
+            const seller = document.getElementById('form-budget-seller').value || currentIssuer.owner || 'PAEZ JOSE RAMIRO';
+
+            const clientName = (document.getElementById('form-client-name').value || '').trim();
+            if (!clientName) {
+                showToast("Por favor ingresa el nombre del cliente", "error");
+                document.getElementById('form-client-name').focus();
+                return;
+            }
+
+            const client = {
+                name: clientName,
+                iva: document.getElementById('form-client-iva').value,
+                cuit: (document.getElementById('form-client-cuit').value || '').trim(),
+                address: (document.getElementById('form-client-address').value || '').trim(),
+                locality: (document.getElementById('form-client-locality').value || '').trim(),
+                province: (document.getElementById('form-client-province').value || '').trim(),
+                phone: (document.getElementById('form-client-phone').value || '').trim(),
+                email: (document.getElementById('form-client-email').value || '').trim()
+            };
+
+            const observations = document.getElementById('form-budget-obs').value || '';
+            const status = document.getElementById('form-budget-status').value || 'Pendiente';
+
+            if (currentBudgetItems.length === 0) {
+                showToast("Debes agregar al menos un ítem al presupuesto", "error");
+                return;
+            }
+
+            const totals = recalculateEditorTotals();
+
+            const budgetData = {
+                number: number,
+                date: date,
+                expireDate: expireDate,
+                seller: seller,
+                issuerId: selectedIssuerId,
+                issuer: currentIssuer,
+                issuerName: currentIssuer.name,
+                client: client,
+                clientName: clientName,
+                observations: observations,
+                status: status,
+                items: currentBudgetItems,
+                itemsCount: totals.totalItemsCount,
+                subtotal: totals.subtotalGross,
+                discount: totals.totalDiscountAmt,
+                total: totals.grandTotal,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (currentEditingBudgetId) {
+                    await db.collection('presupuestos').doc(currentEditingBudgetId).set(budgetData, { merge: true });
+                    showToast("Presupuesto actualizado exitosamente", "success");
+                } else {
+                    budgetData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    const newDoc = await db.collection('presupuestos').add(budgetData);
+                    currentEditingBudgetId = newDoc.id;
+                    showToast("Presupuesto creado y guardado con éxito", "success");
+                }
+
+                closeBudgetEditor();
+            } catch (error) {
+                console.error("Error al guardar presupuesto:", error);
+                showToast("Error al conectar con la base de datos", "error");
+            }
+        }
+
+        async function duplicateBudget(id) {
+            const orig = presupuestosData.find(x => x.id === id);
+            if (!orig) return;
+
+            const cloned = JSON.parse(JSON.stringify(orig));
+            delete cloned.id;
+            cloned.number = generateNextBudgetNumber();
+            cloned.date = getTodayIsoDate();
+            cloned.expireDate = getFutureIsoDate(7);
+            cloned.status = 'Borrador';
+            cloned.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            cloned.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+            try {
+                await db.collection('presupuestos').add(cloned);
+                showToast(`Presupuesto duplicado como Nº ${cloned.number}`, "success");
+            } catch (err) {
+                console.error("Error duplicando presupuesto:", err);
+                showToast("Error al duplicar", "error");
+            }
+        }
+
+        async function deleteBudget(id) {
+            const b = presupuestosData.find(x => x.id === id);
+            const num = b?.number || id;
+            if (!confirm(`¿Estás seguro de eliminar permanentemente el Presupuesto Nº ${num}?`)) {
+                return;
+            }
+
+            try {
+                await db.collection('presupuestos').doc(id).delete();
+                showToast(`Presupuesto Nº ${num} eliminado`, "info");
+            } catch (err) {
+                console.error("Error eliminando presupuesto:", err);
+                showToast("Error al eliminar presupuesto", "error");
+            }
+        }
+
+        // --- 11. MOTOR DE RENDERIZADO Y GENERACIÓN DE PDF EXACTO ---
+        function populatePdfTemplate(budgetObj) {
+            const issuer = budgetObj.issuer || getIssuerById(budgetObj.issuerId);
+
+            // Emisor
+            document.getElementById('pdf-issuer-name').textContent = issuer.name || 'ELECTROFRIO';
+            document.getElementById('pdf-issuer-owner').textContent = issuer.owner || '';
+            document.getElementById('pdf-issuer-addr').textContent = issuer.address || '';
+            document.getElementById('pdf-issuer-phone').textContent = issuer.phone ? `TEL: ${issuer.phone}` : '';
+            document.getElementById('pdf-issuer-tax-line1').textContent = `${issuer.iva || 'MONOTRIBUTISTA'} CUIT: ${issuer.cuit || ''}`;
+            document.getElementById('pdf-issuer-tax-line2').textContent = `INICIO ACT.: ${issuer.startActivity || ''} ING. BRUTOS: ${issuer.iibb || ''}`;
+
+            // Cabecera comprobante
+            document.getElementById('pdf-doc-number').textContent = `Nº ${budgetObj.number || '00000000'}`;
+            document.getElementById('pdf-doc-date').textContent = `FECHA: ${formatDateToDisplay(budgetObj.date)}`;
+            document.getElementById('pdf-doc-expire').textContent = formatDateToDisplay(budgetObj.expireDate);
+            document.getElementById('pdf-doc-seller').textContent = budgetObj.seller || issuer.owner;
+
+            // Cliente
+            const cli = budgetObj.client || {};
+            document.getElementById('pdf-client-name').textContent = cli.name || budgetObj.clientName || 'CONSUMIDOR FINAL';
+            document.getElementById('pdf-client-iva').textContent = cli.iva || 'CONSUMIDOR FINAL';
+            document.getElementById('pdf-client-cuit').textContent = cli.cuit || '';
+            document.getElementById('pdf-client-address').textContent = cli.address || '';
+            document.getElementById('pdf-client-locality').textContent = cli.locality || '';
+            document.getElementById('pdf-client-province').textContent = cli.province || '';
+            document.getElementById('pdf-client-phone').textContent = cli.phone || '';
+            document.getElementById('pdf-client-email').textContent = cli.email || '';
+
+            // Observaciones
+            document.getElementById('pdf-doc-obs').textContent = budgetObj.observations || '';
+
+            // Renglones
+            const itemsTbody = document.getElementById('pdf-items-tbody');
+            let rowsHtml = '';
+            (budgetObj.items || []).forEach(item => {
+                const qtyStr = formatNumberDecimal(item.quantity || 1);
+                const unitStr = formatNumberDecimal(item.unitPrice || 0);
+                const descStr = formatNumberDecimal(item.discountPercent || 0);
+                const subStr = formatNumberDecimal(item.subtotal || 0);
+
+                rowsHtml += `
+                    <tr>
+                        <td style="text-align: center; color: #888888;"></td>
+                        <td style="text-align: left; padding-left: 10px; font-weight: 500;">
+                            ${escapeHtml(item.description)}
+                        </td>
+                        <td style="text-align: right; white-space: nowrap;">${qtyStr}</td>
+                        <td style="text-align: right; white-space: nowrap;">${unitStr}</td>
+                        <td style="text-align: right; white-space: nowrap;">${descStr}</td>
+                        <td style="text-align: right; white-space: nowrap; font-weight: bold;">${subStr}</td>
+                    </tr>
+                `;
+            });
+            itemsTbody.innerHTML = rowsHtml;
+
+            // Totales
+            const itemsCount = (budgetObj.items || []).reduce((s, it) => s + (parseFloat(it.quantity) || 1), 0);
+            document.getElementById('pdf-tot-items').textContent = formatNumberDecimal(itemsCount);
+            document.getElementById('pdf-tot-subtotal').textContent = formatMoney(budgetObj.subtotal || 0);
+            document.getElementById('pdf-tot-desc').textContent = formatMoney(budgetObj.discount || 0);
+            document.getElementById('pdf-tot-grand').textContent = formatMoney(budgetObj.total || 0);
+        }
+
+        function getActiveEditorBudgetData() {
+            const totals = recalculateEditorTotals();
+            const selectedIssuerId = document.getElementById('form-budget-issuer').value;
+            const currentIssuer = getIssuerById(selectedIssuerId);
+
+            return {
+                number: document.getElementById('form-budget-num').value || generateNextBudgetNumber(),
+                date: document.getElementById('form-budget-date').value || getTodayIsoDate(),
+                expireDate: document.getElementById('form-budget-expire').value || getFutureIsoDate(7),
+                seller: document.getElementById('form-budget-seller').value || currentIssuer.owner || 'PAEZ JOSE RAMIRO',
+                issuerId: selectedIssuerId,
+                issuer: currentIssuer,
+                issuerName: currentIssuer.name,
+                client: {
+                    name: document.getElementById('form-client-name').value || 'Cliente Ocasional',
+                    iva: document.getElementById('form-client-iva').value,
+                    cuit: document.getElementById('form-client-cuit').value,
+                    address: document.getElementById('form-client-address').value,
+                    locality: document.getElementById('form-client-locality').value,
+                    province: document.getElementById('form-client-province').value,
+                    phone: document.getElementById('form-client-phone').value,
+                    email: document.getElementById('form-client-email').value
+                },
+                observations: document.getElementById('form-budget-obs').value,
+                items: currentBudgetItems,
+                subtotal: totals.subtotalGross,
+                discount: totals.totalDiscountAmt,
+                total: totals.grandTotal
+            };
+        }
+
+        function downloadActiveBudgetPDF() {
+            const budgetData = getActiveEditorBudgetData();
+            generateAndDownloadPdf(budgetData);
+        }
+
+        function downloadBudgetById(id) {
+            const b = presupuestosData.find(x => x.id === id);
+            if (!b) return showToast("Presupuesto no encontrado", "error");
+            generateAndDownloadPdf(b);
+        }
+
+        function generateAndDownloadPdf(budgetData) {
+            populatePdfTemplate(budgetData);
+
+            const element = document.getElementById('pdf-page-container');
+            const wrapper = document.getElementById('pdf-template-wrapper');
+            wrapper.style.display = 'block';
+
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `ElectroFrio_Presupuesto_N${budgetData.number || '00000000'}_${(budgetData.client?.name || 'Cliente').replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2.5, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showToast("Generando comprobante en PDF...", "info");
+
+            html2pdf().from(element).set(opt).save().then(() => {
+                wrapper.style.display = 'none';
+                showToast("PDF descargado correctamente", "success");
+            }).catch(err => {
+                console.error("Error generando PDF:", err);
+                wrapper.style.display = 'none';
+                showToast("Error al generar PDF", "error");
+            });
+        }
+
+        function printActiveBudget() {
+            const budgetData = getActiveEditorBudgetData();
+            populatePdfTemplate(budgetData);
+            window.print();
+        }
+
+        // --- 12. ENVÍO POR WHATSAPP ---
+        function openWhatsAppModalForBudget(id) {
+            const b = presupuestosData.find(x => x.id === id);
+            if (!b) return;
+            populateAndOpenWhatsAppModal(b);
+        }
+
+        function sendActiveBudgetWhatsApp() {
+            const b = getActiveEditorBudgetData();
+            populateAndOpenWhatsAppModal(b);
+        }
+
+        function populateAndOpenWhatsAppModal(b) {
+            const phone = b.client?.phone || '';
+            document.getElementById('wa-phone-input').value = phone;
+
+            const clientName = b.client?.name || b.clientName || 'Cliente';
+            const num = b.number || '00000000';
+            const issuer = b.issuer || getIssuerById(b.issuerId);
+            const dateStr = formatDateToDisplay(b.date);
+            const expireStr = formatDateToDisplay(b.expireDate);
+            const totalStr = formatMoney(b.total || 0);
+
+            // Generar resumen de ítems
+            let itemsSummary = '';
+            (b.items || []).slice(0, 8).forEach(item => {
+                itemsSummary += `▫️ ${item.quantity}x ${item.description.trim()} (${formatMoney(item.subtotal)})\n`;
+            });
+            if ((b.items || []).length > 8) {
+                itemsSummary += `▫️ ... y ${(b.items.length - 8)} ítems adicionales.\n`;
+            }
+
+            const msg = `*${issuer.name || 'ELECTROFRÍO'} - Presupuesto Nº ${num}*\n\n` +
+                `Hola *${clientName}*, le enviamos el detalle de su presupuesto:\n\n` +
+                `📅 *Fecha de Emisión:* ${dateStr}\n` +
+                `⏳ *Válido hasta:* ${expireStr}\n\n` +
+                `📋 *Detalle del Trabajo y Materiales:*\n${itemsSummary}\n` +
+                `💰 *TOTAL DEL PRESUPUESTO:* *${totalStr}*\n\n` +
+                (b.observations ? `📌 *Observaciones:* ${b.observations}\n\n` : '') +
+                `Quedamos a su entera disposición ante cualquier consulta para coordinar el trabajo.\n` +
+                `¡Muchas gracias por confiar en *${issuer.name || 'ElectroFrío'}*! ❄️⚡`;
+
+            document.getElementById('wa-msg-input').value = msg;
+            document.getElementById('modal-whatsapp').classList.add('active');
+        }
+
+        function closeWhatsAppModal() {
+            document.getElementById('modal-whatsapp').classList.remove('active');
+        }
+
+        function cleanWhatsAppPhone(rawPhone) {
+            if (!rawPhone) return '';
+            let digits = String(rawPhone).replace(/\D/g, '');
+            if (digits.startsWith('0')) digits = digits.substring(1);
+            if (digits.startsWith('15')) digits = digits.substring(2);
+
+            if (digits.length === 10) {
+                return `549${digits}`;
+            }
+            if (digits.startsWith('54') && !digits.startsWith('549') && digits.length === 12) {
+                return `549${digits.substring(2)}`;
+            }
+            if (!digits.startsWith('54') && digits.length > 6) {
+                return `549${digits}`;
+            }
+            return digits;
+        }
+
+        function launchWhatsAppChat() {
+            const rawPhone = document.getElementById('wa-phone-input').value;
+            const message = document.getElementById('wa-msg-input').value;
+            const cleanPhone = cleanWhatsAppPhone(rawPhone);
+
+            const encodedMsg = encodeURIComponent(message);
+            let waUrl = '';
+
+            if (cleanPhone) {
+                waUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+            } else {
+                waUrl = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+            }
+
+            window.open(waUrl, '_blank');
+            closeWhatsAppModal();
+            showToast("WhatsApp abierto", "success");
+        }
+
+        function copyWhatsAppMessage() {
+            const msg = document.getElementById('wa-msg-input').value;
+            navigator.clipboard.writeText(msg).then(() => {
+                showToast("Mensaje copiado al portapapeles", "success");
+            }).catch(() => showToast("No se pudo copiar", "error"));
+        }
+
+        // --- 13. CONFIGURACIÓN DE MULTI-EMISOR (LOCAL STORAGE & FIREBASE) ---
+        function loadIssuersConfig() {
+            const saved = localStorage.getItem('electrofrio_issuers_list');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        issuersList = parsed.map(item => {
+                            if (!item.shortName) item.shortName = getIssuerFriendlyName(item);
+                            return item;
+                        });
+                    }
+                } catch (e) {}
+            }
+            updateIssuerBadgeCount();
+        }
+
+        function updateIssuerBadgeCount() {
+            const el = document.getElementById('btn-count-emisores');
+            if (el) el.textContent = issuersList.length;
+        }
+
+        function toggleIssuerConfigModal() {
+            const modal = document.getElementById('modal-issuer-config');
+            if (!modal.classList.contains('active')) {
+                currentEditingIssuerTabId = issuersList[0]?.id || "paez";
+                renderIssuerTabs();
+                loadIssuerFormValues(currentEditingIssuerTabId);
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function renderIssuerTabs() {
+            const container = document.getElementById('issuer-tabs-container');
+            let html = '';
+            issuersList.forEach((iss, index) => {
+                const isActive = iss.id === currentEditingIssuerTabId ? 'active' : '';
+                const defaultStar = iss.isDefault ? '⭐ ' : '';
+                const friendly = getIssuerFriendlyName(iss);
+                html += `
+                    <button class="issuer-tab ${isActive}" onclick="switchIssuerTab('${iss.id}')">
+                        👤 ${defaultStar}${friendly}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function switchIssuerTab(id) {
+            saveCurrentIssuerFormTemporarily();
+            currentEditingIssuerTabId = id;
+            renderIssuerTabs();
+            loadIssuerFormValues(id);
+        }
+
+        function loadIssuerFormValues(id) {
+            const iss = issuersList.find(i => i.id === id) || issuersList[0];
+            if (!iss) return;
+
+            const friendly = getIssuerFriendlyName(iss);
+            document.getElementById('issuer-editing-title').textContent = `Editando: ${friendly}`;
+            document.getElementById('cfg-issuer-short').value = iss.shortName || friendly;
+            document.getElementById('cfg-issuer-name').value = iss.name || 'ELECTROFRIO';
+            document.getElementById('cfg-issuer-owner').value = iss.owner || '';
+            document.getElementById('cfg-issuer-address').value = iss.address || '';
+            document.getElementById('cfg-issuer-phone').value = iss.phone || '';
+            document.getElementById('cfg-issuer-iva').value = iss.iva || 'MONOTRIBUTISTA';
+            document.getElementById('cfg-issuer-cuit').value = iss.cuit || '';
+            document.getElementById('cfg-issuer-start').value = iss.startActivity || '';
+            document.getElementById('cfg-issuer-iibb').value = iss.iibb || '';
+            document.getElementById('cfg-issuer-is-default').checked = !!iss.isDefault;
+
+            const delBtn = document.getElementById('btn-delete-issuer');
+            if (delBtn) {
+                delBtn.style.display = issuersList.length > 1 ? 'inline-flex' : 'none';
+            }
+        }
+
+        function saveCurrentIssuerFormTemporarily() {
+            const iss = issuersList.find(i => i.id === currentEditingIssuerTabId);
+            if (!iss) return;
+
+            iss.shortName = (document.getElementById('cfg-issuer-short').value || '').trim() || getIssuerFriendlyName(iss);
+            iss.name = document.getElementById('cfg-issuer-name').value;
+            iss.owner = document.getElementById('cfg-issuer-owner').value;
+            iss.address = document.getElementById('cfg-issuer-address').value;
+            iss.phone = document.getElementById('cfg-issuer-phone').value;
+            iss.iva = document.getElementById('cfg-issuer-iva').value;
+            iss.cuit = document.getElementById('cfg-issuer-cuit').value;
+            iss.startActivity = document.getElementById('cfg-issuer-start').value;
+            iss.iibb = document.getElementById('cfg-issuer-iibb').value;
+
+            const isDef = document.getElementById('cfg-issuer-is-default').checked;
+            if (isDef) {
+                issuersList.forEach(i => i.isDefault = false);
+                iss.isDefault = true;
+            }
+        }
+
+        function addNewIssuerProfile() {
+            saveCurrentIssuerFormTemporarily();
+            const newIndex = issuersList.length + 1;
+            const newId = `emisor_${Date.now()}`;
+            const newIssuer = {
+                id: newId,
+                name: `NUEVO EMISOR ${newIndex}`,
+                owner: "",
+                address: "",
+                phone: "",
+                iva: "MONOTRIBUTISTA",
+                cuit: "",
+                startActivity: "",
+                iibb: "",
+                isDefault: false
+            };
+            issuersList.push(newIssuer);
+            currentEditingIssuerTabId = newId;
+            renderIssuerTabs();
+            loadIssuerFormValues(newId);
+            showToast(`Emisor ${newIndex} agregado`, "info");
+        }
+
+        function deleteCurrentIssuerProfile() {
+            if (issuersList.length <= 1) {
+                return showToast("Debe haber al menos 1 emisor registrado", "error");
+            }
+            const idx = issuersList.findIndex(i => i.id === currentEditingIssuerTabId);
+            if (idx === -1) return;
+
+            if (!confirm(`¿Eliminar este perfil de emisor?`)) return;
+
+            const wasDefault = issuersList[idx].isDefault;
+            issuersList.splice(idx, 1);
+            if (wasDefault && issuersList.length > 0) {
+                issuersList[0].isDefault = true;
+            }
+
+            currentEditingIssuerTabId = issuersList[0].id;
+            renderIssuerTabs();
+            loadIssuerFormValues(currentEditingIssuerTabId);
+            showToast("Emisor eliminado", "info");
+        }
+
+        function saveIssuerConfigFromModal() {
+            saveCurrentIssuerFormTemporarily();
+
+            // Asegurar que al menos uno sea default
+            const hasDefault = issuersList.some(i => i.isDefault);
+            if (!hasDefault && issuersList.length > 0) {
+                issuersList[0].isDefault = true;
+            }
+
+            localStorage.setItem('electrofrio_issuers_list', JSON.stringify(issuersList));
+            updateIssuerBadgeCount();
+            toggleIssuerConfigModal();
+            showToast("Configuración de emisores guardada con éxito", "success");
+        }
+
+        // --- 14. EXPORTACIÓN A EXCEL ---
+        function exportToExcel() {
+            if (filteredPresupuestos.length === 0) {
+                return showToast("No hay presupuestos para exportar", "error");
+            }
+
+            const rows = filteredPresupuestos.map(p => ({
+                "Nº Presupuesto": p.number || '',
+                "Fecha": formatDateToDisplay(p.date),
+                "Vencimiento": formatDateToDisplay(p.expireDate),
+                "Emisor": p.issuer?.name || p.issuerName || '',
+                "Cliente": p.client?.name || p.clientName || '',
+                "Condición IVA": p.client?.iva || '',
+                "CUIT": p.client?.cuit || '',
+                "Teléfono": p.client?.phone || '',
+                "Domicilio": p.client?.address || '',
+                "Localidad": p.client?.locality || '',
+                "Observaciones": p.observations || '',
+                "Cantidad Ítems": p.itemsCount || (p.items || []).length,
+                "Subtotal ($)": p.subtotal || 0,
+                "Descuento ($)": p.discount || 0,
+                "Total ($)": p.total || 0,
+                "Estado": p.status || 'Pendiente'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Presupuestos");
+            XLSX.writeFile(wb, `ElectroFrio_Presupuestos_${getTodayIsoDate()}.xlsx`);
+            showToast("Archivo Excel exportado con éxito", "success");
+        }
+
+        // --- 15. TOAST NOTIFICATIONS ---
+        function showToast(msg, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 250);
+            }, 3500);
+        }
+
+        function setupClickOutsideHandlers() {
+            document.addEventListener('click', (e) => {
+                const autoList = document.getElementById('client-autocomplete-list');
+                const clientInput = document.getElementById('form-client-name');
+                if (autoList && !autoList.contains(e.target) && e.target !== clientInput) {
+                    autoList.style.display = 'none';
+                }
+
+                const colPopup = document.getElementById('column-toggle-popup');
+                const colBtnWrapper = document.querySelector('.column-toggle-wrapper');
+                if (colPopup && colBtnWrapper && !colBtnWrapper.contains(e.target)) {
+                    colPopup.classList.remove('show');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
