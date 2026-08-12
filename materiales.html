@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mano de Obra - ElectroFrío</title>
+    <title>Materiales - ElectroFrío</title>
     <!-- PWA & Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Mano de Obra ElectroFrío">
+    <meta name="apple-mobile-web-app-title" content="Materiales ElectroFrío">
     <link rel="shortcut icon" href="icon.png?v=3" type="image/png">
 
     <!-- Google Fonts -->
@@ -232,7 +232,7 @@
 
         /* Layout Container */
         .main-container {
-            max-width: 1600px;
+            max-width: 1700px;
             width: 100%;
             margin: 0 auto;
             padding: 16px 24px 60px;
@@ -249,7 +249,7 @@
             padding: 12px 18px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             box-shadow: var(--shadow-sm);
         }
 
@@ -270,7 +270,7 @@
             border-radius: var(--radius-sm);
             padding: 8px 14px;
             flex-grow: 1;
-            max-width: 700px;
+            max-width: 650px;
             transition: var(--transition);
         }
 
@@ -295,7 +295,7 @@
         .tools-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
@@ -313,6 +313,70 @@
 
         .form-select-sm:focus {
             border-color: var(--border-focus);
+        }
+
+        /* Column Selector Dropdown Menu */
+        .column-toggle-wrapper {
+            position: relative;
+        }
+
+        .column-toggle-popup {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 12px;
+            min-width: 260px;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .column-toggle-popup.show {
+            display: flex;
+        }
+
+        .column-toggle-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .column-check-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .column-check-item input[type="checkbox"] {
+            accent-color: var(--color-blue);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
         }
 
         /* Catalog Table Card */
@@ -367,7 +431,7 @@
         table.custom-table thead th {
             background-color: rgba(6, 11, 20, 0.95);
             color: var(--text-secondary);
-            padding: 12px 16px;
+            padding: 12px 14px;
             font-weight: 600;
             border-bottom: 1px solid var(--border-color);
             position: sticky;
@@ -386,7 +450,7 @@
         }
 
         table.custom-table td {
-            padding: 10px 16px;
+            padding: 9px 14px;
             vertical-align: middle;
         }
 
@@ -398,12 +462,34 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.82rem;
             font-weight: 700;
-            padding: 4px 8px;
+            padding: 3px 7px;
             border-radius: var(--radius-sm);
             background: rgba(0, 191, 255, 0.1);
             color: var(--color-blue);
             border: 1px solid rgba(0, 191, 255, 0.25);
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
+        }
+
+        .sub-code-badge {
+            display: inline-flex;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: var(--radius-full);
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
         }
 
         .desc-text {
@@ -414,7 +500,7 @@
 
         .price-tag {
             font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #34d399;
             white-space: nowrap;
@@ -448,18 +534,35 @@
         .action-btn-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+        }
+
+        .btn-action-view {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 4px 7px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.78rem;
+        }
+
+        .btn-action-view:hover {
+            background: var(--color-blue);
+            color: #0b1320;
+            border-color: var(--color-blue);
         }
 
         .btn-action-edit {
             background: rgba(0, 191, 255, 0.1);
             color: var(--color-blue);
             border: 1px solid rgba(0, 191, 255, 0.25);
-            padding: 5px 8px;
+            padding: 4px 7px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: var(--transition);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -474,35 +577,16 @@
             background: rgba(239, 68, 68, 0.1);
             color: var(--color-red);
             border: 1px solid rgba(239, 68, 68, 0.25);
-            padding: 5px 8px;
+            padding: 4px 7px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: var(--transition);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
         }
 
         .btn-action-delete:hover {
             background: var(--color-red);
             color: #ffffff;
-        }
-
-        /* Empty and Loading States */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
-            opacity: 0.6;
-        }
-
-        .empty-state h3 {
-            font-size: 1.1rem;
-            color: var(--text-primary);
-            margin-bottom: 6px;
         }
 
         /* Modals */
@@ -530,7 +614,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 540px;
+            max-width: 680px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -539,7 +623,7 @@
         }
 
         .modal-card.modal-lg {
-            max-width: 900px;
+            max-width: 960px;
         }
 
         @keyframes modalFadeIn {
@@ -585,7 +669,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .modal-footer {
@@ -600,14 +684,26 @@
         }
 
         /* Form Inputs */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
 
         .form-group label {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
@@ -622,8 +718,8 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             color: var(--text-primary);
-            padding: 10px 12px;
-            font-size: 0.88rem;
+            padding: 8px 12px;
+            font-size: 0.85rem;
             outline: none;
             transition: var(--transition);
             width: 100%;
@@ -652,9 +748,38 @@
         }
 
         .input-hint {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
-            margin-top: 2px;
+        }
+
+        /* Detail View Grid */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+        }
+
+        .detail-item .lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-item .val {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 3px;
+            word-break: break-word;
         }
 
         /* Drag & Drop Upload Zone */
@@ -686,8 +811,8 @@
             border-radius: var(--radius-sm);
             padding: 12px 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
             margin-top: 10px;
         }
 
@@ -698,7 +823,7 @@
         }
 
         .column-mapper-item label {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
             font-weight: 700;
             text-transform: uppercase;
@@ -824,6 +949,25 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .header {
@@ -845,6 +989,9 @@
             .search-box {
                 max-width: 100%;
             }
+            .form-grid-2, .form-grid-3 {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -853,27 +1000,27 @@
     <!-- Header Principal Compacto -->
     <header class="header">
         <div class="header-brand">
-            <div class="header-icon">🔧</div>
+            <div class="header-icon">📦</div>
             <div class="header-brand-text">
                 <h1>
-                    Mano de Obra
-                    <span class="badge-count" id="header-total-badge">📦 0 Servicios</span>
+                    Materiales
+                    <span class="badge-count" id="header-total-badge">📦 0 Materiales</span>
                 </h1>
                 </div>
         </div>
 
         <div class="header-actions">
-            <button class="btn btn-danger" onclick="openClearAllModal()" title="Vaciar toda la lista de mano de obra">
-                🗑️ Vaciar Lista
+            <button class="btn btn-danger" onclick="openClearAllModal()" title="Vaciar toda la lista de materiales">
+                🗑️
             </button>
             <button class="btn btn-secondary" onclick="exportCatalogToExcel()" title="Descargar catálogo a Excel">
-                📊 Exportar Excel
+                📊 Exportar
             </button>
             <button class="btn btn-warning" onclick="openImportModal()" title="Cargar precios desde archivo Excel o CSV">
-                📁 Importar Excel / CSV
+                📁 Importar
             </button>
-            <button class="btn btn-primary" onclick="openNewModal()" title="Crear un nuevo servicio de mano de obra">
-                ➕ Nuevo Servicio
+            <button class="btn btn-primary" onclick="openNewModal()" title="Crear un nuevo material">
+                ➕ Nuevo Material
             </button>
         </div>
     </header>
@@ -881,42 +1028,106 @@
     <!-- Contenedor Principal -->
     <main class="main-container">
 
-        <!-- Barra de Búsqueda Predictiva -->
+        <!-- Barra de Búsqueda Predictiva y Herramientas -->
         <section class="controls-card">
             <div class="search-and-tools">
                 <div class="search-box">
                     <span>🔍</span>
-                    <input type="text" id="input-search" placeholder="Buscar" oninput="handleSearchInput()">
+                    <input type="text" id="input-search" placeholder="Buscar..." oninput="handleSearchInput()">
                     <button id="btn-clear-search" style="display:none; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem;" onclick="clearSearch()">✖</button>
                 </div>
 
                 <div class="tools-group">
-                    <select class="form-select-sm" id="select-unit-filter" onchange="applyFilters()">
-                        <option value="ALL">Todas las unidades</option>
-                        <option value="Unidad">Unidad</option>
-                        <option value="Boca">Boca</option>
-                        <option value="Metro">Metro (mts)</option>
-                        <option value="Hora">Hora</option>
-                        <option value="Global">Global / Servicio</option>
+                    <!-- Filtro de Rubro -->
+                    <select class="form-select-sm" id="select-rubro-filter" onchange="applyFilters()">
+                        <option value="ALL">Todos los Rubros</option>
                     </select>
 
+                    <!-- Filtro de Marca -->
+                    <select class="form-select-sm" id="select-marca-filter" onchange="applyFilters()">
+                        <option value="ALL">Todas las Marcas</option>
+                    </select>
+
+                    <!-- Ordenamiento -->
                     <select class="form-select-sm" id="select-sort" onchange="applyFilters()">
                         <option value="code-asc">Código (A-Z)</option>
                         <option value="code-desc">Código (Z-A)</option>
-                        <option value="name-asc">Nombre (A-Z)</option>
-                        <option value="price-desc">Precio (Mayor a Menor)</option>
-                        <option value="price-asc">Precio (Menor a Mayor)</option>
+                        <option value="name-asc">Producto (A-Z)</option>
+                        <option value="price-desc">Costo (Mayor a Menor)</option>
+                        <option value="price-asc">Costo (Menor a Mayor)</option>
                     </select>
+
+                    <!-- Selector de Columnas Visibles -->
+                    <div class="column-toggle-wrapper">
+                        <button class="btn btn-secondary" onclick="toggleColumnMenu(event)" title="Mostrar u ocultar columnas de la tabla">
+                            👁️ Columnas
+                        </button>
+                        <div class="column-toggle-popup" id="column-toggle-popup">
+                            <div class="column-toggle-header">
+                                <span>Columnas Visibles</span>
+                                <span style="cursor:pointer; font-size:0.7rem; color:var(--color-blue);" onclick="resetColumns()">Restablecer</span>
+                            </div>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="code" checked onchange="toggleColumnVisibility('code', this.checked)">
+                                <span>Código Interno</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="barcode" onchange="toggleColumnVisibility('barcode', this.checked)">
+                                <span>Cod. Barra / Externo</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="product" checked onchange="toggleColumnVisibility('product', this.checked)">
+                                <span>Producto / Material</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="brand" checked onchange="toggleColumnVisibility('brand', this.checked)">
+                                <span>Marca</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="rubro" checked onchange="toggleColumnVisibility('rubro', this.checked)">
+                                <span>Rubro / Sub-Rubro</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="supplier" checked onchange="toggleColumnVisibility('supplier', this.checked)">
+                                <span>Proveedor</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="unit" checked onchange="toggleColumnVisibility('unit', this.checked)">
+                                <span>Unidad Medida</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="cost" checked onchange="toggleColumnVisibility('cost', this.checked)">
+                                <span>Costo ($ ARS)</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="bultos" onchange="toggleColumnVisibility('bultos', this.checked)">
+                                <span>Ctd. Bultos</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="iva" onchange="toggleColumnVisibility('iva', this.checked)">
+                                <span>% IVA</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="updated" checked onchange="toggleColumnVisibility('updated', this.checked)">
+                                <span>Actualizado</span>
+                            </label>
+                            <label class="column-check-item">
+                                <input type="checkbox" data-col="actions" checked onchange="toggleColumnVisibility('actions', this.checked)">
+                                <span>Acciones</span>
+                            </label>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </section>
 
-        <!-- Tabla de Mano de Obra -->
+        <!-- Tabla de Materiales -->
         <section class="table-card">
             <div class="table-header-bar">
                 <h2>
-                    Listado de Precios
-                    <span class="table-count-badge" id="table-count-label">0 servicios</span>
+                    Catálogo de Materiales
+                    <span class="table-count-badge" id="table-count-label">0 materiales</span>
                 </h2>
                 <div style="font-size: 0.78rem; color: var(--text-muted);" id="last-sync-time">
                     Sincronizado en tiempo real
@@ -924,23 +1135,28 @@
             </div>
 
             <div class="table-responsive">
-                <table class="custom-table" id="table-mano-obra">
+                <table class="custom-table" id="table-materiales">
                     <thead>
                         <tr>
-                            <th style="width: 130px;">CÓDIGO</th>
-                            <th>PRODUCTO / MANO DE OBRA</th>
-                            <th style="width: 140px;">CATEGORÍA / RUBRO</th>
-                            <th style="width: 90px;">UNIDAD</th>
-                            <th style="width: 150px; text-align: right;">PRECIO ($ ARS)</th>
-                            <th style="width: 130px; text-align: center;">ACTUALIZADO</th>
-                            <th style="width: 110px; text-align: center;">ACCIONES</th>
+                            <th class="col-code" style="width: 120px;">CÓDIGO</th>
+                            <th class="col-barcode" style="width: 140px;">CÓD. BARRA</th>
+                            <th class="col-product">PRODUCTO / MATERIAL</th>
+                            <th class="col-brand" style="width: 120px;">MARCA</th>
+                            <th class="col-rubro" style="width: 150px;">RUBRO / SUB-RUBRO</th>
+                            <th class="col-supplier" style="width: 130px;">PROVEEDOR</th>
+                            <th class="col-unit" style="width: 90px;">UNIDAD</th>
+                            <th class="col-cost" style="width: 140px; text-align: right;">COSTO ($ ARS)</th>
+                            <th class="col-bultos" style="width: 90px; text-align: center;">BULTOS</th>
+                            <th class="col-iva" style="width: 80px; text-align: center;">% IVA</th>
+                            <th class="col-updated" style="width: 130px; text-align: center;">ACTUALIZADO</th>
+                            <th class="col-actions" style="width: 120px; text-align: center;">ACCIONES</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-mano-obra">
+                    <tbody id="tbody-materiales">
                         <tr>
-                            <td colspan="7" class="empty-state">
+                            <td colspan="12" class="empty-state">
                                 <div class="empty-state-icon">⏳</div>
-                                <h3>Cargando lista de mano de obra...</h3>
+                                <h3>Cargando lista de materiales...</h3>
                                 <p>Obteniendo información desde la base de datos de ElectroFrío</p>
                             </td>
                         </tr>
@@ -952,51 +1168,76 @@
     </main>
 
     <!-- ============================================================== -->
-    <!-- MODAL 1: NUEVO SERVICIO                                        -->
+    <!-- MODAL 1: NUEVO MATERIAL                                        -->
     <!-- ============================================================== -->
     <div class="modal-overlay" id="modal-new">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>➕ Agregar Mano de Obra</h2>
+                <h2>➕ Agregar Nuevo Material</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-new')">&times;</button>
             </div>
             <form id="form-new-item" onsubmit="handleSaveNew(event)">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="new-codigo">
-                            Código de Producto / Servicio *
-                            <span style="font-size:0.7rem; color:var(--color-blue);">Único / Identificador</span>
-                        </label>
-                        <input type="text" id="new-codigo" class="form-input" placeholder="Ej: 01735, 99957, ELE-01" required style="text-transform: uppercase; font-family:'JetBrains Mono', monospace; font-weight:700;">
-                        <span class="input-hint">El código se usará para identificar el servicio y no podrá cambiarse posteriormente.</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="new-descripcion">Producto / Nombre de Mano de Obra *</label>
-                        <input type="text" id="new-descripcion" class="form-input" placeholder="Ej: MDO - ELE - BOCA ELECTRICA COMPLETA" required>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-grid-3">
                         <div class="form-group">
-                            <label for="new-precio">Precio ($ ARS) *</label>
-                            <input type="number" id="new-precio" class="form-input" placeholder="0" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                            <label for="new-codigo">Código * <span style="font-size:0.7rem; color:var(--color-blue);">Único</span></label>
+                            <input type="text" id="new-codigo" class="form-input" placeholder="Ej: MAT-001" required style="font-family:'JetBrains Mono', monospace; font-weight:700; text-transform:uppercase;">
                         </div>
-
                         <div class="form-group">
-                            <label for="new-unidad">Unidad de Medida</label>
-                            <select id="new-unidad" class="form-select">
-                                <option value="Unidad">Unidad</option>
-                                <option value="Boca">Boca</option>
-                                <option value="Metro">Metro</option>
-                                <option value="Hora">Hora</option>
-                                <option value="Global">Global / Servicio</option>
-                            </select>
+                            <label for="new-codbarra">Cód. Barra</label>
+                            <input type="text" id="new-codbarra" class="form-input" placeholder="Ej: 779123456789">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-codext">Cód. Externo</label>
+                            <input type="text" id="new-codext" class="form-input" placeholder="Ej: EXT-998">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="new-categoria">Categoría / Rubro</label>
-                        <input type="text" id="new-categoria" class="form-input" placeholder="Ej: Electricidad, Mano de Obra..." value="MANO DE OBRA">
+                        <label for="new-producto">Nombre del Producto / Material *</label>
+                        <input type="text" id="new-producto" class="form-input" placeholder="Ej: Caño de cobre 1/4 refrigeración" required>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="new-marca">Marca</label>
+                            <input type="text" id="new-marca" class="form-input" placeholder="Ej: Totaline, Genérico, Schneider...">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-proveedor">Proveedor</label>
+                            <input type="text" id="new-proveedor" class="form-input" placeholder="Ej: Distribuidora Norte">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="new-rubro">Rubro</label>
+                            <input type="text" id="new-rubro" class="form-input" placeholder="Ej: Refrigeración, Electricidad...">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-subrubro">Sub-Rubro</label>
+                            <input type="text" id="new-subrubro" class="form-input" placeholder="Ej: Cañerías, Aislantes...">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="new-costo">Costo ($ ARS) *</label>
+                            <input type="number" id="new-costo" class="form-input" placeholder="0" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-unidad">Unidad Medida</label>
+                            <input type="text" id="new-unidad" class="form-input" placeholder="Unidad, Metro, Kg...">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-bultos">Ctd. Bultos</label>
+                            <input type="text" id="new-bultos" class="form-input" placeholder="1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-descripcion">Descripción / Notas Adicionales</label>
+                        <textarea id="new-descripcion" class="form-textarea" rows="2" placeholder="Detalles técnicos, especificaciones..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1008,52 +1249,80 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL 2: EDITAR SERVICIO (CÓDIGO BLOQUEADO)                    -->
+    <!-- MODAL 2: EDITAR MATERIAL (CÓDIGO BLOQUEADO)                    -->
     <!-- ============================================================== -->
     <div class="modal-overlay" id="modal-edit">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>✏️ Editar Mano de Obra</h2>
+                <h2>✏️ Editar Material</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-edit')">&times;</button>
             </div>
             <form id="form-edit-item" onsubmit="handleSaveEdit(event)">
                 <input type="hidden" id="edit-doc-id">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="edit-codigo">
-                            Código de Producto
-                            <span class="locked-field-badge">🔒 Código Bloqueado (No editable)</span>
-                        </label>
-                        <input type="text" id="edit-codigo" class="form-input" disabled readonly style="font-family:'JetBrains Mono', monospace; font-weight:700;">
-                        <span class="input-hint">Por seguridad del sistema y las planillas vinculadas, el código de producto no puede modificarse.</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit-descripcion">Producto / Nombre de Mano de Obra *</label>
-                        <input type="text" id="edit-descripcion" class="form-input" required>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-grid-3">
                         <div class="form-group">
-                            <label for="edit-precio">Precio ($ ARS) *</label>
-                            <input type="number" id="edit-precio" class="form-input" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                            <label for="edit-codigo">
+                                Código
+                                <span class="locked-field-badge">🔒 Bloqueado</span>
+                            </label>
+                            <input type="text" id="edit-codigo" class="form-input" disabled readonly style="font-family:'JetBrains Mono', monospace; font-weight:700;">
                         </div>
-
                         <div class="form-group">
-                            <label for="edit-unidad">Unidad de Medida</label>
-                            <select id="edit-unidad" class="form-select">
-                                <option value="Unidad">Unidad</option>
-                                <option value="Boca">Boca</option>
-                                <option value="Metro">Metro</option>
-                                <option value="Hora">Hora</option>
-                                <option value="Global">Global / Servicio</option>
-                            </select>
+                            <label for="edit-codbarra">Cód. Barra</label>
+                            <input type="text" id="edit-codbarra" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-codext">Cód. Externo</label>
+                            <input type="text" id="edit-codext" class="form-input">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="edit-categoria">Categoría / Rubro</label>
-                        <input type="text" id="edit-categoria" class="form-input">
+                        <label for="edit-producto">Nombre del Producto / Material *</label>
+                        <input type="text" id="edit-producto" class="form-input" required>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-marca">Marca</label>
+                            <input type="text" id="edit-marca" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-proveedor">Proveedor</label>
+                            <input type="text" id="edit-proveedor" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-rubro">Rubro</label>
+                            <input type="text" id="edit-rubro" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-subrubro">Sub-Rubro</label>
+                            <input type="text" id="edit-subrubro" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="edit-costo">Costo ($ ARS) *</label>
+                            <input type="number" id="edit-costo" class="form-input" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-unidad">Unidad Medida</label>
+                            <input type="text" id="edit-unidad" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-bultos">Ctd. Bultos</label>
+                            <input type="text" id="edit-bultos" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-descripcion">Descripción / Notas Adicionales</label>
+                        <textarea id="edit-descripcion" class="form-textarea" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1065,20 +1334,103 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL 3: IMPORTAR DESDE EXCEL / CSV CON CONTROL Y ACTUALIZACIÓN -->
+    <!-- MODAL 3: VER DETALLE COMPLETO (16 CAMPOS)                      -->
+    <!-- ============================================================== -->
+    <div class="modal-overlay" id="modal-view">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h2>👁️ Detalle del Material</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-view')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="lbl">Código Interno</div>
+                        <div class="val" style="color:var(--color-blue); font-family:'JetBrains Mono', monospace;" id="view-codigo">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Código de Barra</div>
+                        <div class="val" id="view-codbarra">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Código Externo</div>
+                        <div class="val" id="view-codext">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Marca</div>
+                        <div class="val" id="view-marca">-</div>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <div class="lbl">Producto / Nombre</div>
+                        <div class="val" style="font-size:1.05rem;" id="view-producto">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Rubro</div>
+                        <div class="val" id="view-rubro">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Sub-Rubro</div>
+                        <div class="val" id="view-subrubro">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Proveedor</div>
+                        <div class="val" id="view-proveedor">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Unidad de Medida</div>
+                        <div class="val" id="view-unidad">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Costo Unitario ($ ARS)</div>
+                        <div class="val" style="color:#34d399; font-size:1.1rem; font-family:'Outfit', sans-serif;" id="view-costo">$ 0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Costo Total ($ ARS)</div>
+                        <div class="val" id="view-costototal">$ 0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Ctd. Bultos</div>
+                        <div class="val" id="view-bultos">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Tipo de Producto</div>
+                        <div class="val" id="view-tipoproducto">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">% IVA</div>
+                        <div class="val" id="view-iva">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Última Actualización</div>
+                        <div class="val" id="view-fecha">-</div>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <div class="lbl">Descripción / Notas</div>
+                        <div class="val" id="view-descripcion" style="font-weight:400; color:var(--text-secondary);">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-view')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 4: IMPORTAR DESDE EXCEL / CSV                            -->
     <!-- ============================================================== -->
     <div class="modal-overlay" id="modal-import">
         <div class="modal-card modal-lg">
             <div class="modal-header">
-                <h2>📁 Importar y Actualizar Precios desde Excel</h2>
+                <h2>📁 Importar Lista de Materiales desde Excel</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-import')">&times;</button>
             </div>
             <div class="modal-body">
                 <p style="font-size:0.85rem; color:var(--text-secondary);">
-                    Sube tu archivo Excel (<strong>.xlsx, .xls</strong>) o <strong>.csv</strong> de lista de precios. El sistema detectará automáticamente las columnas de <strong>Cod Producto, Producto y Costo</strong>.
+                    Sube tu archivo Excel (<strong>.xlsx, .xls</strong>) o <strong>.csv</strong> de materiales. El sistema detectará las 16 columnas oficiales y te permitirá actualizar los precios y datos en Firestore.
                 </p>
 
-                <!-- Zona de Arrastrar y Soltar -->
+                <!-- Zona Drag & Drop -->
                 <div class="dropzone-container" id="import-dropzone" onclick="document.getElementById('import-file-input').click()">
                     <div class="dropzone-icon">📄</div>
                     <p style="font-weight:700; color:var(--text-primary); margin-bottom:4px;" id="dropzone-label">Haz clic aquí o arrastra tu archivo Excel</p>
@@ -1086,34 +1438,40 @@
                     <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
                 </div>
 
-                <!-- Resumen de Auditoría Previa y Configuración de Columnas -->
+                <!-- Panel de Análisis y Mapeo -->
                 <div id="import-analysis-box" style="display: none;">
                     
-                    <!-- Selectores de Columnas Detectadas -->
                     <div class="column-mapper-box">
                         <div class="column-mapper-item">
                             <label>Columna Código:</label>
                             <select id="map-col-code" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                         <div class="column-mapper-item">
-                            <label>Columna Producto / Nombre:</label>
+                            <label>Columna Producto:</label>
                             <select id="map-col-desc" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                         <div class="column-mapper-item">
-                            <label>Columna Precio / Costo:</label>
+                            <label>Columna Costo / Precio:</label>
                             <select id="map-col-price" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                         <div class="column-mapper-item">
-                            <label>Columna Rubro / Categoría:</label>
+                            <label>Columna Marca:</label>
+                            <select id="map-col-brand" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                        <div class="column-mapper-item">
+                            <label>Columna Rubro:</label>
                             <select id="map-col-cat" class="form-select-sm" onchange="reprocessParsedRows()"></select>
+                        </div>
+                        <div class="column-mapper-item">
+                            <label>Columna Proveedor:</label>
+                            <select id="map-col-prov" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                     </div>
 
-                    <!-- Opción de Actualización -->
                     <div class="import-options-bar">
                         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary);">
                             <input type="checkbox" id="chk-update-existing" checked onchange="reprocessParsedRows()" style="width:16px; height:16px; cursor:pointer; accent-color:var(--color-blue);">
-                            <span>🔄 Actualizar productos existentes si el código ya existe (Actualiza nombres y precios)</span>
+                            <span>🔄 Actualizar materiales existentes si el código ya existe (Actualiza costos y datos)</span>
                         </label>
                     </div>
 
@@ -1134,8 +1492,8 @@
 
                     <!-- Previsualización -->
                     <div style="margin-top: 14px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
-                        <span>Previsualización de datos a cargar:</span>
-                        <span style="font-size:0.72rem; color:var(--text-muted);" id="preview-range-text">Mostrando primeros 50 registros</span>
+                        <span>Previsualización de registros:</span>
+                        <span style="font-size:0.72rem; color:var(--text-muted);">Mostrando primeros 50 registros</span>
                     </div>
 
                     <div class="preview-table-container">
@@ -1144,13 +1502,14 @@
                                 <tr>
                                     <th>ACCIÓN</th>
                                     <th>CÓDIGO</th>
-                                    <th>PRODUCTO / MANO DE OBRA</th>
-                                    <th>PRECIO / COSTO</th>
+                                    <th>PRODUCTO / MATERIAL</th>
+                                    <th>MARCA</th>
                                     <th>RUBRO</th>
+                                    <th>COSTO</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-import-preview">
-                                <!-- Filas de previsualización -->
+                                <!-- Filas de preview -->
                             </tbody>
                         </table>
                     </div>
@@ -1167,19 +1526,19 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL 4: CONFIRMAR ELIMINACIÓN                                 -->
+    <!-- MODAL 5: CONFIRMAR ELIMINACIÓN                                 -->
     <!-- ============================================================== -->
     <div class="modal-overlay" id="modal-delete">
         <div class="modal-card" style="max-width: 420px;">
             <div class="modal-header">
-                <h2>🗑️ Eliminar Mano de Obra</h2>
+                <h2>🗑️ Eliminar Material</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-delete')">&times;</button>
             </div>
             <div class="modal-body" style="text-align: center;">
-                <p style="font-size:0.9rem; color:var(--text-primary); margin-bottom:8px;">¿Estás seguro de que deseas eliminar este servicio del catálogo?</p>
+                <p style="font-size:0.9rem; color:var(--text-primary); margin-bottom:8px;">¿Estás seguro de que deseas eliminar este material del catálogo?</p>
                 <div style="padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); margin-bottom: 10px;">
                     <div style="font-family:'JetBrains Mono', monospace; font-weight:700; color:var(--color-red);" id="del-item-code">000</div>
-                    <div style="font-weight:600; font-size:0.85rem; color:var(--text-primary); margin-top:2px;" id="del-item-name">Nombre del servicio</div>
+                    <div style="font-weight:600; font-size:0.85rem; color:var(--text-primary); margin-top:2px;" id="del-item-name">Nombre del material</div>
                 </div>
                 <p style="font-size:0.75rem; color:var(--text-muted);">Esta acción no se puede deshacer en la base de datos.</p>
             </div>
@@ -1191,22 +1550,22 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- MODAL 5: VACIAR CATÁLOGO COMPLETO                              -->
+    <!-- MODAL 6: VACIAR CATÁLOGO COMPLETO                              -->
     <!-- ============================================================== -->
     <div class="modal-overlay" id="modal-clear-all">
         <div class="modal-card" style="max-width: 440px;">
             <div class="modal-header">
-                <h2>⚠️ Vaciar Lista de Mano de Obra</h2>
+                <h2>⚠️ Vaciar Lista de Materiales</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-clear-all')">&times;</button>
             </div>
             <div class="modal-body" style="text-align: center;">
                 <div style="font-size: 2.5rem; margin-bottom: 8px;">🗑️</div>
-                <h3 style="font-size: 1.1rem; color: var(--color-red); margin-bottom: 8px;">¿Eliminar toda la mano de obra?</h3>
+                <h3 style="font-size: 1.1rem; color: var(--color-red); margin-bottom: 8px;">¿Eliminar todos los materiales?</h3>
                 <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 12px;">
-                    Esta acción eliminará <strong>todos los registros</strong> de la base de datos de Mano de Obra para que puedas comenzar de cero o subir un nuevo archivo limpio.
+                    Esta acción eliminará <strong>todos los registros</strong> de la base de datos de Materiales para que puedas comenzar de cero o subir un nuevo archivo limpio.
                 </p>
                 <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 10px; font-size: 0.78rem; color: var(--text-muted);">
-                    Se borrarán los <strong style="color: var(--text-primary);" id="clear-count-label">0</strong> servicios actuales de Firestore.
+                    Se borrarán los <strong style="color: var(--text-primary);" id="clear-count-label">0</strong> materiales actuales de Firestore.
                 </div>
             </div>
             <div class="modal-footer">
@@ -1243,13 +1602,30 @@
         const db = firebase.firestore();
 
         // --- 2. ESTADO GLOBAL ---
-        let manoObraData = [];          // Catálogo sincronizado desde Firestore
-        let filteredData = [];          // Catálogo visible tras aplicar búsqueda
-        let rawExcelRows = [];          // Matriz de filas sin procesar leídas de SheetJS
-        let excelHeaderRowIdx = 0;      // Índice de la fila de encabezados
+        let materialesData = [];        // Catálogo sincronizado desde Firestore
+        let filteredData = [];          // Catálogo visible tras aplicar búsqueda/filtros
+        let rawExcelRows = [];          // Matriz de filas sin procesar de Excel
+        let excelHeaderRowIdx = 0;      // Índice de fila de encabezados
         let itemsToCommit = [];         // Items listos para guardar en Firestore
         let itemToDeleteId = null;      // ID a eliminar
         let unsubscribeFirestore = null;
+
+        // Configuración de visibilidad de columnas por defecto
+        const defaultVisibleCols = {
+            code: true,
+            barcode: false,
+            product: true,
+            brand: true,
+            rubro: true,
+            supplier: true,
+            unit: true,
+            cost: true,
+            bultos: false,
+            iva: false,
+            updated: true,
+            actions: true
+        };
+        let visibleCols = { ...defaultVisibleCols };
 
         // --- 3. TEMA CLARO / OSCURO ---
         function applyTheme(isLight) {
@@ -1271,26 +1647,39 @@
             const savedTheme = localStorage.getItem('electrofrio_theme') || localStorage.getItem('theme') || 'dark';
             applyTheme(savedTheme === 'light');
 
+            // Cargar visibilidad de columnas guardada
+            loadColumnPreferences();
+
             // Cargar de caché local para velocidad instantánea
-            const cached = localStorage.getItem('electrofrio_mano_obra');
+            const cached = localStorage.getItem('electrofrio_materiales');
             if (cached) {
                 try {
-                    manoObraData = JSON.parse(cached);
+                    materialesData = JSON.parse(cached);
                     updateHeaderBadge();
+                    populateFilterDropdowns();
                     applyFilters();
                 } catch(e) {
-                    console.error("Error al cargar caché:", e);
+                    console.error("Error al cargar caché de materiales:", e);
                 }
             }
 
             initFirestoreSync();
             setupDropZone();
+
+            // Cerrar menú de columnas al hacer clic afuera
+            document.addEventListener('click', (e) => {
+                const popup = document.getElementById('column-toggle-popup');
+                const wrapper = document.querySelector('.column-toggle-wrapper');
+                if (popup && wrapper && !wrapper.contains(e.target)) {
+                    popup.classList.remove('show');
+                }
+            });
         });
 
         function initFirestoreSync() {
             if (unsubscribeFirestore) unsubscribeFirestore();
 
-            unsubscribeFirestore = db.collection('mano_obra').onSnapshot((snapshot) => {
+            unsubscribeFirestore = db.collection('materiales').onSnapshot((snapshot) => {
                 const items = [];
                 snapshot.forEach(doc => {
                     items.push({
@@ -1299,8 +1688,8 @@
                     });
                 });
 
-                manoObraData = items;
-                localStorage.setItem('electrofrio_mano_obra', JSON.stringify(manoObraData));
+                materialesData = items;
+                localStorage.setItem('electrofrio_materiales', JSON.stringify(materialesData));
 
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1308,9 +1697,10 @@
                 if (lastSyncEl) lastSyncEl.textContent = `Actualizado: ${timeStr}`;
 
                 updateHeaderBadge();
+                populateFilterDropdowns();
                 applyFilters();
             }, (error) => {
-                console.error("Error al sincronizar mano_obra con Firestore:", error);
+                console.error("Error al sincronizar materiales con Firestore:", error);
                 showToast("Error de conexión con la base de datos", "error");
             });
         }
@@ -1318,11 +1708,71 @@
         function updateHeaderBadge() {
             const badge = document.getElementById('header-total-badge');
             if (badge) {
-                badge.textContent = `📦 ${manoObraData.length} Servicios`;
+                badge.textContent = `📦 ${materialesData.length} Materiales`;
             }
         }
 
-        // --- 5. FORMATO Y HELPERS ---
+        // --- 5. GESTIÓN DE VISIBILIDAD DE COLUMNAS ---
+        function toggleColumnMenu(e) {
+            e.stopPropagation();
+            const popup = document.getElementById('column-toggle-popup');
+            if (popup) popup.classList.toggle('show');
+        }
+
+        function toggleColumnVisibility(colKey, isVisible) {
+            visibleCols[colKey] = isVisible;
+            localStorage.setItem('electrofrio_materiales_cols', JSON.stringify(visibleCols));
+            applyColumnStyles();
+        }
+
+        function loadColumnPreferences() {
+            const saved = localStorage.getItem('electrofrio_materiales_cols');
+            if (saved) {
+                try {
+                    visibleCols = { ...defaultVisibleCols, ...JSON.parse(saved) };
+                } catch(e) {}
+            }
+            // Sincronizar checkboxes
+            document.querySelectorAll('#column-toggle-popup input[type="checkbox"]').forEach(chk => {
+                const colKey = chk.dataset.col;
+                if (colKey && visibleCols[colKey] !== undefined) {
+                    chk.checked = visibleCols[colKey];
+                }
+            });
+            applyColumnStyles();
+        }
+
+        function resetColumns() {
+            visibleCols = { ...defaultVisibleCols };
+            localStorage.removeItem('electrofrio_materiales_cols');
+            document.querySelectorAll('#column-toggle-popup input[type="checkbox"]').forEach(chk => {
+                const colKey = chk.dataset.col;
+                if (colKey && visibleCols[colKey] !== undefined) {
+                    chk.checked = visibleCols[colKey];
+                }
+            });
+            applyColumnStyles();
+        }
+
+        function applyColumnStyles() {
+            const styleId = 'dynamic-col-styles';
+            let styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = styleId;
+                document.head.appendChild(styleEl);
+            }
+
+            let css = '';
+            for (const [col, isVis] of Object.entries(visibleCols)) {
+                if (!isVis) {
+                    css += `.col-${col} { display: none !important; }\n`;
+                }
+            }
+            styleEl.innerHTML = css;
+        }
+
+        // --- 6. FORMATO Y HELPERS ---
         function formatMoney(num) {
             const val = Math.round(parseFloat(num) || 0);
             return '$ ' + val.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -1334,7 +1784,8 @@
         }
 
         function getValidDocId(code) {
-            if (!code) return db.collection('mano_obra').doc().id;
+            if (!code) return db.collection('materiales').doc().id;
+            // Firestore no permite barras '/' en los IDs de documento porque los interpreta como subcolecciones
             return String(code).trim().replace(/\//g, '__').replace(/\\/g, '__');
         }
 
@@ -1385,7 +1836,6 @@
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return Math.round(val);
             let s = String(val).trim().replace(/\$/g, '').trim();
-            // Formato con punto de miles y coma decimal (ej: 29.339,50 o 77749,6825)
             if (s.includes('.') && s.includes(',')) {
                 s = s.replace(/\./g, '').replace(',', '.');
             } else if (s.includes(',')) {
@@ -1395,7 +1845,37 @@
             return Math.round(parseFloat(s) || 0);
         }
 
-        // --- 6. BÚSQUEDA Y FILTRADO ---
+        // --- 7. BÚSQUEDA Y FILTRADO ---
+        function populateFilterDropdowns() {
+            const rubros = new Set();
+            const marcas = new Set();
+
+            materialesData.forEach(item => {
+                if (item.rubro) rubros.add(item.rubro.trim());
+                if (item.marca) marcas.add(item.marca.trim());
+            });
+
+            const selRubro = document.getElementById('select-rubro-filter');
+            const selMarca = document.getElementById('select-marca-filter');
+
+            const currentRubro = selRubro.value;
+            const currentMarca = selMarca.value;
+
+            selRubro.innerHTML = '<option value="ALL">Todos los Rubros</option>';
+            selMarca.innerHTML = '<option value="ALL">Todas las Marcas</option>';
+
+            Array.from(rubros).sort().forEach(r => {
+                selRubro.add(new Option(r, r));
+            });
+
+            Array.from(marcas).sort().forEach(m => {
+                selMarca.add(new Option(m, m));
+            });
+
+            if (rubros.has(currentRubro)) selRubro.value = currentRubro;
+            if (marcas.has(currentMarca)) selMarca.value = currentMarca;
+        }
+
         function handleSearchInput() {
             const val = document.getElementById('input-search').value;
             const clearBtn = document.getElementById('btn-clear-search');
@@ -1412,26 +1892,41 @@
 
         function applyFilters() {
             const searchVal = (document.getElementById('input-search')?.value || '').trim().toLowerCase();
-            const unitFilter = document.getElementById('select-unit-filter')?.value || 'ALL';
+            const rubroFilter = document.getElementById('select-rubro-filter')?.value || 'ALL';
+            const marcaFilter = document.getElementById('select-marca-filter')?.value || 'ALL';
             const sortMode = document.getElementById('select-sort')?.value || 'code-asc';
 
-            filteredData = manoObraData.filter(item => {
+            filteredData = materialesData.filter(item => {
                 const code = sanitizeCode(item.codigo || item.id || '');
-                const desc = (item.descripcion || item.producto || item.nombre || '').toLowerCase();
-                const cat = (item.categoria || item.rubro || '').toLowerCase();
-                const unit = item.unidad || 'Unidad';
+                const barcode = sanitizeCode(item.cod_barra || '');
+                const codeExt = sanitizeCode(item.codigo_externo || '');
+                const prod = (item.producto || item.descripcion || '').toLowerCase();
+                const marca = (item.marca || '').toLowerCase();
+                const rubro = (item.rubro || '').toLowerCase();
+                const subrubro = (item.sub_rubro || '').toLowerCase();
+                const prov = (item.proveedor || '').toLowerCase();
 
-                // Filtro de Unidad
-                if (unitFilter !== 'ALL' && unit !== unitFilter) {
+                // Filtro de Rubro
+                if (rubroFilter !== 'ALL' && item.rubro !== rubroFilter) {
                     return false;
                 }
 
-                // Búsqueda por Código o Nombre / Descripción / Categoría
+                // Filtro de Marca
+                if (marcaFilter !== 'ALL' && item.marca !== marcaFilter) {
+                    return false;
+                }
+
+                // Búsqueda en múltiples campos
                 if (searchVal) {
-                    const matchesCode = code.toLowerCase().includes(searchVal);
-                    const matchesDesc = desc.includes(searchVal);
-                    const matchesCat = cat.includes(searchVal);
-                    if (!matchesCode && !matchesDesc && !matchesCat) return false;
+                    const match = code.toLowerCase().includes(searchVal) ||
+                                  barcode.toLowerCase().includes(searchVal) ||
+                                  codeExt.toLowerCase().includes(searchVal) ||
+                                  prod.includes(searchVal) ||
+                                  marca.includes(searchVal) ||
+                                  rubro.includes(searchVal) ||
+                                  subrubro.includes(searchVal) ||
+                                  prov.includes(searchVal);
+                    if (!match) return false;
                 }
 
                 return true;
@@ -1441,10 +1936,10 @@
             filteredData.sort((a, b) => {
                 const codeA = sanitizeCode(a.codigo || a.id || '');
                 const codeB = sanitizeCode(b.codigo || b.id || '');
-                const nameA = (a.descripcion || a.producto || '').toLowerCase();
-                const nameB = (b.descripcion || b.producto || '').toLowerCase();
-                const priceA = parseFloat(a.precio) || 0;
-                const priceB = parseFloat(b.precio) || 0;
+                const nameA = (a.producto || a.descripcion || '').toLowerCase();
+                const nameB = (b.producto || b.descripcion || '').toLowerCase();
+                const priceA = parseFloat(a.costo || a.precio) || 0;
+                const priceB = parseFloat(b.costo || b.precio) || 0;
 
                 switch (sortMode) {
                     case 'code-asc': return codeA.localeCompare(codeB, undefined, { numeric: true });
@@ -1460,18 +1955,18 @@
             updateFilteredCounts();
         }
 
-        // --- 7. RENDERIZADO DE TABLA ---
+        // --- 8. RENDERIZADO DE TABLA ---
         function renderCatalog() {
-            const tbody = document.getElementById('tbody-mano-obra');
+            const tbody = document.getElementById('tbody-materiales');
             if (!tbody) return;
 
             if (filteredData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="12" class="empty-state">
                             <div class="empty-state-icon">🔍</div>
-                            <h3>No se encontraron servicios</h3>
-                            <p>Prueba buscando por código (ej: 01735, 99957) o por nombre de la mano de obra.</p>
+                            <h3>No se encontraron materiales</h3>
+                            <p>Prueba buscando con otro término o importa tu lista desde el botón "📁 Importar Excel / CSV".</p>
                         </td>
                     </tr>
                 `;
@@ -1481,38 +1976,63 @@
             let html = '';
             filteredData.forEach(item => {
                 const code = sanitizeCode(item.codigo || item.id || '');
-                const desc = item.descripcion || item.producto || item.nombre || '-';
-                const price = formatMoney(item.precio);
-                const cat = item.categoria || item.rubro || 'MANO DE OBRA';
-                const unit = item.unidad || 'Unidad';
+                const barcode = item.cod_barra || item.codigo_externo || '-';
+                const prod = item.producto || item.descripcion || '-';
+                const marca = item.marca || 'Genérica';
+                const rubro = item.rubro || '-';
+                const subrubro = item.sub_rubro || '';
+                const prov = item.proveedor || '-';
+                const unit = item.unidad_medida || 'Unidad';
+                const cost = formatMoney(item.costo || item.precio);
+                const bultos = item.bultos || item.indica_ctd_bultos || '1';
+                const iva = item.iva || item.porcentaje_iva ? `${item.iva || item.porcentaje_iva}%` : '21%';
                 const updateDate = formatDate(item);
 
                 html += `
                     <tr>
-                        <td>
+                        <td class="col-code">
                             <span class="code-badge">${escapeHtml(code)}</span>
                         </td>
-                        <td>
-                            <div class="desc-text">${escapeHtml(desc)}</div>
+                        <td class="col-barcode">
+                            <span class="sub-code-badge">${escapeHtml(barcode)}</span>
                         </td>
-                        <td>
-                            <span class="category-badge">${escapeHtml(cat)}</span>
+                        <td class="col-product">
+                            <div class="desc-text">${escapeHtml(prod)}</div>
+                            ${subrubro ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">📂 ${escapeHtml(subrubro)}</div>` : ''}
                         </td>
-                        <td>
-                            <span style="color: var(--text-secondary); font-size:0.8rem;">${escapeHtml(unit)}</span>
+                        <td class="col-brand">
+                            <span class="brand-badge">${escapeHtml(marca)}</span>
                         </td>
-                        <td style="text-align: right;">
-                            <span class="price-tag">${price}</span>
+                        <td class="col-rubro">
+                            <span class="category-badge">${escapeHtml(rubro)}</span>
                         </td>
-                        <td style="text-align: center;">
+                        <td class="col-supplier">
+                            <span style="font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(prov)}</span>
+                        </td>
+                        <td class="col-unit">
+                            <span style="color: var(--text-muted); font-size:0.8rem;">${escapeHtml(unit)}</span>
+                        </td>
+                        <td class="col-cost" style="text-align: right;">
+                            <span class="price-tag">${cost}</span>
+                        </td>
+                        <td class="col-bultos" style="text-align: center;">
+                            <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(bultos)}</span>
+                        </td>
+                        <td class="col-iva" style="text-align: center;">
+                            <span style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(iva)}</span>
+                        </td>
+                        <td class="col-updated" style="text-align: center;">
                             <span class="date-badge" title="Fecha de última actualización">📅 ${escapeHtml(updateDate)}</span>
                         </td>
-                        <td style="text-align: center;">
+                        <td class="col-actions" style="text-align: center;">
                             <div class="action-btn-group" style="justify-content: center;">
-                                <button class="btn-action-edit" onclick="openEditModal('${item.id}')" title="Editar producto y precio (Código bloqueado)">
-                                    ✏️ Editar
+                                <button class="btn-action-view" onclick="openViewModal('${item.id}')" title="Ver detalle completo de 16 campos">
+                                    👁️
                                 </button>
-                                <button class="btn-action-delete" onclick="openDeleteModal('${item.id}')" title="Eliminar servicio">
+                                <button class="btn-action-edit" onclick="openEditModal('${item.id}')" title="Editar material (Código bloqueado)">
+                                    ✏️
+                                </button>
+                                <button class="btn-action-delete" onclick="openDeleteModal('${item.id}')" title="Eliminar material">
                                     🗑️
                                 </button>
                             </div>
@@ -1527,15 +2047,14 @@
         function updateFilteredCounts() {
             const countLabel = document.getElementById('table-count-label');
             if (countLabel) {
-                countLabel.textContent = `${filteredData.length} de ${manoObraData.length} servicios`;
+                countLabel.textContent = `${filteredData.length} de ${materialesData.length} materiales`;
             }
         }
 
-        // --- 8. MODAL NUEVO SERVICIO ---
+        // --- 9. MODAL NUEVO MATERIAL ---
         function openNewModal() {
             const form = document.getElementById('form-new-item');
             if (form) form.reset();
-            document.getElementById('new-categoria').value = "MANO DE OBRA";
             openModal('modal-new');
             setTimeout(() => document.getElementById('new-codigo')?.focus(), 150);
         }
@@ -1543,27 +2062,28 @@
         async function handleSaveNew(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-save-new');
-            const codeInput = document.getElementById('new-codigo');
-            const descInput = document.getElementById('new-descripcion');
-            const priceInput = document.getElementById('new-precio');
-            const unitInput = document.getElementById('new-unidad');
-            const catInput = document.getElementById('new-categoria');
+            const code = sanitizeCode(document.getElementById('new-codigo').value);
+            const codbarra = document.getElementById('new-codbarra').value.trim();
+            const codext = document.getElementById('new-codext').value.trim();
+            const prod = document.getElementById('new-producto').value.trim();
+            const marca = document.getElementById('new-marca').value.trim() || 'Genérica';
+            const rubro = document.getElementById('new-rubro').value.trim() || 'MATERIALES';
+            const subrubro = document.getElementById('new-subrubro').value.trim();
+            const prov = document.getElementById('new-proveedor').value.trim();
+            const costo = Math.round(parseFloat(document.getElementById('new-costo').value) || 0);
+            const unidad = document.getElementById('new-unidad').value.trim() || 'Unidad';
+            const bultos = document.getElementById('new-bultos').value.trim() || '1';
+            const desc = document.getElementById('new-descripcion').value.trim();
 
-            const rawCode = sanitizeCode(codeInput.value);
-            const desc = descInput.value.trim();
-            const price = Math.round(parseFloat(priceInput.value) || 0);
-            const unit = unitInput.value;
-            const cat = catInput.value.trim() || 'MANO DE OBRA';
-
-            if (!rawCode || !desc) {
-                showToast("Por favor complete los campos obligatorios", "warning");
+            if (!code || !prod) {
+                showToast("El código y nombre del producto son obligatorios", "warning");
                 return;
             }
 
-            const exists = manoObraData.some(item => sanitizeCode(item.codigo || item.id) === rawCode);
+            const exists = materialesData.some(x => sanitizeCode(x.codigo || x.id) === code);
             if (exists) {
-                showToast(`El código "${rawCode}" ya existe en la base de datos. Use un código diferente.`, "error");
-                codeInput.focus();
+                showToast(`El código "${code}" ya existe en la base de datos.`, "error");
+                document.getElementById('new-codigo').focus();
                 return;
             }
 
@@ -1573,23 +2093,31 @@
 
                 const nowFormatted = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const docData = {
-                    codigo: rawCode,
+                    codigo: code,
+                    cod_barra: codbarra,
+                    codigo_externo: codext,
+                    producto: prod,
+                    marca: marca,
+                    rubro: rubro,
+                    sub_rubro: subrubro,
+                    proveedor: prov,
+                    costo: costo,
+                    costo_total: costo,
+                    unidad_medida: unidad,
+                    bultos: bultos,
                     descripcion: desc,
-                    precio: price,
-                    unidad: unit,
-                    categoria: cat,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     fecha_actualizacion: nowFormatted
                 };
 
-                const docId = getValidDocId(rawCode);
-                await db.collection('mano_obra').doc(docId).set(docData);
+                const docId = getValidDocId(code);
+                await db.collection('materiales').doc(docId).set(docData);
 
-                showToast(`Servicio "${rawCode}" agregado con éxito`, "success");
+                showToast(`Material "${code}" guardado con éxito`, "success");
                 closeModal('modal-new');
             } catch (err) {
-                console.error("Error al guardar nuevo servicio:", err);
+                console.error("Error al guardar material:", err);
                 showToast("Error al guardar: " + err.message, "error");
             } finally {
                 btn.disabled = false;
@@ -1597,37 +2125,47 @@
             }
         }
 
-        // --- 9. MODAL EDITAR SERVICIO (CÓDIGO BLOQUEADO) ---
+        // --- 10. MODAL EDITAR MATERIAL (CÓDIGO BLOQUEADO) ---
         function openEditModal(docId) {
-            const item = manoObraData.find(x => x.id === docId);
-            if (!item) {
-                showToast("No se encontró el registro", "error");
-                return;
-            }
+            const item = materialesData.find(x => x.id === docId);
+            if (!item) return;
 
             document.getElementById('edit-doc-id').value = item.id;
-            // El campo de código queda BLOQUEADO y deshabilitado
             document.getElementById('edit-codigo').value = sanitizeCode(item.codigo || item.id);
-            document.getElementById('edit-descripcion').value = item.descripcion || item.producto || item.nombre || '';
-            document.getElementById('edit-precio').value = Math.round(parseFloat(item.precio) || 0);
-            document.getElementById('edit-unidad').value = item.unidad || 'Unidad';
-            document.getElementById('edit-categoria').value = item.categoria || item.rubro || 'MANO DE OBRA';
+            document.getElementById('edit-codbarra').value = item.cod_barra || '';
+            document.getElementById('edit-codext').value = item.codigo_externo || '';
+            document.getElementById('edit-producto').value = item.producto || item.descripcion || '';
+            document.getElementById('edit-marca').value = item.marca || '';
+            document.getElementById('edit-proveedor').value = item.proveedor || '';
+            document.getElementById('edit-rubro').value = item.rubro || '';
+            document.getElementById('edit-subrubro').value = item.sub_rubro || '';
+            document.getElementById('edit-costo').value = Math.round(parseFloat(item.costo || item.precio) || 0);
+            document.getElementById('edit-unidad').value = item.unidad_medida || 'Unidad';
+            document.getElementById('edit-bultos').value = item.bultos || '1';
+            document.getElementById('edit-descripcion').value = item.descripcion || '';
 
             openModal('modal-edit');
-            setTimeout(() => document.getElementById('edit-descripcion')?.focus(), 150);
+            setTimeout(() => document.getElementById('edit-producto')?.focus(), 150);
         }
 
         async function handleSaveEdit(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-save-edit');
             const docId = document.getElementById('edit-doc-id').value;
+            const codbarra = document.getElementById('edit-codbarra').value.trim();
+            const codext = document.getElementById('edit-codext').value.trim();
+            const prod = document.getElementById('edit-producto').value.trim();
+            const marca = document.getElementById('edit-marca').value.trim() || 'Genérica';
+            const rubro = document.getElementById('edit-rubro').value.trim() || 'MATERIALES';
+            const subrubro = document.getElementById('edit-subrubro').value.trim();
+            const prov = document.getElementById('edit-proveedor').value.trim();
+            const costo = Math.round(parseFloat(document.getElementById('edit-costo').value) || 0);
+            const unidad = document.getElementById('edit-unidad').value.trim() || 'Unidad';
+            const bultos = document.getElementById('edit-bultos').value.trim() || '1';
             const desc = document.getElementById('edit-descripcion').value.trim();
-            const price = Math.round(parseFloat(document.getElementById('edit-precio').value) || 0);
-            const unit = document.getElementById('edit-unidad').value;
-            const cat = document.getElementById('edit-categoria').value.trim() || 'MANO DE OBRA';
 
-            if (!desc) {
-                showToast("La descripción no puede quedar vacía", "warning");
+            if (!prod) {
+                showToast("El nombre del producto no puede quedar vacío", "warning");
                 return;
             }
 
@@ -1636,19 +2174,27 @@
                 btn.textContent = "Guardando cambios...";
 
                 const nowFormatted = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                await db.collection('mano_obra').doc(docId).update({
+                await db.collection('materiales').doc(docId).update({
+                    cod_barra: codbarra,
+                    codigo_externo: codext,
+                    producto: prod,
+                    marca: marca,
+                    rubro: rubro,
+                    sub_rubro: subrubro,
+                    proveedor: prov,
+                    costo: costo,
+                    costo_total: costo,
+                    unidad_medida: unidad,
+                    bultos: bultos,
                     descripcion: desc,
-                    precio: price,
-                    unidad: unit,
-                    categoria: cat,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     fecha_actualizacion: nowFormatted
                 });
 
-                showToast("Servicio actualizado correctamente", "success");
+                showToast("Material actualizado correctamente", "success");
                 closeModal('modal-edit');
             } catch (err) {
-                console.error("Error al actualizar servicio:", err);
+                console.error("Error al actualizar material:", err);
                 showToast("Error al actualizar: " + err.message, "error");
             } finally {
                 btn.disabled = false;
@@ -1656,14 +2202,39 @@
             }
         }
 
-        // --- 10. MODAL ELIMINAR SERVICIO ---
+        // --- 11. MODAL VER DETALLE COMPLETO (16 CAMPOS) ---
+        function openViewModal(docId) {
+            const item = materialesData.find(x => x.id === docId);
+            if (!item) return;
+
+            document.getElementById('view-codigo').textContent = sanitizeCode(item.codigo || item.id) || '-';
+            document.getElementById('view-codbarra').textContent = item.cod_barra || '-';
+            document.getElementById('view-codext').textContent = item.codigo_externo || '-';
+            document.getElementById('view-marca').textContent = item.marca || 'Genérica';
+            document.getElementById('view-producto').textContent = item.producto || item.descripcion || '-';
+            document.getElementById('view-rubro').textContent = item.rubro || '-';
+            document.getElementById('view-subrubro').textContent = item.sub_rubro || '-';
+            document.getElementById('view-proveedor').textContent = item.proveedor || '-';
+            document.getElementById('view-unidad').textContent = item.unidad_medida || 'Unidad';
+            document.getElementById('view-costo').textContent = formatMoney(item.costo || item.precio);
+            document.getElementById('view-costototal').textContent = formatMoney(item.costo_total || item.costo || item.precio);
+            document.getElementById('view-bultos').textContent = item.bultos || item.indica_ctd_bultos || '-';
+            document.getElementById('view-tipoproducto').textContent = item.tipo_producto || '-';
+            document.getElementById('view-iva').textContent = item.iva || item.porcentaje_iva ? `${item.iva || item.porcentaje_iva}%` : '21%';
+            document.getElementById('view-fecha').textContent = `📅 ${formatDate(item)}`;
+            document.getElementById('view-descripcion').textContent = item.descripcion || 'Sin observaciones adicionales';
+
+            openModal('modal-view');
+        }
+
+        // --- 12. MODAL ELIMINAR MATERIAL ---
         function openDeleteModal(docId) {
-            const item = manoObraData.find(x => x.id === docId);
+            const item = materialesData.find(x => x.id === docId);
             if (!item) return;
 
             itemToDeleteId = docId;
             document.getElementById('del-item-code').textContent = sanitizeCode(item.codigo || item.id);
-            document.getElementById('del-item-name').textContent = item.descripcion || item.producto || item.nombre || '';
+            document.getElementById('del-item-name').textContent = item.producto || item.descripcion || '';
 
             openModal('modal-delete');
         }
@@ -1676,11 +2247,11 @@
                 btn.disabled = true;
                 btn.textContent = "Eliminando...";
 
-                await db.collection('mano_obra').doc(itemToDeleteId).delete();
-                showToast("Servicio eliminado de la base de datos", "success");
+                await db.collection('materiales').doc(itemToDeleteId).delete();
+                showToast("Material eliminado de la base de datos", "success");
                 closeModal('modal-delete');
             } catch (err) {
-                console.error("Error al eliminar servicio:", err);
+                console.error("Error al eliminar material:", err);
                 showToast("Error al eliminar: " + err.message, "error");
             } finally {
                 btn.disabled = false;
@@ -1689,10 +2260,10 @@
             }
         }
 
-        // --- 10.1. VACIAR CATÁLOGO COMPLETO DE MANO DE OBRA ---
+        // --- 12.1. VACIAR CATÁLOGO COMPLETO DE MATERIALES ---
         function openClearAllModal() {
             const countEl = document.getElementById('clear-count-label');
-            if (countEl) countEl.textContent = manoObraData.length;
+            if (countEl) countEl.textContent = materialesData.length;
             openModal('modal-clear-all');
         }
 
@@ -1702,9 +2273,9 @@
                 btn.disabled = true;
                 btn.textContent = "Consultando base de datos...";
 
-                const snapshot = await db.collection('mano_obra').get();
+                const snapshot = await db.collection('materiales').get();
                 if (snapshot.empty) {
-                    showToast("La lista de mano de obra ya está vacía (0 registros)", "info");
+                    showToast("La lista de materiales ya está vacía (0 registros)", "info");
                     closeModal('modal-clear-all');
                     return;
                 }
@@ -1727,14 +2298,14 @@
                     btn.textContent = `Eliminando (${deleted}/${totalDocs})...`;
                 }
 
-                manoObraData = [];
+                materialesData = [];
                 filteredData = [];
-                localStorage.removeItem('electrofrio_mano_obra');
+                localStorage.removeItem('electrofrio_materiales');
                 renderCatalog();
                 updateHeaderBadge();
                 updateFilteredCounts();
 
-                showToast(`¡Se vació la lista! Se eliminaron ${deleted} servicios correctamente.`, "success");
+                showToast(`¡Se vació la lista! Se eliminaron ${deleted} materiales correctamente.`, "success");
                 closeModal('modal-clear-all');
             } catch (err) {
                 console.error("Error al vaciar catálogo:", err);
@@ -1745,7 +2316,7 @@
             }
         }
 
-        // --- 11. IMPORTACIÓN Y ACTUALIZACIÓN INTELIGENTE DE EXCEL ---
+        // --- 13. IMPORTACIÓN Y ACTUALIZACIÓN INTELIGENTE DE EXCEL ---
         function openImportModal() {
             rawExcelRows = [];
             itemsToCommit = [];
@@ -1822,15 +2393,9 @@
             excelHeaderRowIdx = 0;
             for (let r = 0; r < Math.min(rows.length, 5); r++) {
                 const row = rows[r];
-                const hasCodeHeader = row.some(cell => {
-                    const str = String(cell || '').trim().toLowerCase();
-                    return str.includes('cod') || str === 'id' || str === 'codigo';
-                });
-                const hasProdHeader = row.some(cell => {
-                    const str = String(cell || '').trim().toLowerCase();
-                    return str === 'producto' || str.includes('desc') || str.includes('mano de obra');
-                });
-                if (hasCodeHeader || hasProdHeader) {
+                const hasCode = row.some(c => String(c || '').toLowerCase().includes('cod'));
+                const hasProd = row.some(c => String(c || '').toLowerCase().includes('prod') || String(c || '').toLowerCase().includes('desc'));
+                if (hasCode || hasProd) {
                     excelHeaderRowIdx = r;
                     break;
                 }
@@ -1838,71 +2403,76 @@
 
             const headerRow = rows[excelHeaderRowIdx];
 
-            // Rellenar selectores de mapeo
             const mapCode = document.getElementById('map-col-code');
             const mapDesc = document.getElementById('map-col-desc');
             const mapPrice = document.getElementById('map-col-price');
+            const mapBrand = document.getElementById('map-col-brand');
             const mapCat = document.getElementById('map-col-cat');
+            const mapProv = document.getElementById('map-col-prov');
 
-            [mapCode, mapDesc, mapPrice, mapCat].forEach(sel => sel.innerHTML = '');
+            [mapCode, mapDesc, mapPrice, mapBrand, mapCat, mapProv].forEach(sel => sel.innerHTML = '');
 
             headerRow.forEach((colName, idx) => {
                 const name = String(colName || `Columna ${idx + 1}`).trim();
-                const optCode = new Option(`${idx + 1}. ${name}`, idx);
-                const optDesc = new Option(`${idx + 1}. ${name}`, idx);
-                const optPrice = new Option(`${idx + 1}. ${name}`, idx);
-                const optCat = new Option(`${idx + 1}. ${name}`, idx);
-
-                mapCode.add(optCode);
-                mapDesc.add(optDesc);
-                mapPrice.add(optPrice);
-                mapCat.add(optCat);
+                mapCode.add(new Option(`${idx + 1}. ${name}`, idx));
+                mapDesc.add(new Option(`${idx + 1}. ${name}`, idx));
+                mapPrice.add(new Option(`${idx + 1}. ${name}`, idx));
+                mapBrand.add(new Option(`${idx + 1}. ${name}`, idx));
+                mapCat.add(new Option(`${idx + 1}. ${name}`, idx));
+                mapProv.add(new Option(`${idx + 1}. ${name}`, idx));
             });
 
-            // Opción de "Ninguno" para Rubro/Categoría
-            mapCat.add(new Option('Predeterminado (MANO DE OBRA)', -1));
+            mapBrand.add(new Option('Predeterminado (Genérica)', -1));
+            mapCat.add(new Option('Predeterminado (MATERIALES)', -1));
+            mapProv.add(new Option('Predeterminado (Sin asignar)', -1));
 
-            // Detección inteligente inicial
-            let detectedCode = 0;
-            let detectedDesc = 1;
-            let detectedPrice = -1;
-            let detectedCat = -1;
+            // Detección automática inteligente de las 16 columnas
+            let dCode = -1, dDesc = -1, dPrice = -1, dBrand = -1, dCat = -1, dProv = -1;
 
             headerRow.forEach((colName, idx) => {
-                const str = String(colName || '').trim().toLowerCase();
+                const str = String(colName || '').trim().toLowerCase().replace(/[-_]/g, ' ');
 
-                // 1. Código
-                if (str === 'cod producto' || str === 'cod. producto' || str === 'cod_producto' || str === 'codigo' || str === 'código' || str === 'cod') {
-                    detectedCode = idx;
-                } else if (str.includes('cod') && !str.includes('barra') && detectedCode === 0) {
-                    detectedCode = idx;
+                // Código principal
+                if (dCode === -1) {
+                    if (str === 'codigo' || str === 'código' || str === 'cod') dCode = idx;
+                    else if (str.includes('codigo') && !str.includes('externo') && !str.includes('barra')) dCode = idx;
                 }
 
-                // 2. Producto / Descripción (debe ser 'producto' o 'descripcion', NO el código)
-                if (str === 'producto' || str === 'descripcion' || str === 'descripción' || str === 'detalle' || str === 'servicio' || str === 'mano de obra') {
-                    detectedDesc = idx;
-                } else if ((str.includes('desc') || str.includes('prod')) && !str.includes('cod') && !str.includes('utilidad') && detectedDesc === 1) {
-                    detectedDesc = idx;
+                // Producto
+                if (dDesc === -1) {
+                    if (str === 'producto' || str === 'nombre' || str === 'descripcion' || str === 'descripción') dDesc = idx;
+                    else if (str.includes('prod') && !str.includes('tipo') && !str.includes('cod')) dDesc = idx;
                 }
 
-                // 3. Precio / Costo
-                if (str === 'costo' || str === 'precio' || str === 'importe' || str === 'valor' || str === '$' || str === 'costo unitario' || str === 'precio unitario') {
-                    detectedPrice = idx;
-                } else if ((str.includes('cost') || str.includes('prec')) && !str.includes('utilidad') && !str.includes('porc') && detectedPrice === -1) {
-                    detectedPrice = idx;
+                // Costo
+                if (dPrice === -1) {
+                    if (str === 'costo' || str === 'precio' || str === 'costo unitario' || str === 'precio unitario') dPrice = idx;
+                    else if (str.includes('cost') && !str.includes('total')) dPrice = idx;
                 }
 
-                // 4. Rubro / Categoría
-                if (str === 'rubro' || str === 'categoria' || str === 'categoría' || str === 'sub rubro') {
-                    detectedCat = idx;
+                // Marca
+                if (dBrand === -1 && (str.includes('marca') || str === 'brand')) {
+                    dBrand = idx;
+                }
+
+                // Rubro
+                if (dCat === -1 && (str === 'rubro' || str === 'categoria' || str === 'categoría')) {
+                    dCat = idx;
+                }
+
+                // Proveedor
+                if (dProv === -1 && (str.includes('proveedor') || str.includes('prov'))) {
+                    dProv = idx;
                 }
             });
 
-            // Asignar selecciones iniciales detectadas
-            mapCode.value = detectedCode;
-            mapDesc.value = detectedDesc;
-            if (detectedPrice !== -1) mapPrice.value = detectedPrice;
-            if (detectedCat !== -1) mapCat.value = detectedCat;
+            // Asignación de valores detectados o fallbacks seguros
+            mapCode.value = dCode !== -1 ? dCode : 2;
+            mapDesc.value = dDesc !== -1 ? dDesc : 4;
+            mapPrice.value = dPrice !== -1 ? dPrice : 8;
+            if (dBrand !== -1) mapBrand.value = dBrand;
+            if (dCat !== -1) mapCat.value = dCat;
+            if (dProv !== -1) mapProv.value = dProv;
 
             reprocessParsedRows();
         }
@@ -1913,14 +2483,15 @@
             const codeCol = parseInt(document.getElementById('map-col-code').value);
             const descCol = parseInt(document.getElementById('map-col-desc').value);
             const priceCol = parseInt(document.getElementById('map-col-price').value);
+            const brandCol = parseInt(document.getElementById('map-col-brand').value);
             const catCol = parseInt(document.getElementById('map-col-cat').value);
+            const provCol = parseInt(document.getElementById('map-col-prov').value);
             const allowUpdate = document.getElementById('chk-update-existing').checked;
 
-            // Map de productos existentes en Firestore
-            const existingItemsMap = new Map();
-            manoObraData.forEach(item => {
+            const existingMap = new Map();
+            materialesData.forEach(item => {
                 const c = sanitizeCode(item.codigo || item.id);
-                if (c) existingItemsMap.set(c, item);
+                if (c) existingMap.set(c, item);
             });
 
             const parsedRows = [];
@@ -1929,31 +2500,58 @@
             let updateCount = 0;
             let skippedCount = 0;
 
-            const seenInThisFile = new Set();
+            const seenInFile = new Set();
+            const headerRow = rawExcelRows[excelHeaderRowIdx];
+
+            // Mapeo de columnas adicionales de las 16 oficiales si existen en el header
+            const colMap = {};
+            headerRow.forEach((colName, idx) => {
+                const s = String(colName || '').trim().toLowerCase().replace(/[-_]/g, ' ');
+                if (s.includes('barra')) colMap.barcode = idx;
+                if (s.includes('externo')) colMap.codeExt = idx;
+                if (s.includes('sub rubro')) colMap.subrubro = idx;
+                if (s.includes('unidad')) colMap.unit = idx;
+                if (s.includes('costo total')) colMap.costTotal = idx;
+                if (s.includes('bulto')) colMap.bultos = idx;
+                if (s.includes('tipo')) colMap.tipo = idx;
+                if (s.includes('iva')) colMap.iva = idx;
+                if (s.includes('modificable')) colMap.modificable = idx;
+            });
 
             for (let i = excelHeaderRowIdx + 1; i < rawExcelRows.length; i++) {
                 const row = rawExcelRows[i];
                 if (!row || row.length === 0) continue;
 
                 let code = sanitizeCode(row[codeCol]);
-                let desc = String(row[descCol] || '').trim();
-                let priceNum = priceCol >= 0 ? parseExcelPrice(row[priceCol]) : 0;
-                let cat = catCol >= 0 ? String(row[catCol] || '').trim() : 'MANO DE OBRA';
+                let prod = String(row[descCol] || '').trim();
+                let costoNum = priceCol >= 0 ? parseExcelPrice(row[priceCol]) : 0;
+                let marca = brandCol >= 0 ? String(row[brandCol] || '').trim() : 'Genérica';
+                let rubro = catCol >= 0 ? String(row[catCol] || '').trim() : 'MATERIALES';
+                let prov = provCol >= 0 ? String(row[provCol] || '').trim() : '';
 
-                if (!code && !desc) continue; // Fila vacía
+                let barcode = colMap.barcode !== undefined ? String(row[colMap.barcode] || '').trim() : '';
+                let codeExt = colMap.codeExt !== undefined ? String(row[colMap.codeExt] || '').trim() : '';
+                let subrubro = colMap.subrubro !== undefined ? String(row[colMap.subrubro] || '').trim() : '';
+                let unit = colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : 'Unidad';
+                let bultos = colMap.bultos !== undefined ? String(row[colMap.bultos] || '').trim() : '1';
+                let tipo = colMap.tipo !== undefined ? String(row[colMap.tipo] || '').trim() : '';
+                let iva = colMap.iva !== undefined ? String(row[colMap.iva] || '').trim() : '';
 
-                // Si no hay código pero hay producto, generar uno auxiliar
-                if (!code && desc) {
-                    code = 'MO-' + String(i).padStart(5, '0');
+                if (!code && !prod) continue;
+
+                if (!code && prod) {
+                    code = 'MAT-' + String(i).padStart(5, '0');
                 }
 
-                if (!cat) cat = 'MANO DE OBRA';
+                if (!marca) marca = 'Genérica';
+                if (!rubro) rubro = 'MATERIALES';
+                if (!unit) unit = 'Unidad';
 
-                const alreadyExists = existingItemsMap.has(code);
-                const isDuplicatedInFile = seenInThisFile.has(code);
-                seenInThisFile.add(code);
+                const alreadyExists = existingMap.has(code);
+                const isDuplicatedInFile = seenInFile.has(code);
+                seenInFile.add(code);
 
-                let actionStatus = 'new'; // 'new', 'update', 'skip'
+                let actionStatus = 'new';
 
                 if (alreadyExists) {
                     if (allowUpdate) {
@@ -1973,10 +2571,19 @@
 
                 const itemObj = {
                     codigo: code,
-                    descripcion: desc,
-                    precio: priceNum,
-                    unidad: 'Unidad',
-                    categoria: cat,
+                    cod_barra: barcode,
+                    codigo_externo: codeExt,
+                    producto: prod,
+                    marca: marca,
+                    rubro: rubro,
+                    sub_rubro: subrubro,
+                    proveedor: prov,
+                    costo: costoNum,
+                    costo_total: costoNum,
+                    unidad_medida: unit,
+                    bultos: bultos,
+                    tipo_producto: tipo,
+                    iva: iva,
                     status: actionStatus
                 };
 
@@ -1987,14 +2594,12 @@
                 }
             }
 
-            // Mostrar el panel de análisis
             document.getElementById('import-analysis-box').style.display = 'block';
             document.getElementById('count-file-total').textContent = parsedRows.length;
             document.getElementById('count-file-new').textContent = newCount;
             document.getElementById('count-file-update').textContent = allowUpdate ? updateCount : skippedCount;
             document.getElementById('lbl-file-update').textContent = allowUpdate ? 'Existentes a Actualizar' : 'Duplicados Omitidos';
 
-            // Renderizar la previsualización
             const tbodyPreview = document.getElementById('tbody-import-preview');
             let previewHtml = '';
 
@@ -2012,9 +2617,10 @@
                     <tr style="${row.status === 'skip' ? 'opacity: 0.5; background: rgba(239, 68, 68, 0.04);' : ''}">
                         <td>${badge}</td>
                         <td><span class="code-badge">${escapeHtml(row.codigo)}</span></td>
-                        <td><strong style="color:var(--text-primary);">${escapeHtml(row.descripcion)}</strong></td>
-                        <td style="color:#34d399; font-weight:700;">${formatMoney(row.precio)}</td>
-                        <td><span class="category-badge">${escapeHtml(row.categoria)}</span></td>
+                        <td><strong style="color:var(--text-primary);">${escapeHtml(row.producto)}</strong></td>
+                        <td><span class="brand-badge">${escapeHtml(row.marca)}</span></td>
+                        <td><span class="category-badge">${escapeHtml(row.rubro)}</span></td>
+                        <td style="color:#34d399; font-weight:700;">${formatMoney(row.costo)}</td>
                     </tr>
                 `;
             });
@@ -2022,7 +2628,7 @@
             if (parsedRows.length > 50) {
                 previewHtml += `
                     <tr>
-                        <td colspan="5" style="text-align:center; color:var(--text-muted); font-size:0.75rem; padding:10px;">
+                        <td colspan="6" style="text-align:center; color:var(--text-muted); font-size:0.75rem; padding:10px;">
                             ... y otros ${parsedRows.length - 50} registros más listos para procesar.
                         </td>
                     </tr>
@@ -2039,7 +2645,7 @@
                 } else if (newCount > 0) {
                     btnConfirm.textContent = `🚀 Importar ${newCount} Nuevos a Base de Datos`;
                 } else {
-                    btnConfirm.textContent = `🔄 Actualizar ${updateCount} Productos Existentes`;
+                    btnConfirm.textContent = `🔄 Actualizar ${updateCount} Materiales Existentes`;
                 }
             } else {
                 btnConfirm.disabled = true;
@@ -2049,7 +2655,7 @@
 
         async function executeBatchImport() {
             if (itemsToCommit.length === 0) {
-                showToast("No hay registros para importar o actualizar", "warning");
+                showToast("No hay registros para procesar", "warning");
                 return;
             }
 
@@ -2070,13 +2676,22 @@
 
                     chunk.forEach(item => {
                         const docId = getValidDocId(item.codigo);
-                        const docRef = db.collection('mano_obra').doc(docId);
+                        const docRef = db.collection('materiales').doc(docId);
                         batch.set(docRef, {
                             codigo: item.codigo,
-                            descripcion: item.descripcion,
-                            precio: item.precio,
-                            unidad: item.unidad || 'Unidad',
-                            categoria: item.categoria || 'MANO DE OBRA',
+                            cod_barra: item.cod_barra || '',
+                            codigo_externo: item.codigo_externo || '',
+                            producto: item.producto || '',
+                            marca: item.marca || 'Genérica',
+                            rubro: item.rubro || 'MATERIALES',
+                            sub_rubro: item.sub_rubro || '',
+                            proveedor: item.proveedor || '',
+                            costo: item.costo || 0,
+                            costo_total: item.costo_total || item.costo || 0,
+                            unidad_medida: item.unidad_medida || 'Unidad',
+                            bultos: item.bultos || '1',
+                            tipo_producto: item.tipo_producto || '',
+                            iva: item.iva || '',
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                             fecha_actualizacion: nowFormatted
                         }, { merge: true });
@@ -2087,7 +2702,7 @@
                     btn.textContent = `Guardando (${processed}/${total})...`;
                 }
 
-                showToast(`¡Se procesaron exitosamente ${total} productos en la base de datos!`, "success");
+                showToast(`¡Se procesaron exitosamente ${total} materiales en la base de datos!`, "success");
                 closeModal('modal-import');
             } catch (err) {
                 console.error("Error al importar lote en Firestore:", err);
@@ -2098,42 +2713,64 @@
             }
         }
 
-        // --- 12. EXPORTAR A EXCEL (.XLSX) ---
+        // --- 14. EXPORTAR A EXCEL (.XLSX) ---
         function exportCatalogToExcel() {
-            const dataToExport = filteredData.length > 0 ? filteredData : manoObraData;
+            const dataToExport = filteredData.length > 0 ? filteredData : materialesData;
             if (dataToExport.length === 0) {
                 showToast("No hay datos disponibles para exportar", "warning");
                 return;
             }
 
             const excelRows = dataToExport.map(item => ({
-                "Cod Producto": sanitizeCode(item.codigo || item.id),
-                "Producto": item.descripcion || item.producto || item.nombre || '',
-                "Costo": Math.round(parseFloat(item.precio) || 0),
-                "Rubro": item.categoria || item.rubro || 'MANO DE OBRA',
-                "Unidad": item.unidad || 'Unidad',
-                "Fecha Actualización": formatDate(item.updatedAt || item.createdAt)
+                "COD BARRA": item.cod_barra || '',
+                "CODIGO-EXTERNO": item.codigo_externo || '',
+                "CODIGO": sanitizeCode(item.codigo || item.id),
+                "MARCA": item.marca || 'Genérica',
+                "PRODUCTO": item.producto || item.descripcion || '',
+                "RUBRO": item.rubro || 'MATERIALES',
+                "SUB-RUBRO": item.sub_rubro || '',
+                "UNIDAD-MEDIDA": item.unidad_medida || 'Unidad',
+                "COSTO": Math.round(parseFloat(item.costo || item.precio) || 0),
+                "COSTO-TOTAL": Math.round(parseFloat(item.costo_total || item.costo || item.precio) || 0),
+                "INDICA-CTD-BULTOS": item.bultos || item.indica_ctd_bultos || '1',
+                "PROVEEDOR": item.proveedor || '',
+                "TIPO-D- PRODUCTO": item.tipo_producto || '',
+                "DESCRIPCION": item.descripcion || '',
+                "PORCENTAJE-IVA": item.iva || item.porcentaje_iva || '21',
+                "PRECIO-MODIFICABLE": item.precio_modificable || 'SI',
+                "FECHA ACTUALIZACION": formatDate(item)
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(excelRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Lista de Precio");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Materiales");
 
             worksheet['!cols'] = [
+                { wch: 16 },
+                { wch: 16 },
                 { wch: 15 },
-                { wch: 65 },
                 { wch: 15 },
-                { wch: 20 },
+                { wch: 45 },
+                { wch: 18 },
+                { wch: 18 },
                 { wch: 12 },
+                { wch: 14 },
+                { wch: 14 },
+                { wch: 14 },
+                { wch: 20 },
+                { wch: 18 },
+                { wch: 30 },
+                { wch: 14 },
+                { wch: 16 },
                 { wch: 18 }
             ];
 
             const nowStr = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(workbook, `ElectroFrio_ManoDeObra_${nowStr}.xlsx`);
-            showToast("Catálogo exportado exitosamente", "success");
+            XLSX.writeFile(workbook, `ElectroFrio_Materiales_${nowStr}.xlsx`);
+            showToast("Catálogo de materiales exportado exitosamente", "success");
         }
 
-        // --- 13. UTILIDADES DE MODALES Y TOASTS ---
+        // --- 15. UTILIDADES DE MODALES Y TOASTS ---
         function openModal(id) {
             const modal = document.getElementById(id);
             if (modal) modal.classList.add('show');
@@ -2147,6 +2784,7 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+                document.getElementById('column-toggle-popup')?.classList.remove('show');
             }
         });
 
