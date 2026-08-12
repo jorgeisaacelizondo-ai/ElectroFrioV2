@@ -2382,7 +2382,7 @@
             }
 
             // Mensaje preconfigurado completo
-            const msg = `Hola *${client.name}*, te saludamos del equipo de *ElectroFrío*.\n\nTe escribimos para recordarte sobre el saldo pendiente de tu cuenta de *${formatCurrency(balance)}* ${detalleTrabajoStr}.\n\n*Datos para Transferencia Bancaria:*\n• *Banco:* BANCO NACION\n• *Alias:* ELECTROFRIOLR.BN\n• *Titular:* Arias Jorge, Victor Ignacio\n\nPor favor envíanos el comprobante por este medio una vez realizado el pago. ¡Muchas gracias!`;
+            const msg = `Hola *${client.name}*, te saludamos del equipo de *ElectroFrío*.\n\nTe escribimos para recordarte sobre el saldo pendiente de tu cuenta de *${formatCurrency(balance)}* ${detalleTrabajoStr}.\n\n*Datos para Transferencia Bancaria:*\n- *Banco:* BANCO NACION\n- *Alias:* ELECTROFRIOLR.BN\n- *Titular:* Arias Jorge, Victor Ignacio\n\nPor favor envíanos el comprobante por este medio una vez realizado el pago. ¡Muchas gracias!`;
 
             document.getElementById('wa-debt-message').value = msg;
             openModal('modal-whatsapp-debt');
