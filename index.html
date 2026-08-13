@@ -4082,8 +4082,11 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                                    <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                                    <td style="padding: 6px 4px;">
+                                        <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                                        <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                                    </td>
+                                    <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -7678,8 +7681,11 @@
             if (tbodyMo) {
                 tbodyMo.innerHTML = `
                     <tr>
-                        <td><input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                        <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                        <td style="padding: 6px 4px;">
+                            <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                            <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
                     </tr>
                 `;
             }
@@ -7801,8 +7807,11 @@
                 const tbody = document.getElementById('pdig-tablaManoObra').getElementsByTagName('tbody')[0];
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                    <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                    <td style="padding: 6px 4px;">
+                        <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                        <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -7887,14 +7896,19 @@
                     const moList = [];
                     moRows.forEach(row => {
                         const accInput = row.querySelector('.pdig-mo-accion');
+                        const zonaInput = row.querySelector('.pdig-mo-zona');
                         const cantInput = row.querySelector('.pdig-mo-cant');
                         const descInput = row.querySelector('.pdig-mo-desc');
                         if (accInput) {
                             const acc = accInput.value.trim();
+                            const zona = zonaInput ? zonaInput.value.trim() : '';
                             const cant = cantInput ? cantInput.value.trim() : '';
                             const desc = descInput ? descInput.value.trim() : '';
                             if (acc) {
                                 let itemStr = acc;
+                                if (zona) {
+                                    itemStr += ` (Zona: ${zona})`;
+                                }
                                 if (cant && cant !== '1') {
                                     itemStr += ` (x${cant})`;
                                 }
@@ -10521,16 +10535,29 @@
                 if (moList.length === 0) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                        <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                        <td style="padding: 6px 4px;">
+                            <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                            <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
                     `;
                     tbodyMo.appendChild(tr);
                 } else {
                     moList.forEach(item => {
+                        let accionVal = item;
+                        let zonaVal = '';
+                        const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Sector):\s*([^\]\)]+)[\)\]]/i);
+                        if (zonaMatch) {
+                            zonaVal = zonaMatch[1].trim();
+                            accionVal = item.replace(zonaMatch[0], '').trim();
+                        }
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td><input type="text" class="pdig-mo-accion" value="${item}" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                            <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                            <td style="padding: 6px 4px;">
+                                <input type="text" class="pdig-mo-accion" value="${accionVal.replace(/"/g, '&quot;')}" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                                <input type="text" class="pdig-mo-zona" value="${zonaVal.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                            </td>
+                            <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
                         `;
                         tbodyMo.appendChild(tr);
                     });
