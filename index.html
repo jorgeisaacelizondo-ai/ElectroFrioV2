@@ -1510,6 +1510,85 @@
             border: 1px solid var(--border-color);
         }
 
+        /* Selector de Tipo de Fichaje en Modal (Entrada Rojo / Salida Verde) */
+        .fichaje-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .fichaje-type-btn {
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            outline: none;
+        }
+
+        body.light-mode .fichaje-type-btn {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.15);
+            color: #64748b;
+        }
+
+        /* Hover states */
+        .fichaje-type-btn.btn-type-entrada:hover:not(.active) {
+            border-color: rgba(255, 59, 48, 0.7);
+            color: #ff5247;
+            background: rgba(255, 59, 48, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .fichaje-type-btn.btn-type-salida:hover:not(.active) {
+            border-color: rgba(76, 217, 100, 0.7);
+            color: #4cd964;
+            background: rgba(76, 217, 100, 0.12);
+            transform: translateY(-1px);
+        }
+
+        /* Active / Selected states */
+        .fichaje-type-btn.btn-type-entrada.active {
+            background: #ff3b30;
+            color: #ffffff;
+            border-color: #ff3b30;
+            box-shadow: 0 0 16px rgba(255, 59, 48, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .fichaje-type-btn.btn-type-salida.active {
+            background: #4cd964;
+            color: #0b1320;
+            border-color: #4cd964;
+            box-shadow: 0 0 16px rgba(76, 217, 100, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .fichaje-type-selector.has-error {
+            animation: fichajeShake 0.4s ease-in-out;
+        }
+
+        .fichaje-type-selector.has-error .fichaje-type-btn:not(.active) {
+            border-color: rgba(255, 59, 48, 0.7);
+            background: rgba(255, 59, 48, 0.08);
+        }
+
+        @keyframes fichajeShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
         /* ------------------ RESPONSIVIDAD MÓVIL (PANTALLAS CHICAS) ------------------ */
         .sidebar-backdrop {
             display: none;
@@ -3348,13 +3427,32 @@
                         <input type="time" id="fichaje-time" required
                             style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 6px;">
                     </div>
-                    <div class="input-group">
-                        <label for="fichaje-type">Tipo</label>
-                        <select id="fichaje-type" required
-                            style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 6px;">
-                            <option value="Entrada">Entrada</option>
-                            <option value="Salida">Salida</option>
-                        </select>
+                    <div class="input-group" id="fichajeTypeGroup">
+                        <label>Tipo <span style="color: var(--color-red);">*</span></label>
+                        <input type="hidden" id="fichaje-type" value="">
+                        <div class="fichaje-type-selector" id="fichajeTypeSelector">
+                            <button type="button" class="fichaje-type-btn btn-type-entrada" id="btnTypeEntrada" onclick="setFichajeType('Entrada')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                    <polyline points="10 17 15 12 10 7" />
+                                    <line x1="15" y1="12" x2="3" y2="12" />
+                                </svg>
+                                <span>Entrada</span>
+                            </button>
+                            <button type="button" class="fichaje-type-btn btn-type-salida" id="btnTypeSalida" onclick="setFichajeType('Salida')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" y1="12" x2="9" y2="12" />
+                                </svg>
+                                <span>Salida</span>
+                            </button>
+                        </div>
+                        <div id="fichajeTypeError" style="color: var(--color-red); font-size: 12px; margin-top: 6px; display: none; font-weight: 500;">
+                            ⚠ Debes seleccionar una opción (Entrada o Salida).
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="fichaje-gps-status">Ubicación (GPS)</label>
@@ -11623,6 +11721,38 @@
             }
         }
 
+        // Lógica del Selector de Tipo de Fichaje (Botones Entrada Rojo / Salida Verde)
+        window.setFichajeType = function (type) {
+            const input = document.getElementById('fichaje-type');
+            const btnEntrada = document.getElementById('btnTypeEntrada');
+            const btnSalida = document.getElementById('btnTypeSalida');
+            const errorEl = document.getElementById('fichajeTypeError');
+            const selectorEl = document.getElementById('fichajeTypeSelector');
+
+            if (input) input.value = type || '';
+
+            if (btnEntrada) {
+                if (type === 'Entrada') {
+                    btnEntrada.classList.add('active');
+                } else {
+                    btnEntrada.classList.remove('active');
+                }
+            }
+
+            if (btnSalida) {
+                if (type === 'Salida') {
+                    btnSalida.classList.add('active');
+                } else {
+                    btnSalida.classList.remove('active');
+                }
+            }
+
+            if (type) {
+                if (errorEl) errorEl.style.display = 'none';
+                if (selectorEl) selectorEl.classList.remove('has-error');
+            }
+        };
+
         if (btnOpenAddFichajeModal) {
             btnOpenAddFichajeModal.addEventListener('click', () => {
                 editFichajeId = null;
@@ -11644,7 +11774,13 @@
                 const minutes = String(now.getMinutes()).padStart(2, '0');
                 document.getElementById('fichaje-time').value = `${hours}:${minutes}`;
 
-                document.getElementById('fichaje-type').value = 'Entrada';
+                // Requerir selección explícita de Entrada o Salida
+                setFichajeType('');
+                const errorEl = document.getElementById('fichajeTypeError');
+                if (errorEl) errorEl.style.display = 'none';
+                const selectorEl = document.getElementById('fichajeTypeSelector');
+                if (selectorEl) selectorEl.classList.remove('has-error');
+
                 document.getElementById('fichaje-gps-status').value = 'manual';
 
                 modalFichaje.classList.add('show');
@@ -11655,6 +11791,11 @@
             btnCloseFichajeModal.addEventListener('click', () => {
                 modalFichaje.classList.remove('show');
                 formFichaje.reset();
+                setFichajeType('');
+                const errorEl = document.getElementById('fichajeTypeError');
+                if (errorEl) errorEl.style.display = 'none';
+                const selectorEl = document.getElementById('fichajeTypeSelector');
+                if (selectorEl) selectorEl.classList.remove('has-error');
                 editFichajeId = null;
             });
         }
@@ -11676,7 +11817,7 @@
                 // Cargar valores existentes
                 document.getElementById('fichaje-date').value = f.date;
                 document.getElementById('fichaje-time').value = formatTime12hTo24h(f.time);
-                document.getElementById('fichaje-type').value = f.type;
+                setFichajeType(f.type || 'Entrada');
 
                 const isVerified = f.gps && f.gps.verified;
                 document.getElementById('fichaje-gps-status').value = isVerified ? 'verified' : 'manual';
@@ -11705,8 +11846,22 @@
 
                 const dateVal = document.getElementById('fichaje-date').value;
                 const timeVal = document.getElementById('fichaje-time').value;
-                const typeVal = document.getElementById('fichaje-type').value;
+                const typeVal = document.getElementById('fichaje-type') ? document.getElementById('fichaje-type').value : '';
                 const gpsVal = document.getElementById('fichaje-gps-status').value;
+
+                // Validación obligatoria de tipo de fichaje
+                if (!typeVal) {
+                    const errorEl = document.getElementById('fichajeTypeError');
+                    const selectorEl = document.getElementById('fichajeTypeSelector');
+                    if (errorEl) errorEl.style.display = 'block';
+                    if (selectorEl) {
+                        selectorEl.classList.remove('has-error');
+                        void selectorEl.offsetWidth; // Forzar reflow para reiniciar animación
+                        selectorEl.classList.add('has-error');
+                    }
+                    alert("Por favor selecciona si el registro es de ENTRADA (Rojo) o SALIDA (Verde).");
+                    return;
+                }
 
                 // Formatear hora
                 const formattedTime = formatTime24hTo12h(timeVal);
