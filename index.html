@@ -1902,6 +1902,300 @@
             color: #95a5a6;
         }
 
+        /* --- Control de Asistencia del Día de Hoy (Admin) --- */
+        .today-attendance-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .today-attendance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, #00b4d8 0%, #0077b6 100%);
+        }
+
+        /* Botón para colapsar / expandir el control diario */
+        .btn-toggle-attendance {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-toggle-attendance:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--text-secondary);
+        }
+
+        .today-attendance-card.is-collapsed .today-card-body {
+            display: none !important;
+        }
+
+        .today-attendance-card.is-collapsed #iconToggleTodayAttendance {
+            transform: rotate(180deg);
+        }
+
+        /* Barra de selección de fecha y navegación */
+        .daily-date-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .daily-date-controls input[type="date"] {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            outline: none;
+        }
+
+        .btn-date-nav {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-date-nav:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-date-nav.btn-date-today {
+            background: rgba(0, 180, 216, 0.15);
+            color: #00b4d8;
+            border-color: rgba(0, 180, 216, 0.35);
+        }
+
+        .btn-date-nav.btn-date-today:hover {
+            background: rgba(0, 180, 216, 0.25);
+            color: #fff;
+        }
+
+        .today-kpi-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .today-kpi-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .today-kpi-chip.chip-missing-in {
+            background: rgba(231, 76, 60, 0.15);
+            color: #ff6b6b;
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .today-kpi-chip.chip-missing-out {
+            background: rgba(243, 156, 18, 0.15);
+            color: #f39c12;
+            border-color: rgba(243, 156, 18, 0.3);
+        }
+
+        .today-kpi-chip.chip-complete {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border-color: rgba(46, 204, 113, 0.3);
+        }
+
+        .today-kpi-chip.chip-total {
+            background: rgba(0, 180, 216, 0.12);
+            color: #00b4d8;
+            border-color: rgba(0, 180, 216, 0.25);
+        }
+
+        .today-filters-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .today-filter-pill {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .today-filter-pill:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .today-filter-pill.active {
+            background: rgba(0, 180, 216, 0.2);
+            color: #00b4d8;
+            border-color: #00b4d8;
+        }
+
+        .today-collab-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .today-collab-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0077b6, #00b4d8);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .today-badge-success {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .today-badge-missing-in {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.35);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .today-badge-missing-out {
+            background: rgba(243, 156, 18, 0.15);
+            color: #f39c12;
+            border: 1px solid rgba(243, 156, 18, 0.35);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .today-badge-none {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-quick-in {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-quick-in:hover {
+            background: #2ecc71;
+            color: #000;
+        }
+
+        .btn-quick-out {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-quick-out:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+
         /* Sistema de Notificaciones Toast (Posicionado al tope para móvil) */
         .toast-notification {
             position: fixed;
@@ -3019,8 +3313,100 @@
                         </div>
                     </div>
 
-                    <!-- VISTA DEL ADMINISTRADOR: FILTROS DE ASISTENCIA -->
+                    <!-- VISTA DEL ADMINISTRADOR: CONTROL DE ASISTENCIA DE HOY Y FILTROS -->
                     <div class="role-admin-only">
+                        <!-- 1. Tarjeta de Control Diario de Asistencia (Oculta/Colapsada por defecto) -->
+                        <div class="today-attendance-card is-collapsed" id="todayAttendanceCard">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                <div>
+                                    <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;" id="todayAttendanceTitle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b4d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        Control Diario de Asistencia
+                                    </h3>
+                                    <p style="color: var(--text-secondary); font-size: 13px; margin: 0;" id="todayAttendanceDateLabel">
+                                        Cargando fecha...
+                                    </p>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <div class="today-kpi-chips" id="todayAttendanceKpiChips">
+                                        <!-- Chips dinámicos calculados en JS -->
+                                    </div>
+                                    <button type="button" class="btn-toggle-attendance" id="btnToggleTodayAttendance" onclick="toggleTodayAttendanceCard()" title="Ocultar o mostrar la tabla">
+                                        <span id="labelToggleTodayAttendance">Mostrar Tabla</span>
+                                        <svg id="iconToggleTodayAttendance" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Cuerpo de la Tarjeta (Colapsable) -->
+                            <div id="todayAttendanceCardBody" class="today-card-body">
+                                <!-- Barra de Selección y Navegación de Fecha -->
+                                <div class="daily-date-controls">
+                                    <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                                        📅 Fecha a Consultar:
+                                    </span>
+                                    <input type="date" id="inputDailyAttendanceDate" onchange="changeDailyAttendanceDate(this.value)">
+                                    <button type="button" class="btn-date-nav" onclick="navDailyAttendanceDate(-1)" title="Día Anterior">
+                                        ◀ Anterior
+                                    </button>
+                                    <button type="button" class="btn-date-nav btn-date-today" onclick="navDailyAttendanceDate(0)" title="Ir a la fecha actual">
+                                        Hoy
+                                    </button>
+                                    <button type="button" class="btn-date-nav" onclick="navDailyAttendanceDate(1)" title="Día Siguiente">
+                                        Siguiente ▶
+                                    </button>
+                                </div>
+
+                                <!-- Filtros rápidos para la fecha seleccionada -->
+                                <div class="today-filters-bar">
+                                    <button type="button" class="today-filter-pill active" id="pillTodayAll" onclick="filterTodayAttendance('all')">
+                                        Todos (<span id="countTodayAll">0</span>)
+                                    </button>
+                                    <button type="button" class="today-filter-pill" id="pillTodayDidFichar" onclick="filterTodayAttendance('did_fichar')">
+                                        🟢 Sí Ficharon (<span id="countTodayDidFichar">0</span>)
+                                    </button>
+                                    <button type="button" class="today-filter-pill" id="pillTodayDidNotFichar" onclick="filterTodayAttendance('did_not_fichar')">
+                                        🔴 NO Ficharon (<span id="countTodayDidNotFichar">0</span>)
+                                    </button>
+                                    <button type="button" class="today-filter-pill" id="pillTodayMissingIn" onclick="filterTodayAttendance('missing_in')">
+                                        ⚠️ Falta Entrada (<span id="countTodayMissingIn">0</span>)
+                                    </button>
+                                    <button type="button" class="today-filter-pill" id="pillTodayMissingOut" onclick="filterTodayAttendance('missing_out')">
+                                        ⏳ Falta Salida (<span id="countTodayMissingOut">0</span>)
+                                    </button>
+                                    <button type="button" class="today-filter-pill" id="pillTodayComplete" onclick="filterTodayAttendance('complete')">
+                                        ✅ Jornada Completa (<span id="countTodayComplete">0</span>)
+                                    </button>
+                                </div>
+
+                                <!-- Tabla de Asistencia del Día -->
+                                <div class="table-responsive">
+                                    <table class="custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Colaborador</th>
+                                                <th>Entrada</th>
+                                                <th>Salida</th>
+                                                <th>Estado del Día</th>
+                                                <th style="text-align: right;">Acción Rápida</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="todayAttendanceTableBody">
+                                            <!-- Renderizado dinámico -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Filtros para el Registro General / Histórico -->
                         <div class="content-card" style="margin-bottom: 20px;">
                             <div class="fichajes-filters-card">
                                 <div class="filter-group">
@@ -6012,6 +6398,10 @@
             }
 
             // --- E. TABLA DE FICHAJES ---
+            if (role === 'Administrador' && activeModule === 'fichajes') {
+                renderTodayAttendanceControl();
+            }
+
             const fichajesTableBody = document.getElementById('fichajesTableBody');
             if (fichajesTableBody && activeModule === 'fichajes') {
                 fichajesTableBody.innerHTML = '';
@@ -6036,7 +6426,7 @@
                     });
                 }
 
-                document.getElementById('fichajesTitle').textContent = role === 'Colaborador' ? 'Último Fichaje Registrado' : 'Registro de Asistencia y Fichajes';
+                document.getElementById('fichajesTitle').textContent = role === 'Colaborador' ? 'Último Fichaje Registrado' : 'Historial de Asistencia y Fichajes';
 
                 if (fichajesToShow.length === 0) {
                     fichajesTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No hay fichajes registrados.</td></tr>`;
@@ -6186,6 +6576,392 @@
                     alert('Colaborador eliminado localmente.');
                 }
             }
+        }
+
+        // --- CONTROL DIARIO DE ASISTENCIA (ADMIN) ---
+        let todayAttendanceFilter = 'all';
+        let dailyAttendanceSelectedDate = '';
+
+        window.toggleTodayAttendanceCard = function () {
+            const card = document.getElementById('todayAttendanceCard');
+            const label = document.getElementById('labelToggleTodayAttendance');
+            if (!card) return;
+
+            const isCollapsed = card.classList.toggle('is-collapsed');
+            if (label) {
+                label.textContent = isCollapsed ? 'Mostrar Tabla' : 'Ocultar Tabla';
+            }
+            localStorage.setItem('electrofrio_daily_attendance_collapsed', isCollapsed ? 'true' : 'false');
+        };
+
+        window.changeDailyAttendanceDate = function (newDateVal) {
+            dailyAttendanceSelectedDate = newDateVal || getLocalISODate(getSyncedDate());
+            renderTodayAttendanceControl();
+        };
+
+        window.navDailyAttendanceDate = function (delta) {
+            const now = getSyncedDate();
+            const nowISO = getLocalISODate(now);
+
+            if (delta === 0) {
+                dailyAttendanceSelectedDate = nowISO;
+            } else {
+                const baseDateStr = dailyAttendanceSelectedDate || nowISO;
+                const [y, m, d] = baseDateStr.split('-').map(Number);
+                const dateObj = new Date(y, m - 1, d, 12, 0, 0);
+                dateObj.setDate(dateObj.getDate() + delta);
+                dailyAttendanceSelectedDate = getLocalISODate(dateObj);
+            }
+
+            const inputDate = document.getElementById('inputDailyAttendanceDate');
+            if (inputDate) {
+                inputDate.value = dailyAttendanceSelectedDate;
+            }
+
+            renderTodayAttendanceControl();
+        };
+
+        window.filterTodayAttendance = function (filterKey) {
+            todayAttendanceFilter = filterKey;
+
+            // Actualizar clases activas en los pills
+            const pills = document.querySelectorAll('.today-filter-pill');
+            pills.forEach(p => p.classList.remove('active'));
+
+            if (filterKey === 'all') document.getElementById('pillTodayAll')?.classList.add('active');
+            if (filterKey === 'did_fichar') document.getElementById('pillTodayDidFichar')?.classList.add('active');
+            if (filterKey === 'did_not_fichar') document.getElementById('pillTodayDidNotFichar')?.classList.add('active');
+            if (filterKey === 'missing_in') document.getElementById('pillTodayMissingIn')?.classList.add('active');
+            if (filterKey === 'missing_out') document.getElementById('pillTodayMissingOut')?.classList.add('active');
+            if (filterKey === 'complete') document.getElementById('pillTodayComplete')?.classList.add('active');
+
+            renderTodayAttendanceControl();
+        };
+
+        window.openModalFichajeForCollab = function (collabName, defaultType = 'Entrada', targetDate = null) {
+            editFichajeId = null;
+            const modalFichaje = document.getElementById('modalFichaje');
+            const formFichaje = document.getElementById('formFichaje');
+            if (!modalFichaje) return;
+
+            if (formFichaje) formFichaje.reset();
+
+            document.getElementById('modalFichajeHeaderText').textContent = "Registrar Fichaje Manual";
+            const submitBtn = document.querySelector('#modalFichaje button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = "Registrar Fichaje";
+
+            // Mostrar select de colaboradores y ocultar input de lectura
+            const groupSelect = document.getElementById('fichajeCollabGroup');
+            const groupRead = document.getElementById('fichajeCollabNameGroup');
+            const collabSelect = document.getElementById('fichaje-collab');
+            if (groupSelect) groupSelect.style.display = 'block';
+            if (groupRead) groupRead.style.display = 'none';
+            if (collabSelect) {
+                collabSelect.required = true;
+                populateFichajeCollabsDropdown();
+                if (collabName) {
+                    collabSelect.value = collabName;
+                }
+            }
+
+            // Autocompletar con fecha seleccionada o actual
+            const now = getSyncedDate();
+            const dateToSet = targetDate || dailyAttendanceSelectedDate || getLocalISODate(now);
+            const dateInput = document.getElementById('fichaje-date');
+            if (dateInput) dateInput.value = dateToSet;
+
+            const timeInput = document.getElementById('fichaje-time');
+            if (timeInput) {
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                timeInput.value = `${hours}:${minutes}`;
+            }
+
+            if (typeof setFichajeType === 'function') {
+                setFichajeType(defaultType || 'Entrada');
+            }
+            const errorEl = document.getElementById('fichajeTypeError');
+            if (errorEl) errorEl.style.display = 'none';
+            const selectorEl = document.getElementById('fichajeTypeSelector');
+            if (selectorEl) selectorEl.classList.remove('has-error');
+
+            const gpsStatus = document.getElementById('fichaje-gps-status');
+            if (gpsStatus) gpsStatus.value = 'manual';
+
+            modalFichaje.classList.add('show');
+        };
+
+        function renderTodayAttendanceControl() {
+            const tableBody = document.getElementById('todayAttendanceTableBody');
+            const dateLabel = document.getElementById('todayAttendanceDateLabel');
+            const titleEl = document.getElementById('todayAttendanceTitle');
+            const kpiChips = document.getElementById('todayAttendanceKpiChips');
+            const inputDate = document.getElementById('inputDailyAttendanceDate');
+            const card = document.getElementById('todayAttendanceCard');
+            const labelToggle = document.getElementById('labelToggleTodayAttendance');
+            if (!tableBody) return;
+
+            // Iniciar siempre oculta/colapsada por defecto
+            if (card && !card.dataset.initCollapsed) {
+                card.dataset.initCollapsed = 'true';
+                card.classList.add('is-collapsed');
+                if (labelToggle) labelToggle.textContent = 'Mostrar Tabla';
+            }
+
+            const now = getSyncedDate();
+            const nowISO = getLocalISODate(now);
+
+            if (!dailyAttendanceSelectedDate) {
+                dailyAttendanceSelectedDate = nowISO;
+            }
+
+            const selectedISO = dailyAttendanceSelectedDate;
+            if (inputDate && inputDate.value !== selectedISO) {
+                inputDate.value = selectedISO;
+            }
+
+            const [sY, sM, sD] = selectedISO.split('-');
+            const selectedAR_full = `${sD}/${sM}/${sY}`;
+            const selectedAR_short = `${parseInt(sD, 10)}/${parseInt(sM, 10)}/${sY}`;
+            const isToday = selectedISO === nowISO;
+
+            if (dateLabel) {
+                try {
+                    const parsedDate = new Date(parseInt(sY, 10), parseInt(sM, 10) - 1, parseInt(sD, 10), 12, 0, 0);
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const formattedDate = parsedDate.toLocaleDateString('es-AR', options);
+                    const capDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+                    dateLabel.textContent = isToday ? `Hoy - ${capDate}` : `${capDate} (Histórico Diario)`;
+                } catch (e) {
+                    dateLabel.textContent = isToday ? `Hoy - ${selectedAR_full}` : `${selectedAR_full} (Histórico Diario)`;
+                }
+            }
+
+            // Helper para identificar fichajes de la fecha seleccionada
+            const isFichajeDateSelected = (fDate, fTimestamp) => {
+                if (!fDate && !fTimestamp) return false;
+                if (isToday && fDate === 'Hoy') return true;
+                if (fDate === selectedISO || fDate === selectedAR_full || fDate === selectedAR_short) return true;
+                if (fDate && formatDateToShort(fDate) === formatDateToShort(selectedISO)) return true;
+                if (fTimestamp) {
+                    try {
+                        const tDate = new Date(fTimestamp);
+                        if (!isNaN(tDate.getTime())) {
+                            const tISO = getLocalISODate(tDate);
+                            if (tISO === selectedISO) return true;
+                        }
+                    } catch (e) {}
+                }
+                return false;
+            };
+
+            // Filtrar colaboradores que deben fichar (role === 'Colaborador' o colaboradores registrados)
+            let targetCollabs = colaboradores.filter(c => c.role === 'Colaborador');
+            if (targetCollabs.length === 0) {
+                targetCollabs = colaboradores;
+            }
+
+            let countDidFichar = 0;
+            let countDidNotFichar = 0;
+            let countMissingIn = 0;
+            let countMissingOut = 0;
+            let countComplete = 0;
+
+            const analyzedList = targetCollabs.map(collab => {
+                const myFichajesOnDate = fichajes.filter(f => {
+                    const nameMatch = (f.name && f.name.trim().toLowerCase() === (collab.name || '').trim().toLowerCase()) ||
+                                      (f.username && collab.username && f.username.trim().toLowerCase() === collab.username.trim().toLowerCase());
+                    return nameMatch && isFichajeDateSelected(f.date, f.timestamp);
+                });
+
+                // Ordenar por hora / timestamp cronológicamente
+                myFichajesOnDate.sort((a, b) => {
+                    const tsA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                    const tsB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                    if (tsA !== tsB) return tsA - tsB;
+                    return (a.time || '').localeCompare(b.time || '');
+                });
+
+                const entradas = myFichajesOnDate.filter(f => f.type === 'Entrada');
+                const salidas = myFichajesOnDate.filter(f => f.type === 'Salida');
+
+                const didFichar = myFichajesOnDate.length > 0;
+                const hasEntrada = entradas.length > 0;
+                const hasSalida = salidas.length > 0;
+                const firstEntrada = hasEntrada ? entradas[0] : null;
+                const lastSalida = hasSalida ? salidas[salidas.length - 1] : null;
+                const latestFichaje = didFichar ? myFichajesOnDate[myFichajesOnDate.length - 1] : null;
+
+                let category = ''; // 'did_not_fichar', 'missing_out', 'missing_in', 'complete'
+                let statusBadge = '';
+                let quickActionHtml = '';
+                const safeName = (collab.name || '').replace(/'/g, "\\'");
+
+                if (!didFichar) {
+                    // No fichó en todo el día
+                    category = 'did_not_fichar';
+                    countDidNotFichar++;
+                    countMissingIn++;
+                    statusBadge = `<span class="today-badge-missing-in">🔴 NO Fichó (Ausente)</span>`;
+                    quickActionHtml = `<button class="btn-quick-in" onclick="openModalFichajeForCollab('${safeName}', 'Entrada', '${selectedISO}')">+ Fichar Entrada</button>`;
+                } else {
+                    countDidFichar++;
+
+                    if (hasEntrada && !hasSalida) {
+                        // Fichó entrada pero falta salida
+                        category = 'missing_out';
+                        countMissingOut++;
+                        statusBadge = `<span class="today-badge-missing-out">🟡 En Turno (Falta Salida)</span>`;
+                        quickActionHtml = `<button class="btn-quick-out" onclick="openModalFichajeForCollab('${safeName}', 'Salida', '${selectedISO}')">+ Fichar Salida</button>`;
+                    } else if (!hasEntrada && hasSalida) {
+                        // Salida sin entrada registrada
+                        category = 'missing_in';
+                        countMissingIn++;
+                        statusBadge = `<span class="today-badge-missing-in">🟠 Falta Entrada</span>`;
+                        quickActionHtml = `<button class="btn-quick-in" onclick="openModalFichajeForCollab('${safeName}', 'Entrada', '${selectedISO}')">+ Fichar Entrada</button>`;
+                    } else {
+                        // Tiene entrada y salida
+                        if (latestFichaje && latestFichaje.type === 'Entrada') {
+                            // Reingresó y falta salida
+                            category = 'missing_out';
+                            countMissingOut++;
+                            statusBadge = `<span class="today-badge-missing-out">🟡 En Turno (Falta Salida)</span>`;
+                            quickActionHtml = `<button class="btn-quick-out" onclick="openModalFichajeForCollab('${safeName}', 'Salida', '${selectedISO}')">+ Fichar Salida</button>`;
+                        } else {
+                            // Jornada completa
+                            category = 'complete';
+                            countComplete++;
+                            statusBadge = `<span class="today-badge-success">🟢 Jornada Completa</span>`;
+                            quickActionHtml = `<button class="btn-editar-fichaje" style="font-size:11px; padding:4px 8px;" onclick="openModalFichajeForCollab('${safeName}', 'Salida', '${selectedISO}')">+ Fichaje</button>`;
+                        }
+                    }
+                }
+
+                return {
+                    collab,
+                    didFichar,
+                    hasEntrada,
+                    hasSalida,
+                    firstEntrada,
+                    lastSalida,
+                    latestFichaje,
+                    category,
+                    statusBadge,
+                    quickActionHtml
+                };
+            });
+
+            // Actualizar contadores en la interfaz
+            const countAllEl = document.getElementById('countTodayAll');
+            const countDidFicharEl = document.getElementById('countTodayDidFichar');
+            const countDidNotFicharEl = document.getElementById('countTodayDidNotFichar');
+            const countMissingInEl = document.getElementById('countTodayMissingIn');
+            const countMissingOutEl = document.getElementById('countTodayMissingOut');
+            const countCompleteEl = document.getElementById('countTodayComplete');
+
+            if (countAllEl) countAllEl.textContent = targetCollabs.length;
+            if (countDidFicharEl) countDidFicharEl.textContent = countDidFichar;
+            if (countDidNotFicharEl) countDidNotFicharEl.textContent = countDidNotFichar;
+            if (countMissingInEl) countMissingInEl.textContent = countMissingIn;
+            if (countMissingOutEl) countMissingOutEl.textContent = countMissingOut;
+            if (countCompleteEl) countCompleteEl.textContent = countComplete;
+
+            if (kpiChips) {
+                kpiChips.innerHTML = `
+                    <div class="today-kpi-chip chip-total" title="Total de colaboradores">
+                        <span>👥 Total:</span> <strong>${targetCollabs.length}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-complete" title="Colaboradores que registraron al menos un fichaje">
+                        <span>🟢 Ficharon:</span> <strong>${countDidFichar}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-missing-in" title="Colaboradores sin ningún fichaje en este día">
+                        <span>🔴 Sin Fichar:</span> <strong>${countDidNotFichar}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-missing-out" title="Colaboradores con entrada pero sin salida">
+                        <span>🟡 Falta Salida:</span> <strong>${countMissingOut}</strong>
+                    </div>
+                `;
+            }
+
+            // Filtrar lista según el filtro activo
+            let filteredList = analyzedList;
+            if (todayAttendanceFilter === 'did_fichar') {
+                filteredList = analyzedList.filter(item => item.didFichar);
+            } else if (todayAttendanceFilter === 'did_not_fichar') {
+                filteredList = analyzedList.filter(item => !item.didFichar);
+            } else if (todayAttendanceFilter === 'missing_in') {
+                filteredList = analyzedList.filter(item => !item.hasEntrada);
+            } else if (todayAttendanceFilter === 'missing_out') {
+                filteredList = analyzedList.filter(item => item.hasEntrada && (!item.hasSalida || item.latestFichaje?.type === 'Entrada'));
+            } else if (todayAttendanceFilter === 'complete') {
+                filteredList = analyzedList.filter(item => item.category === 'complete');
+            }
+
+            tableBody.innerHTML = '';
+
+            if (filteredList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No hay colaboradores en este filtro para la fecha seleccionada.</td></tr>`;
+                return;
+            }
+
+            filteredList.forEach(item => {
+                const tr = document.createElement('tr');
+                const initials = (item.collab.name || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                // Colaborador TD
+                const collabTd = `
+                    <td>
+                        <div class="today-collab-info">
+                            <div class="today-collab-avatar">${initials}</div>
+                            <div>
+                                <strong style="color:var(--text-primary); font-size:13px;">${item.collab.name}</strong>
+                                ${item.collab.username ? `<div style="color:var(--text-muted); font-size:11px;">@${item.collab.username}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                // Entrada TD
+                let entradaTd = '';
+                if (item.firstEntrada) {
+                    const gpsIcon = (item.firstEntrada.gps && item.firstEntrada.gps.verified) ? '📍' : '📌';
+                    entradaTd = `
+                        <td>
+                            <span class="today-badge-success" title="Registrado: ${item.firstEntrada.time} (${gpsIcon === '📍' ? 'GPS Verificado' : 'Manual'})">
+                                ${gpsIcon} ${item.firstEntrada.time}
+                            </span>
+                        </td>
+                    `;
+                } else {
+                    entradaTd = `<td><span class="today-badge-missing-in">⚠️ Falta Entrada</span></td>`;
+                }
+
+                // Salida TD
+                let salidaTd = '';
+                if (item.lastSalida) {
+                    const gpsIcon = (item.lastSalida.gps && item.lastSalida.gps.verified) ? '📍' : '📌';
+                    salidaTd = `
+                        <td>
+                            <span class="today-badge-success" title="Registrado: ${item.lastSalida.time} (${gpsIcon === '📍' ? 'GPS Verificado' : 'Manual'})">
+                                ${gpsIcon} ${item.lastSalida.time}
+                            </span>
+                        </td>
+                    `;
+                } else if (item.hasEntrada) {
+                    salidaTd = `<td><span class="today-badge-missing-out">⏳ Falta Salida</span></td>`;
+                } else {
+                    salidaTd = `<td><span class="today-badge-none">❌ Sin Fichar</span></td>`;
+                }
+
+                // Estado TD
+                const statusTd = `<td>${item.statusBadge}</td>`;
+
+                // Acción Rápida TD
+                const actionTd = `<td style="text-align: right;">${item.quickActionHtml}</td>`;
+
+                tr.innerHTML = `${collabTd}${entradaTd}${salidaTd}${statusTd}${actionTd}`;
+                tableBody.appendChild(tr);
+            });
         }
 
         // Renderizar lista de filtros de colaboradores en Fichajes (Admin)
