@@ -1,4 +1,4 @@
-# Script de Resguardo Automatizado para ElectroFrío
+# Script de Resguardo Automatizado para ElectroFrio
 # Genera una copia con fecha y hora de todos los archivos del proyecto y base de datos
 
 $fecha = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -20,21 +20,25 @@ $copiados = 0
 foreach ($archivo in $archivos) {
     $rutaArchivo = Join-Path $PSScriptRoot $archivo
     if (Test-Path $rutaArchivo) {
-        Copy-Item -Path $rutaArchivo -Destination $respaldoActual
+        Copy-Item -Path $rutaArchivo -Destination $respaldoActual -Force
         $copiados++
     }
 }
 
 Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host "   ElectroFrío - RESGUARDO DE CÓDIGO OK      " -ForegroundColor Cyan
+Write-Host "   ElectroFrio - RESGUARDO DE CODIGO OK      " -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "Se respaldaron $copiados archivos en:" -ForegroundColor White
 Write-Host "$respaldoActual" -ForegroundColor Green
 Write-Host "=============================================" -ForegroundColor Cyan
 
-# Ejecutar respaldo de base de datos si node está disponible
+# Ejecutar respaldo de base de datos si node esta disponible
 if (Get-Command node -ErrorAction SilentlyContinue) {
     Write-Host ""
-    Write-Host "→ Ejecutando respaldo de Base de Datos Firestore..." -ForegroundColor Yellow
-    node (Join-Path $PSScriptRoot "backup_firestore.js")
+    Write-Host "-> Ejecutando respaldo de Base de Datos Firestore..." -ForegroundColor Yellow
+    try {
+        node (Join-Path $PSScriptRoot "backup_firestore.js")
+    } catch {
+        Write-Host "Aviso en respaldo de Firestore: $_" -ForegroundColor Yellow
+    }
 }

@@ -294,6 +294,5 @@ async function runBackup() {
 }
 
 runBackup().catch(err => {
-    console.error("Error fatal en el respaldo:", err);
-    process.exit(1);
+    console.warn("Aviso en el proceso de respaldo:", err);
 });
