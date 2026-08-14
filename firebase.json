@@ -10,6 +10,13 @@
         "firebase.json",
         "**/.*",
         "**/node_modules/**",
+        "**/.venv/**",
+        "**/*.ps1",
+        "**/*.bat",
+        "**/*.cmd",
+        "**/*.sh",
+        "**/*.exe",
+        "**/*.py",
         "historial.csv",
         "historial_parsed.json",
         "backups/**",
@@ -18,7 +25,9 @@
         "reverted_backup/**",
         "package.json",
         "package-lock.json",
-        "respaldar.ps1"
+        "backup_firestore.js",
+        "backup_credentials.json",
+        "serviceAccountKey.json"
       ],
       "headers": [
         {
