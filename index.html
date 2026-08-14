@@ -2391,6 +2391,27 @@
                 </div>
             </header>
 
+            <!-- BANNER RECORDATORIO BACKUP SEMANAL -->
+            <div id="bannerAlertaBackupSemanal" style="display: none; background: linear-gradient(90deg, #16243d 0%, #1e3656 100%); border-bottom: 2px solid var(--color-blue); padding: 12px 24px; justify-content: space-between; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.35);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 22px;">🛡️</span>
+                    <div>
+                        <span style="font-size: 13px; font-weight: 700; color: #ffffff;">Copia de Seguridad Semanal:</span>
+                        <span id="bannerAlertaBackupTexto" style="font-size: 13px; color: var(--text-secondary); margin-left: 6px;">Han pasado más de 7 días desde tu última copia de seguridad.</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                    <button type="button" onclick="exportarBackupCompleto()" style="padding: 7px 16px; background: var(--color-blue); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,191,255,0.3);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Descargar Backup Ahora
+                    </button>
+                    <button type="button" onclick="posponerAlertaBackup()" title="Recordar mañana" style="padding: 7px 12px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; font-size: 12px; cursor: pointer;">
+                        Posponer
+                    </button>
+                    <button type="button" onclick="document.getElementById('bannerAlertaBackupSemanal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 0 6px; line-height: 1;">&times;</button>
+                </div>
+            </div>
+
             <!-- Área de contenido dinámico -->
             <div class="content-area" id="contentArea">
 
@@ -3272,6 +3293,101 @@
 
                             <button type="submit" class="save-btn" style="width: auto; padding: 10px 24px; background-color: var(--color-blue); color: #000; font-weight: 700;">Guardar Cambios</button>
                         </form>
+                    </div>
+
+                    <!-- Centro de Resguardo y Copias de Seguridad (Backup) -->
+                    <div class="content-card" style="margin-top: 20px;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: var(--color-blue); display: flex; align-items: center; gap: 8px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Copias de Seguridad y Resguardo de Datos (Backup)
+                                </h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;">
+                                    Protege toda la información de clientes, órdenes, planillas PDT, presupuestos, materiales, cobros, tareas y fichajes.
+                                </p>
+                            </div>
+                            <div id="backup-status-badge" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(0, 191, 255, 0.1); color: var(--color-blue); border: 1px solid rgba(0, 191, 255, 0.3);">
+                                🔄 Consultando estado...
+                            </div>
+                        </div>
+
+                        <div style="padding: 15px 0;">
+                            <!-- Panel de Estadísticas y Fechas de Resguardo -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                                <div style="background: var(--bg-input); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Último Resguardo</div>
+                                    <div id="lblUltimoBackup" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 5px;">Consultando...</div>
+                                    <div id="lblTiempoTranscurridoBackup" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Calculando...</div>
+                                </div>
+                                <div style="background: var(--bg-input); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Frecuencia Recomendada</div>
+                                    <div style="font-size: 15px; font-weight: 700; color: var(--color-green); margin-top: 5px;">Semanal (Cada 7 días)</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Alerta automática de seguridad</div>
+                                </div>
+                                <div style="background: var(--bg-input); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Colecciones Respaldadas</div>
+                                    <div style="font-size: 15px; font-weight: 700; color: var(--color-blue); margin-top: 5px;">13 Colecciones</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Base de datos completa</div>
+                                </div>
+                            </div>
+
+                            <!-- Botones de Acción -->
+                            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                                <button type="button" class="save-btn" id="btnDescargarBackup" onclick="exportarBackupCompleto()"
+                                    style="width: auto; padding: 12px 24px; background-color: var(--color-blue); color: #000; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; cursor: pointer; border: none; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,191,255,0.25);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Descargar Backup Completo Ahora (.JSON)
+                                </button>
+
+                                <button type="button" class="save-btn" id="btnAbrirModalRestaurar" onclick="abrirModalRestaurarBackup()"
+                                    style="width: auto; padding: 12px 20px; background-color: transparent; border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; cursor: pointer; transition: var(--transition-smooth);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Restaurar Datos desde Archivo JSON
+                                </button>
+                            </div>
+
+                            <!-- Opciones y Configuración de Resguardo Automático -->
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.15); border-radius: 10px; border: 1px dashed var(--border-color);">
+                                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                                    ⚙️ Preferencias de Automatización Semanal
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-primary); cursor: pointer;">
+                                        <input type="checkbox" id="chkRecordatorioBackup" checked onchange="guardarPreferenciaRecordatorio(this.checked)" style="accent-color: var(--color-blue); width: 16px; height: 16px;">
+                                        Mostrar aviso / alerta en pantalla cuando pasen más de 7 días sin hacer un backup
+                                    </label>
+                                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-primary); cursor: pointer;">
+                                        <input type="checkbox" id="chkAutoBackupWeekly" onchange="guardarPreferenciaBackupAuto(this.checked)" style="accent-color: var(--color-blue); width: 16px; height: 16px;">
+                                        Descargar automáticamente el archivo de backup al iniciar sesión si pasaron más de 7 días
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Progreso y Logs -->
+                            <div id="backup-progress-container" style="margin-top: 15px; display: none;">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                                    <span id="backup-progress-label" style="color: var(--text-secondary); font-weight: 600;">Exportando colecciones...</span>
+                                    <span id="backup-progress-pct" style="color: var(--color-blue); font-weight: 700;">0%</span>
+                                </div>
+                                <div style="width: 100%; height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
+                                    <div id="backup-progress-bar" style="width: 0%; height: 100%; background: var(--color-blue); transition: width 0.3s ease;"></div>
+                                </div>
+                                <div id="backup-log-details" style="margin-top: 8px; font-size: 11px; color: var(--text-muted); font-family: monospace;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="content-card" style="margin-top: 20px;">
@@ -4213,6 +4329,60 @@
         </div>
     </div>
 
+    <!-- MODAL RESTAURAR BACKUP -->
+    <div id="modalRestaurarBackup" class="modal-overlay">
+        <div class="modal-content" style="max-width: 650px; width: 95%; background-color: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                <h3 class="modal-title" style="margin: 0; font-size: 18px; color: var(--color-yellow); display: flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Restaurar Base de Datos desde Resguardo
+                </h3>
+                <button type="button" class="close-btn" onclick="cerrarModalRestaurarBackup()" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding-top: 15px;">
+                <p style="font-size: 13px; color: var(--text-primary); margin-bottom: 12px;">
+                    Seleccione un archivo de respaldo previo (<code>.json</code>) generado por el sistema para restaurar los documentos en Firestore.
+                </p>
+                <div style="background: rgba(255, 59, 48, 0.1); border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <p style="font-size: 12px; color: #ff6b6b; margin: 0; font-weight: 500;">
+                        ⚠️ <strong>Atención:</strong> La restauración creará y actualizará los documentos existentes en Firestore con la información contenida en el archivo de backup seleccionado.
+                    </p>
+                </div>
+
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="inputBackupFile" style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Seleccionar archivo JSON de backup:</label>
+                    <input type="file" id="inputBackupFile" accept=".json" onchange="analizarArchivoBackup(event)" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">
+                </div>
+
+                <div id="restore-file-preview" style="display: none; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <h5 style="margin: 0 0 8px 0; color: var(--color-blue); font-size: 13px;">Resumen del Respaldo:</h5>
+                    <div style="font-size: 12px; color: var(--text-primary); display: grid; grid-template-columns: 1fr 1fr; gap: 6px;" id="restore-stats-grid"></div>
+                </div>
+
+                <div id="restore-progress-container" style="display: none; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                        <span id="restore-progress-label" style="color: var(--text-secondary);">Restaurando...</span>
+                        <span id="restore-progress-pct" style="color: var(--color-blue); font-weight: 700;">0%</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div id="restore-progress-bar" style="width: 0%; height: 100%; background: var(--color-green); transition: width 0.2s ease;"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <button type="button" class="save-btn" onclick="cerrarModalRestaurarBackup()" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); margin: 0; width: auto; padding: 8px 16px;">Cancelar</button>
+                    <button type="button" id="btnEjecutarRestauracion" onclick="ejecutarRestauracionConfirmada()" disabled style="background-color: var(--color-green); color: #000; font-weight: 700; margin: 0; width: auto; padding: 8px 20px; border: none; border-radius: 8px; cursor: not-allowed; opacity: 0.5;">
+                        Iniciar Restauración
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Contenedor Toast Global -->
     <div id="toastNotification" class="toast-notification"></div>
 
@@ -4638,6 +4808,14 @@
                         showApp();
                         const lastModule = localStorage.getItem('electrofrio_active_module') || 'dashboard';
                         switchTab(lastModule);
+
+                        if (userData.role === 'Administrador') {
+                            setTimeout(() => {
+                                if (typeof verificarAlertaBackupSemanal === 'function') {
+                                    verificarAlertaBackupSemanal();
+                                }
+                            }, 2500);
+                        }
                     }
                 } catch (error) {
                     console.error("Error al obtener datos del usuario desde Firestore:", error);
@@ -9759,6 +9937,466 @@
             }
         };
 
+        // ==========================================
+        // 3.6 SISTEMA DE COPIAS DE SEGURIDAD Y BACKUP
+        // ==========================================
+
+        const BACKUP_COLLECTIONS = [
+            'clientes',
+            'ordenes',
+            'ordenesTrabajo',
+            'planillas',
+            'planillasDigitales',
+            'presupuestos',
+            'materiales',
+            'mano_obra',
+            'cobros_movimientos',
+            'tareas',
+            'fichajes',
+            'usuarios',
+            'configuracion'
+        ];
+
+        // 1. Exportar Backup Completo en Formato JSON
+        window.exportarBackupCompleto = async function () {
+            const btn = document.getElementById('btnDescargarBackup');
+            const progressContainer = document.getElementById('backup-progress-container');
+            const progressLabel = document.getElementById('backup-progress-label');
+            const progressPct = document.getElementById('backup-progress-pct');
+            const progressBar = document.getElementById('backup-progress-bar');
+            const logDetails = document.getElementById('backup-log-details');
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                    btn.innerHTML = `⏱️ Exportando base de datos...`;
+                }
+                if (progressContainer) progressContainer.style.display = 'block';
+                if (progressBar) progressBar.style.width = '5%';
+                if (progressPct) progressPct.textContent = '5%';
+                if (progressLabel) progressLabel.textContent = 'Conectando con Firestore...';
+                if (logDetails) logDetails.textContent = 'Iniciando lectura de colecciones...';
+
+                const backupData = {
+                    metadata: {
+                        version: "2.0",
+                        system: "ElectroFrío Refrigeración",
+                        generatedAt: new Date().toISOString(),
+                        timestamp: Date.now(),
+                        exportedBy: localStorage.getItem('electrofrio_name') || localStorage.getItem('electrofrio_user') || 'Admin'
+                    },
+                    collections: {},
+                    totalDocuments: 0,
+                    stats: {}
+                };
+
+                let completedCols = 0;
+                const totalCols = BACKUP_COLLECTIONS.length;
+
+                for (const colName of BACKUP_COLLECTIONS) {
+                    if (progressLabel) progressLabel.textContent = `Descargando colección: ${colName}...`;
+                    
+                    try {
+                        const snapshot = await db.collection(colName).get();
+                        backupData.collections[colName] = {};
+                        let count = 0;
+
+                        snapshot.forEach(doc => {
+                            backupData.collections[colName][doc.id] = doc.data();
+                            count++;
+                        });
+
+                        backupData.stats[colName] = count;
+                        backupData.totalDocuments += count;
+
+                        if (logDetails) {
+                            logDetails.textContent = `✓ ${colName}: ${count} documentos respaldados`;
+                        }
+                    } catch (colErr) {
+                        console.warn(`Aviso al respaldar colección ${colName}:`, colErr);
+                        backupData.stats[colName] = `Error: ${colErr.message}`;
+                    }
+
+                    completedCols++;
+                    const pct = Math.round((completedCols / totalCols) * 95);
+                    if (progressBar) progressBar.style.width = `${pct}%`;
+                    if (progressPct) progressPct.textContent = `${pct}%`;
+                }
+
+                if (progressLabel) progressLabel.textContent = 'Generando archivo de descarga...';
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressPct) progressPct.textContent = '100%';
+
+                // Crear archivo JSON y disparar descarga
+                const jsonStr = JSON.stringify(backupData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const fechaStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup_electrofrio_${fechaStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // Guardar registro de último backup
+                const nowTs = Date.now();
+                localStorage.setItem('electrofrio_last_backup_time', nowTs.toString());
+                localStorage.setItem('electrofrio_last_backup_count', backupData.totalDocuments.toString());
+
+                // Guardar en Firestore para control centralizado
+                try {
+                    await db.collection('configuracion').doc('backup_meta').set({
+                        lastBackupTime: nowTs,
+                        lastBackupIso: new Date().toISOString(),
+                        lastBackupUser: backupData.metadata.exportedBy,
+                        totalDocuments: backupData.totalDocuments,
+                        stats: backupData.stats
+                    }, { merge: true });
+                } catch (e) {
+                    console.warn("No se pudo guardar backup_meta en Firestore:", e);
+                }
+
+                actualizarEstadoUIBackup();
+
+                // Ocultar banner de alerta si estaba visible
+                const banner = document.getElementById('bannerAlertaBackupSemanal');
+                if (banner) banner.style.display = 'none';
+
+                showToast(`🎉 ¡Backup completado! ${backupData.totalDocuments} documentos descargados exitosamente.`, 'success');
+                if (logDetails) logDetails.textContent = `¡Resguardo finalizado! ${backupData.totalDocuments} documentos guardados en su dispositivo.`;
+
+            } catch (err) {
+                console.error("Error al exportar backup:", err);
+                showToast("Error al generar backup: " + err.message, "error");
+                if (logDetails) logDetails.textContent = `Error: ${err.message}`;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar Backup Completo Ahora (.JSON)`;
+                }
+            }
+        };
+
+        // 2. Actualizar Estado Visual del Backup en Configuración
+        window.actualizarEstadoUIBackup = async function () {
+            const lblFecha = document.getElementById('lblUltimoBackup');
+            const lblTranscurrido = document.getElementById('lblTiempoTranscurridoBackup');
+            const badge = document.getElementById('backup-status-badge');
+            if (!lblFecha || !badge) return;
+
+            let lastTs = parseInt(localStorage.getItem('electrofrio_last_backup_time') || '0', 10);
+
+            // Consultar también Firestore por si se hizo backup desde otra PC
+            try {
+                const doc = await db.collection('configuracion').doc('backup_meta').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.lastBackupTime && data.lastBackupTime > lastTs) {
+                        lastTs = data.lastBackupTime;
+                        localStorage.setItem('electrofrio_last_backup_time', lastTs.toString());
+                    }
+                }
+            } catch (e) {
+                // ignorar
+            }
+
+            if (!lastTs || lastTs === 0) {
+                lblFecha.textContent = 'Sin resguardo previo';
+                lblFecha.style.color = 'var(--color-red)';
+                if (lblTranscurrido) lblTranscurrido.textContent = '⚠️ Nunca se ha realizado un backup';
+                badge.style.background = 'rgba(255, 59, 48, 0.15)';
+                badge.style.color = 'var(--color-red)';
+                badge.style.borderColor = 'rgba(255, 59, 48, 0.4)';
+                badge.textContent = '⚠️ Resguardo Requerido';
+                return;
+            }
+
+            const diffMs = Date.now() - lastTs;
+            const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHoras = Math.floor(diffMs / (1000 * 60 * 60));
+            const dateObj = new Date(lastTs);
+            const fechaFormateada = dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+            lblFecha.textContent = fechaFormateada;
+            lblFecha.style.color = 'var(--text-primary)';
+
+            if (diffDias >= 7) {
+                if (lblTranscurrido) lblTranscurrido.textContent = `⚠️ Hace ${diffDias} días (Vencido)`;
+                badge.style.background = 'rgba(255, 59, 48, 0.15)';
+                badge.style.color = 'var(--color-red)';
+                badge.style.borderColor = 'rgba(255, 59, 48, 0.4)';
+                badge.textContent = `⚠️ Vencido (Hace ${diffDias}d)`;
+            } else if (diffDias >= 4) {
+                if (lblTranscurrido) lblTranscurrido.textContent = `Hace ${diffDias} días`;
+                badge.style.background = 'rgba(247, 208, 2, 0.15)';
+                badge.style.color = 'var(--color-yellow)';
+                badge.style.borderColor = 'rgba(247, 208, 2, 0.4)';
+                badge.textContent = `🟡 Al día (Hace ${diffDias}d)`;
+            } else {
+                const txt = diffDias === 0 ? (diffHoras === 0 ? 'Hace menos de 1h' : `Hace ${diffHoras} horas`) : `Hace ${diffDias} día${diffDias > 1 ? 's' : ''}`;
+                if (lblTranscurrido) lblTranscurrido.textContent = `✓ ${txt} (Protegido)`;
+                badge.style.background = 'rgba(76, 217, 100, 0.15)';
+                badge.style.color = 'var(--color-green)';
+                badge.style.borderColor = 'rgba(76, 217, 100, 0.4)';
+                badge.textContent = '🛡️ Base de Datos Protegida';
+            }
+
+            // Cargar estado de los checkboxes
+            const chkAuto = document.getElementById('chkAutoBackupWeekly');
+            if (chkAuto) chkAuto.checked = localStorage.getItem('electrofrio_pref_auto_backup') === 'true';
+            const chkRecordatorio = document.getElementById('chkRecordatorioBackup');
+            if (chkRecordatorio) chkRecordatorio.checked = localStorage.getItem('electrofrio_pref_recordatorio_backup') !== 'false';
+        };
+
+        // 3. Verificación de Alerta Semanal al Iniciar Sesión
+        window.verificarAlertaBackupSemanal = async function () {
+            const role = localStorage.getItem('electrofrio_role');
+            if (role !== 'Administrador') return;
+
+            const recordatorioActivo = localStorage.getItem('electrofrio_pref_recordatorio_backup') !== 'false';
+            if (!recordatorioActivo) return;
+
+            // Verificar si fue pospuesto hoy
+            const snoozeUntil = parseInt(localStorage.getItem('electrofrio_backup_snooze_until') || '0', 10);
+            if (Date.now() < snoozeUntil) return;
+
+            let lastTs = parseInt(localStorage.getItem('electrofrio_last_backup_time') || '0', 10);
+
+            try {
+                const doc = await db.collection('configuracion').doc('backup_meta').get();
+                if (doc.exists && doc.data().lastBackupTime) {
+                    lastTs = Math.max(lastTs, doc.data().lastBackupTime);
+                }
+            } catch (e) { }
+
+            const diffMs = Date.now() - lastTs;
+            const diffDias = lastTs === 0 ? 999 : Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffDias >= 7) {
+                // Si tiene activa la auto-descarga semanal automática
+                const autoDownload = localStorage.getItem('electrofrio_pref_auto_backup') === 'true';
+                if (autoDownload) {
+                    console.log("Auto-descarga semanal de backup activada. Iniciando...");
+                    showToast("Iniciando auto-descarga semanal de copia de seguridad...", "info");
+                    exportarBackupCompleto();
+                    return;
+                }
+
+                // Mostrar banner superior elegante
+                const banner = document.getElementById('bannerAlertaBackupSemanal');
+                const bannerTexto = document.getElementById('bannerAlertaBackupTexto');
+                if (banner) {
+                    if (bannerTexto) {
+                        bannerTexto.textContent = lastTs === 0
+                            ? "Aún no se ha realizado ninguna copia de seguridad de la base de datos."
+                            : `Han pasado ${diffDias} días desde tu última copia de seguridad.`;
+                    }
+                    banner.style.display = 'flex';
+                }
+            }
+        };
+
+        window.posponerAlertaBackup = function () {
+            // Posponer por 24 horas
+            const mañana = Date.now() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('electrofrio_backup_snooze_until', mañana.toString());
+            const banner = document.getElementById('bannerAlertaBackupSemanal');
+            if (banner) banner.style.display = 'none';
+            showToast("Recordatorio pospuesto por 24 horas", "info");
+        };
+
+        window.guardarPreferenciaBackupAuto = function (checked) {
+            localStorage.setItem('electrofrio_pref_auto_backup', checked ? 'true' : 'false');
+            showToast(checked ? "Auto-descarga semanal activada" : "Auto-descarga semanal desactivada", "info");
+        };
+
+        window.guardarPreferenciaRecordatorio = function (checked) {
+            localStorage.setItem('electrofrio_pref_recordatorio_backup', checked ? 'true' : 'false');
+            showToast(checked ? "Avisos de backup activados" : "Avisos de backup desactivados", "info");
+        };
+
+        // 4. Modal de Restauración / Importación de Resguardo
+        let backupParsedParaRestaurar = null;
+
+        window.abrirModalRestaurarBackup = function () {
+            const modal = document.getElementById('modalRestaurarBackup');
+            const preview = document.getElementById('restore-file-preview');
+            const btnExec = document.getElementById('btnEjecutarRestauracion');
+            const input = document.getElementById('inputBackupFile');
+            const progress = document.getElementById('restore-progress-container');
+
+            if (input) input.value = '';
+            if (preview) preview.style.display = 'none';
+            if (progress) progress.style.display = 'none';
+            if (btnExec) {
+                btnExec.disabled = true;
+                btnExec.style.opacity = '0.5';
+                btnExec.style.cursor = 'not-allowed';
+            }
+            backupParsedParaRestaurar = null;
+
+            if (modal) {
+                modal.classList.add('show');
+                modal.style.display = 'flex';
+            }
+        };
+
+        window.cerrarModalRestaurarBackup = function () {
+            const modal = document.getElementById('modalRestaurarBackup');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+            }
+            backupParsedParaRestaurar = null;
+        };
+
+        window.analizarArchivoBackup = function (event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('restore-file-preview');
+            const statsGrid = document.getElementById('restore-stats-grid');
+            const btnExec = document.getElementById('btnEjecutarRestauracion');
+
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.collections && typeof parsed !== 'object') {
+                        throw new Error("El archivo JSON no tiene el formato de respaldo esperado.");
+                    }
+
+                    backupParsedParaRestaurar = parsed;
+
+                    // Mostrar resumen
+                    let totalDocs = 0;
+                    let htmlStats = '';
+
+                    const collectionsObj = parsed.collections || parsed;
+                    const keys = Object.keys(collectionsObj);
+
+                    keys.forEach(k => {
+                        if (typeof collectionsObj[k] === 'object' && collectionsObj[k] !== null) {
+                            const count = Object.keys(collectionsObj[k]).length;
+                            totalDocs += count;
+                            htmlStats += `<div><strong>• ${k}:</strong> ${count} docs</div>`;
+                        }
+                    });
+
+                    if (statsGrid) {
+                        const dateStr = parsed.metadata?.generatedAt ? new Date(parsed.metadata.generatedAt).toLocaleString('es-AR') : 'No especificada';
+                        const autor = parsed.metadata?.exportedBy || 'Desconocido';
+                        statsGrid.innerHTML = `
+                            <div style="grid-column: span 2; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color);">
+                                <strong>Fecha de creación:</strong> ${dateStr} | <strong>Generado por:</strong> ${autor}
+                            </div>
+                            <div style="grid-column: span 2; font-weight: 700; color: var(--color-green); margin-bottom: 4px;">
+                                Total Documentos Detectados: ${totalDocs}
+                            </div>
+                            ${htmlStats}
+                        `;
+                    }
+
+                    if (preview) preview.style.display = 'block';
+
+                    if (btnExec && totalDocs > 0) {
+                        btnExec.disabled = false;
+                        btnExec.style.opacity = '1';
+                        btnExec.style.cursor = 'pointer';
+                    }
+                } catch (err) {
+                    console.error("Error al parsear archivo de backup:", err);
+                    showToast("Error al leer el archivo: " + err.message, "error");
+                    if (preview) preview.style.display = 'none';
+                    if (btnExec) {
+                        btnExec.disabled = true;
+                        btnExec.style.opacity = '0.5';
+                        btnExec.style.cursor = 'not-allowed';
+                    }
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        window.ejecutarRestauracionConfirmada = async function () {
+            if (!backupParsedParaRestaurar) return;
+
+            const confirmacion = confirm("⚠️ ATENCIÓN: Se procederá a restaurar la información en Firestore.\n\nLos documentos se crearán o actualizarán con los datos del archivo de respaldo.\n\n¿Desea continuar?");
+            if (!confirmacion) return;
+
+            const btnExec = document.getElementById('btnEjecutarRestauracion');
+            const progressContainer = document.getElementById('restore-progress-container');
+            const progressLabel = document.getElementById('restore-progress-label');
+            const progressPct = document.getElementById('restore-progress-pct');
+            const progressBar = document.getElementById('restore-progress-bar');
+
+            try {
+                if (btnExec) {
+                    btnExec.disabled = true;
+                    btnExec.style.opacity = '0.5';
+                    btnExec.textContent = 'Restaurando...';
+                }
+                if (progressContainer) progressContainer.style.display = 'block';
+
+                const collectionsObj = backupParsedParaRestaurar.collections || backupParsedParaRestaurar;
+                const colNames = Object.keys(collectionsObj);
+
+                let totalRestored = 0;
+                let currentStep = 0;
+                const totalCols = colNames.length;
+
+                for (const colName of colNames) {
+                    const docsObj = collectionsObj[colName];
+                    if (typeof docsObj !== 'object' || docsObj === null) continue;
+
+                    const docIds = Object.keys(docsObj);
+                    if (docIds.length === 0) {
+                        currentStep++;
+                        continue;
+                    }
+
+                    if (progressLabel) progressLabel.textContent = `Restaurando colección: ${colName} (${docIds.length} docs)...`;
+
+                    const batchSize = 400;
+                    for (let i = 0; i < docIds.length; i += batchSize) {
+                        const chunkIds = docIds.slice(i, i + batchSize);
+                        const batch = db.batch();
+
+                        chunkIds.forEach(id => {
+                            const docRef = db.collection(colName).doc(id);
+                            batch.set(docRef, docsObj[id], { merge: true });
+                        });
+
+                        await batch.commit();
+                        totalRestored += chunkIds.length;
+                    }
+
+                    currentStep++;
+                    const pct = Math.round((currentStep / totalCols) * 100);
+                    if (progressBar) progressBar.style.width = `${pct}%`;
+                    if (progressPct) progressPct.textContent = `${pct}%`;
+                }
+
+                showToast(`🎉 ¡Restauración exitosa! Se actualizaron ${totalRestored} documentos en Firestore.`, "success");
+                cerrarModalRestaurarBackup();
+            } catch (err) {
+                console.error("Error al restaurar backup:", err);
+                showToast("Error al restaurar datos: " + err.message, "error");
+                if (progressLabel) progressLabel.textContent = `Error: ${err.message}`;
+            } finally {
+                if (btnExec) {
+                    btnExec.disabled = false;
+                    btnExec.style.opacity = '1';
+                    btnExec.textContent = 'Iniciar Restauración';
+                }
+            }
+        };
+
         // 4. Importar Planillas de Trabajo desde Excel (con Mapeo)
         window.handleImportPlanillasExcel = function (event) {
             const file = event.target.files[0];
@@ -12330,6 +12968,14 @@
                 setTimeout(() => {
                     if (typeof initTechMap === 'function') {
                         initTechMap();
+                    }
+                }, 100);
+            }
+
+            if (moduleName === 'configuracion') {
+                setTimeout(() => {
+                    if (typeof actualizarEstadoUIBackup === 'function') {
+                        actualizarEstadoUIBackup();
                     }
                 }, 100);
             }

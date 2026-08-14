@@ -6,6 +6,10 @@ node_modules/
 *.log
 firebase-debug.log
 
+# Credenciales sensibles
+backup_credentials.json
+serviceAccountKey.json
+
 # Backups y archivos de trabajo temporales
 # Mantengo la carpeta backups versionada para poder volver a estados previos.
 reverted_backup/
