@@ -6409,8 +6409,8 @@
                 let fichajesToShow = [];
                 if (role === 'Colaborador') {
                     const myFichajes = fichajes.filter(f => f.name && f.name.trim().toLowerCase() === (currentName || '').trim().toLowerCase());
-                    // Solo dejar asentado el horario de la última entrada o salida
-                    fichajesToShow = myFichajes.length > 0 ? [myFichajes[0]] : [];
+                    // Mostrar los fichajes del colaborador del día de hoy
+                    fichajesToShow = myFichajes.filter(f => isFichajeToday(f.date, f.timestamp));
                 } else {
                     fichajesToShow = fichajes.filter(f => {
                         if (filterFichajesCollabs.length > 0 && !filterFichajesCollabs.some(fc => fc.trim().toLowerCase() === (f.name || '').trim().toLowerCase())) {
@@ -6426,10 +6426,11 @@
                     });
                 }
 
-                document.getElementById('fichajesTitle').textContent = role === 'Colaborador' ? 'Último Fichaje Registrado' : 'Historial de Asistencia y Fichajes';
+                document.getElementById('fichajesTitle').textContent = role === 'Colaborador' ? 'Fichaje de hoy' : 'Historial de Asistencia y Fichajes';
 
                 if (fichajesToShow.length === 0) {
-                    fichajesTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No hay fichajes registrados.</td></tr>`;
+                    const emptyMsg = role === 'Colaborador' ? 'No hay fichajes registrados el día de hoy.' : 'No hay fichajes registrados.';
+                    fichajesTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">${emptyMsg}</td></tr>`;
                 } else {
                     fichajesToShow.forEach(f => {
                         const tr = document.createElement('tr');
@@ -7245,6 +7246,54 @@
             const m = String(now.getMonth() + 1).padStart(2, '0');
             const y = now.getFullYear();
             return `${d}/${m}/${y}`;
+        }
+
+        // Verificar si un fichaje es del día de hoy
+        function isFichajeToday(fDate, fTimestamp) {
+            const now = (typeof getSyncedDate === 'function') ? getSyncedDate() : new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = now.getMonth();
+            const nowDate = now.getDate();
+
+            if (fTimestamp) {
+                try {
+                    const tDate = new Date(fTimestamp);
+                    if (!isNaN(tDate.getTime())) {
+                        if (tDate.getFullYear() === nowYear && tDate.getMonth() === nowMonth && tDate.getDate() === nowDate) {
+                            return true;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (!fDate) return false;
+            if (fDate === 'Hoy') return true;
+
+            const yyyy = nowYear;
+            const mm = String(nowMonth + 1).padStart(2, '0');
+            const dd = String(nowDate).padStart(2, '0');
+            const m = String(nowMonth + 1);
+            const d = String(nowDate);
+
+            const todayISO = `${yyyy}-${mm}-${dd}`;
+            const todayAR = `${dd}/${mm}/${yyyy}`;
+            const todayARShort = `${d}/${m}/${yyyy}`;
+
+            if (fDate === todayISO || fDate === todayAR || fDate === todayARShort) return true;
+
+            let clean = fDate;
+            if (fDate.includes('-')) {
+                const parts = fDate.split('-');
+                if (parts.length === 3 && parts[0].length === 4) {
+                    clean = `${parseInt(parts[2], 10)}/${parseInt(parts[1], 10)}/${parts[0]}`;
+                }
+            } else if (fDate.includes('/')) {
+                const parts = fDate.split('/');
+                if (parts.length === 3) {
+                    clean = `${parseInt(parts[0], 10)}/${parseInt(parts[1], 10)}/${parts[2]}`;
+                }
+            }
+            return clean === `${d}/${m}/${yyyy}`;
         }
 
         // Calcular distancia usando la fórmula de Haversine
