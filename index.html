@@ -4980,26 +4980,24 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Habilitar Persistencia Local en IndexedDB para reducir drásticamente las lecturas en Firebase
-        db.enablePersistence({ synchronizeTabs: true })
-            .then(() => {
-                console.log("Persistencia multi-pestaña de Firestore en IndexedDB activada correctamente.");
-            })
-            .catch((err) => {
-                return db.enablePersistence().catch((e) => {
-                    console.warn("No se pudo activar la persistencia de Firestore en IndexedDB:", e.message);
+        // Re-sincronizar Firestore de forma inmediata al volver al primer plano (wake up en celular)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log("Aplicación volvió al primer plano. Reconectando Firestore...");
+                db.disableNetwork().then(() => {
+                    return db.enableNetwork();
+                }).then(() => {
+                    console.log("Firestore reconectado e interactivo de inmediato.");
+                }).catch(err => {
+                    console.error("Error al forzar reconexión rápida:", err);
                 });
-            });
+            }
+        });
 
-            
         // Sincronización horaria con el servidor
         let timeOffset = 0;
 
         async function syncTimeWithServer() {
-            if (window.location.protocol === 'file:') {
-                timeOffset = 0;
-                return;
-            }
             try {
                 const start = Date.now();
                 const response = await fetch(window.location.href.split('?')[0] + '?t=' + Date.now(), { method: 'HEAD' });
@@ -5013,7 +5011,7 @@
                     console.log(`[Sincronización Horaria] Desfase: ${timeOffset}ms, Latencia: ${latency}ms`);
                 }
             } catch (err) {
-                console.warn("[Sincronización Horaria] Usando hora del sistema local.");
+                console.error("[Sincronización Horaria] Error al sincronizar con el servidor:", err);
             }
         }
         function getSyncedDate() {
@@ -5026,62 +5024,6 @@
             const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
             const dd = String(dateObj.getDate()).padStart(2, '0');
             return `${yyyy}-${mm}-${dd}`;
-        }
-
-        // Helpers para segmentación de fechas y sincronización eficiente de fichajes en Firestore
-        function getStartOfWeekDateISO() {
-            const now = getSyncedDate();
-            const day = now.getDay();
-            const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Lunes como inicio de semana
-            const monday = new Date(now.getFullYear(), now.getMonth(), diff);
-            return getLocalISODate(monday);
-        }
-
-        function getThirtyDaysAgoISO() {
-            const now = getSyncedDate();
-            const past = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
-            return getLocalISODate(past);
-        }
-
-        function mergeAndSaveFichajes(incomingList) {
-            const existingMap = new Map();
-            (fichajes || []).forEach(f => {
-                const key = f.id || `${f.name}_${f.date}_${f.time}_${f.type}`;
-                existingMap.set(key, f);
-            });
-            (incomingList || []).forEach(f => {
-                const key = f.id || `${f.name}_${f.date}_${f.time}_${f.type}`;
-                existingMap.set(key, f);
-            });
-            const merged = Array.from(existingMap.values());
-            merged.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
-            fichajes = merged;
-            localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
-        }
-
-        async function fetchHistoricalFichajesIfNeeded(desdeVal, hastaVal) {
-            const thirtyDaysAgoStr = getThirtyDaysAgoISO();
-            if (desdeVal && desdeVal < thirtyDaysAgoStr) {
-                try {
-                    let query = db.collection('fichajes').where('date', '>=', desdeVal);
-                    if (hastaVal) {
-                        query = query.where('date', '<=', hastaVal);
-                    } else {
-                        query = query.where('date', '<=', thirtyDaysAgoStr);
-                    }
-                    const snap = await query.get();
-                    const fetched = [];
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        data.id = doc.id;
-                        fetched.push(data);
-                    });
-                    mergeAndSaveFichajes(fetched);
-                    updateTablesAndViews();
-                } catch (err) {
-                    console.error("Error al consultar fichajes históricos:", err);
-                }
-            }
         }
 
 
@@ -7466,7 +7408,7 @@
 
                         // 1. Agregar localmente
                         fichajes.unshift(nuevoFichaje);
-                        localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                        localStorage.setItem('electrofrio_clockins', JSON.stringify(fichajes));
                         updateTablesAndViews();
                         showToast('¡Se registró con éxito!', 'success');
 
@@ -13200,7 +13142,6 @@
                 filterFichajesDesdeVal = document.getElementById('filterFichajesDesde').value;
                 filterFichajesHastaVal = document.getElementById('filterFichajesHasta').value;
 
-                fetchHistoricalFichajesIfNeeded(filterFichajesDesdeVal, filterFichajesHastaVal);
                 updateTablesAndViews();
             });
         }
@@ -13518,37 +13459,22 @@
                 });
             }
 
-            // Activar sincronización de fichajes en tiempo real desde Firestore (Segmentada por Rol y Fecha)
+            // Activar sincronización de fichajes en tiempo real desde Firestore
             if (!unsubscribeFichajes) {
-                const userRole = localStorage.getItem('electrofrio_role') || 'Colaborador';
-                let query = db.collection('fichajes');
-
-                if (userRole === 'Colaborador') {
-                    const startOfWeekStr = getStartOfWeekDateISO();
-                    query = query.where('date', '>=', startOfWeekStr);
-                } else {
-                    // Administrador: Sincronizar en tiempo real los fichajes del último mes (últimos 30 días)
-                    const thirtyDaysAgoStr = getThirtyDaysAgoISO();
-                    query = query.where('date', '>=', thirtyDaysAgoStr);
-                }
-
-                const handleSnapshot = (querySnapshot) => {
+                unsubscribeFichajes = db.collection('fichajes').onSnapshot((querySnapshot) => {
                     const updatedFichajes = [];
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
                         data.id = doc.id;
                         updatedFichajes.push(data);
                     });
-                    mergeAndSaveFichajes(updatedFichajes);
+                    // Ordenar por timestamp descendente
+                    updatedFichajes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    fichajes = updatedFichajes;
+                    localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
                     updateTablesAndViews();
-                };
-
-                unsubscribeFichajes = query.onSnapshot(handleSnapshot, (error) => {
-                    console.warn("Error al sincronizar fichajes segmentados de Firestore (posible falta de índice o regla). Aplicando fallback seguro:", error);
-                    // Fallback seguro sin filtros si la consulta segmentada falla
-                    unsubscribeFichajes = db.collection('fichajes').onSnapshot(handleSnapshot, (err) => {
-                        console.error("Error crítico al sincronizar fichajes de Firestore:", err);
-                    });
+                }, (error) => {
+                    console.error("Error al sincronizar fichajes de Firestore:", error);
                 });
             }
 
@@ -14650,12 +14576,12 @@
 
     <!-- Desregistro del Service Worker para forzar funcionamiento online -->
     <script>
-        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+        if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
                     registration.unregister();
                 }
-            }).catch(function(e) {});
+            });
         }
     </script>
 </body>
