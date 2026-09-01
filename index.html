@@ -3872,7 +3872,7 @@
                     </div>
                     <div class="input-group">
                         <label for="collab-gpsradius">Radio (m)</label>
-                        <input type="number" id="collab-gpsradius" value="300" min="0">
+                        <input type="number" id="collab-gpsradius" value="700" min="0">
                     </div>
                 </div>
 
@@ -5059,7 +5059,7 @@
                         premium: false,
                         hourlyRate: 3000,
                         schedule: { in: "08:00", out: "17:00", tolerance: 15 },
-                        gps: { lat: "-29.41310", lng: "-66.85580", radius: 200 },
+                        gps: { lat: "-29.418139", lng: "-66.857306", radius: 700 },
                         status: "online"
                     },
                     {
@@ -7312,19 +7312,24 @@
             return R * c; // Distancia en metros
         }
 
-        // Fichaje entrada / salida con Geolocalización (Solo se solicita al presionar el botón)
+        // Fichaje entrada / salida con Geolocalización (Optimizado para iOS / Safari / Android)
         function verifyGeolocationAndExecute(callback, onRejected) {
             if (!navigator.onLine) {
                 showToast("No tienes conexión a internet activa. Por favor, conéctate a la red e intenta nuevamente.", "error");
                 if (onRejected) onRejected();
                 return;
             }
+
+            const restoreBtn = () => {
+                if (onRejected) onRejected();
+            };
+
             const name = localStorage.getItem('electrofrio_name') || "";
             const collab = colaboradores.find(c => c.name && c.name.trim().toLowerCase() === name.trim().toLowerCase());
 
-            const DEFAULT_LAT = -29.41310; // San Martín 375, La Rioja
-            const DEFAULT_LNG = -66.85580; // San Martín 375, La Rioja
-            const DEFAULT_RADIUS = 300; // 300 metros a la redonda (3 cuadras a la redonda)
+            const DEFAULT_LAT = -29.418139; // 29°25'05.3"S 66°51'26.3"W
+            const DEFAULT_LNG = -66.857306; // 29°25'05.3"S 66°51'26.3"W
+            const DEFAULT_RADIUS = 700; // 700 metros a la redonda (~7 cuadras)
 
             let allowedLat = DEFAULT_LAT;
             let allowedLng = DEFAULT_LNG;
@@ -7333,58 +7338,68 @@
             if (collab && collab.gps && collab.gps.lat && collab.gps.lng) {
                 const parsedLat = parseFloat(collab.gps.lat);
                 const parsedLng = parseFloat(collab.gps.lng);
-                // Si el colaborador aún tiene la coordenada antigua por defecto (-29.41810), actualizar a San Martín 375
-                if (Math.abs(parsedLat - (-29.41810)) < 0.001 && Math.abs(parsedLng - (-66.85735)) < 0.001) {
-                    allowedLat = DEFAULT_LAT;
-                    allowedLng = DEFAULT_LNG;
-                } else {
-                    allowedLat = parsedLat;
-                    allowedLng = parsedLng;
-                }
+                allowedLat = !isNaN(parsedLat) && parsedLat !== 0 ? parsedLat : DEFAULT_LAT;
+                allowedLng = !isNaN(parsedLng) && parsedLng !== 0 ? parsedLng : DEFAULT_LNG;
                 const customRadius = parseFloat(collab.gps.radius);
-                allowedRadius = (!isNaN(customRadius) && customRadius >= 100) ? customRadius : DEFAULT_RADIUS;
+                allowedRadius = (!isNaN(customRadius) && customRadius >= 700) ? customRadius : DEFAULT_RADIUS;
             }
 
-            const restoreBtn = () => {
-                if (onRejected) onRejected();
-            };
-
-            const notInLocationMsg = "No estás en el lugar autorizado para tomar el fichaje. Por favor ponte en contacto con la administración ya que no se registrará el fichaje.";
-
             if (!navigator.geolocation) {
-                console.warn("Geolocalización no soportada por el navegador.");
                 restoreBtn();
-                showToast(notInLocationMsg, "error");
+                const msg = "Tu navegador o dispositivo no soporta geolocalización. Por favor ponte en contacto con la administración.";
+                showToast(msg, "error");
+                alert(msg);
                 return;
             }
 
-            // Se solicita la ubicación EXCLUSIVAMENTE al presionar el botón de fichar
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    const distance = calculateDistance(userLat, userLng, allowedLat, allowedLng);
+            // Estrategia de geolocalización compatible con iPhone (iOS / Safari) y Android
+            function requestLocation(options, isRetry = false) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        const distance = calculateDistance(userLat, userLng, allowedLat, allowedLng);
 
-                    if (distance <= allowedRadius) {
-                        callback(collab, userLat, userLng);
-                    } else {
+                        if (distance <= allowedRadius) {
+                            callback(collab, userLat, userLng);
+                        } else {
+                            restoreBtn();
+                            const msg = `No estás en el lugar autorizado para tomar el fichaje (estás a ${Math.round(distance)}m). Por favor ponte en contacto con la administración ya que no se registrará tu fichaje.`;
+                            showToast(msg, "error");
+                            alert(msg);
+                        }
+                    },
+                    (error) => {
+                        // Si el primer intento rápido falla en iOS por timeout o falta de señal, reintentar con alta precisión
+                        if (!isRetry && (error.code === 2 || error.code === 3)) {
+                            console.warn("Reintentando lectura GPS para iOS/Safari...");
+                            requestLocation({ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }, true);
+                            return;
+                        }
+
                         restoreBtn();
-                        const msg = `No estás en el lugar para tomar el fichaje (estás a ${Math.round(distance)}m). Por favor ponte en contacto con la administración ya que no se registrará el fichaje.`;
+                        console.warn("Error de geolocalización:", error);
+                        
+                        let msg = "No se obtuvo tu ubicación GPS. Por favor ponte en contacto con la administración.";
+                        if (error.code === 1) { // PERMISSION_DENIED
+                            msg = "Debes permitir el acceso a tu ubicación en tu iPhone/Safari (Ajustes > Privacidad y seguridad > Localización > Sitios web de Safari) para poder fichar.";
+                        } else if (error.code === 3) { // TIMEOUT
+                            msg = "Tiempo de espera agotado para obtener GPS en tu iPhone. Por favor verifica que la localización esté activa e intenta al aire libre.";
+                        }
+                        
                         showToast(msg, "error");
-                    }
-                },
-                (error) => {
-                    restoreBtn();
-                    console.warn("Error o denegación de geolocalización:", error);
-                    const msg = "No estás en el lugar para tomar el fichaje (no se obtuvo ubicación GPS). Por favor ponte en contacto con la administración ya que no se registrará el fichaje.";
-                    showToast(msg, "error");
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
+                        alert(msg);
+                    },
+                    options
+                );
+            }
+
+            // Intento inicial: rápido y de alta compatibilidad con interiores en iOS/Android
+            requestLocation({
+                enableHighAccuracy: false,
+                timeout: 12000,
+                maximumAge: 30000
+            });
         }
 
         if (btnFicharUnico) {
@@ -13381,7 +13396,7 @@
                 // Configurar objeto GPS
                 let gpsObj = { manual: true };
                 if (gpsVal === 'verified') {
-                    gpsObj = { lat: -29.41310, lng: -66.85580, verified: true };
+                    gpsObj = { lat: -29.418139, lng: -66.857306, verified: true };
                 }
 
                 try {
@@ -13956,7 +13971,7 @@
             const tolerance = 0;
             const lat = document.getElementById('collab-gpslat').value.trim();
             const lng = document.getElementById('collab-gpslng').value.trim();
-            const radius = parseInt(document.getElementById('collab-gpsradius').value) || 300;
+            const radius = parseInt(document.getElementById('collab-gpsradius').value) || 700;
 
             // Si estamos editando
             if (editUsernameMode) {
