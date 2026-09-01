@@ -5788,30 +5788,45 @@
                 const shiftSubtext = document.getElementById('currentShiftSubtext');
 
                 if (shiftStatusVal && shiftSubtext) {
-                      const btnUnico = document.getElementById('btnFicharUnico');
-                      if (latestFichajeToday && latestFichajeToday.type === 'Entrada') {
-                          shiftStatusVal.textContent = 'En Servicio';
-                          shiftStatusVal.style.color = 'var(--color-green)';
-                          shiftSubtext.textContent = `Entrada registrada a las ${latestFichajeToday.time}`;
-  
-                          if (btnUnico) {
-                              btnUnico.textContent = 'Marcar Salida';
-                              btnUnico.className = 'fichaje-btn out';
-                              btnUnico.disabled = false;
-                          }
-                      } else {
-                          shiftStatusVal.textContent = 'Fuera de Turno';
-                          shiftStatusVal.style.color = 'var(--color-red)';
-                          shiftSubtext.textContent = latestFichajeToday
-                              ? `Salida registrada hoy a las ${latestFichajeToday.time}` : 'No has iniciado jornada hoy';
-  
-                          if (btnUnico) {
-                              btnUnico.textContent = 'Marcar Entrada';
-                              btnUnico.className = 'fichaje-btn in';
-                              btnUnico.disabled = false;
-                          }
-                      }
-                  }
+                    const btnUnico = document.getElementById('btnFicharUnico');
+                    const entradasToday = myFichajesToday.filter(f => f.type === 'Entrada').length;
+                    const salidasToday = myFichajesToday.filter(f => f.type === 'Salida').length;
+
+                    if (latestFichajeToday && latestFichajeToday.type === 'Entrada') {
+                        shiftStatusVal.textContent = 'En Servicio';
+                        shiftStatusVal.style.color = 'var(--color-green)';
+                        shiftSubtext.textContent = `Entrada registrada a las ${latestFichajeToday.time}`;
+
+                        if (btnUnico) {
+                            if (salidasToday >= 2) {
+                                btnUnico.textContent = 'Límite de Salidas Alcanzado (2/2)';
+                                btnUnico.className = 'fichaje-btn out disabled';
+                                btnUnico.disabled = true;
+                            } else {
+                                btnUnico.textContent = 'Marcar Salida';
+                                btnUnico.className = 'fichaje-btn out';
+                                btnUnico.disabled = false;
+                            }
+                        }
+                    } else {
+                        shiftStatusVal.textContent = 'Fuera de Turno';
+                        shiftStatusVal.style.color = 'var(--color-red)';
+                        shiftSubtext.textContent = latestFichajeToday
+                            ? `Salida registrada hoy a las ${latestFichajeToday.time}` : 'No has iniciado jornada hoy';
+
+                        if (btnUnico) {
+                            if (entradasToday >= 2) {
+                                btnUnico.textContent = 'Límite de Entradas Alcanzado (2/2)';
+                                btnUnico.className = 'fichaje-btn in disabled';
+                                btnUnico.disabled = true;
+                            } else {
+                                btnUnico.textContent = 'Marcar Entrada';
+                                btnUnico.className = 'fichaje-btn in';
+                                btnUnico.disabled = false;
+                            }
+                        }
+                    }
+                }
 
                 // Helper para parsear fecha a timestamp
                 const parseDateDash = (dStr) => {
@@ -7434,6 +7449,30 @@
                         intendedType = 'Entrada';
                     } else {
                         intendedType = 'Salida';
+                    }
+
+                    // Validar límite de máximo 2 Entradas y 2 Salidas por día
+                    const entradasHoy = myDocs.filter(d => d.type === 'Entrada').length;
+                    const salidasHoy = myDocs.filter(d => d.type === 'Salida').length;
+
+                    if (intendedType === 'Entrada' && entradasHoy >= 2) {
+                        const msg = "Has alcanzado el límite máximo de 2 entradas registradas el día de hoy.";
+                        showToast(msg, "error");
+                        alert(msg);
+                        btnFicharUnico.disabled = true;
+                        btnFicharUnico.textContent = 'Límite de Entradas Alcanzado (2/2)';
+                        btnFicharUnico.className = 'fichaje-btn in disabled';
+                        return;
+                    }
+
+                    if (intendedType === 'Salida' && salidasHoy >= 2) {
+                        const msg = "Has alcanzado el límite máximo de 2 salidas registradas el día de hoy.";
+                        showToast(msg, "error");
+                        alert(msg);
+                        btnFicharUnico.disabled = true;
+                        btnFicharUnico.textContent = 'Límite de Salidas Alcanzado (2/2)';
+                        btnFicharUnico.className = 'fichaje-btn out disabled';
+                        return;
                     }
 
                     // Check if it matches what the user thought they were clicking
