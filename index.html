@@ -7263,9 +7263,8 @@
             return R * c; // Distancia en metros
         }
 
-        // Fichaje entrada / salida con Geolocalización
+        // Fichaje entrada / salida con Geolocalización (Solo se solicita al presionar el botón)
         function verifyGeolocationAndExecute(callback) {
-            // Validar conexión a internet activa de forma estricta
             if (!navigator.onLine) {
                 showToast("No tienes conexión a internet activa. Por favor, conéctate a la red e intenta nuevamente.", "error");
                 return;
@@ -7273,7 +7272,6 @@
             const name = localStorage.getItem('electrofrio_name') || "";
             const collab = colaboradores.find(c => c.name && c.name.trim().toLowerCase() === name.trim().toLowerCase());
 
-            // Ubicación global de la empresa por defecto (La Rioja, ejemplo de Jorge Isaac)
             const DEFAULT_LAT = -29.41810;
             const DEFAULT_LNG = -66.85735;
             const DEFAULT_RADIUS = 100;
@@ -7282,16 +7280,10 @@
             let allowedLng = DEFAULT_LNG;
             let allowedRadius = DEFAULT_RADIUS;
 
-            // Si el colaborador tiene coordenadas GPS personalizadas asignadas
             if (collab && collab.gps && collab.gps.lat && collab.gps.lng) {
                 allowedLat = parseFloat(collab.gps.lat);
                 allowedLng = parseFloat(collab.gps.lng);
                 allowedRadius = parseFloat(collab.gps.radius) || 50;
-            }
-
-            if (!navigator.geolocation) {
-                showToast("Tu dispositivo o navegador no soporta geolocalización.", "error");
-                return;
             }
 
             let btn = document.activeElement;
@@ -7302,39 +7294,45 @@
                 btn.textContent = "Ubicando...";
             }
 
+            const restoreBtn = () => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            };
+
+            if (!navigator.geolocation) {
+                console.warn("Geolocalización no soportada por el navegador. Registrando como manual.");
+                restoreBtn();
+                callback(collab, null, null);
+                return;
+            }
+
+            // Se solicita la ubicación EXCLUSIVAMENTE al presionar el botón de fichar
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    restoreBtn();
                     const userLat = position.coords.latitude;
                     const userLng = position.coords.longitude;
                     const distance = calculateDistance(userLat, userLng, allowedLat, allowedLng);
 
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = originalText;
-                    }
-
-                    if (distance <= allowedRadius) {
+                    if (distance <= allowedRadius || !collab || !collab.gps || !collab.gps.lat) {
                         callback(collab, userLat, userLng);
                     } else {
-                        showToast(`No estás dentro de la zona de trabajo autorizada.<br>Distancia: ${Math.round(distance)}m (Máx: ${allowedRadius}m).`, "error");
+                        showToast(`Fuera de zona autorizada (${Math.round(distance)}m). Fichaje registrado con advertencia.`, "warning");
+                        callback(collab, userLat, userLng);
                     }
                 },
                 (error) => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = originalText;
-                    }
-                    console.error("Error de ubicación: ", error);
-                    let errorMsg = "No se pudo verificar tu ubicación. Asegúrate de tener activado el GPS y conceder permisos.";
-                    if (error.code === error.PERMISSION_DENIED) {
-                        errorMsg = "Permiso de ubicación denegado. Debes habilitar los permisos en tu navegador.";
-                    }
-                    showToast(errorMsg, "error");
+                    restoreBtn();
+                    console.warn("Error o denegación de geolocalización:", error);
+                    showToast("No se obtuvo GPS exacto. Fichaje registrado como manual.", "info");
+                    callback(collab, null, null);
                 },
                 {
-                    enableHighAccuracy: true,
-                    timeout: 6000,
-                    maximumAge: 30000
+                    enableHighAccuracy: false, // Rápido y compatible con PC y dispositivos móviles
+                    timeout: 8000,
+                    maximumAge: 60000
                 }
             );
         }
@@ -14414,40 +14412,10 @@
         };
 
         // RASTREO GPS CONTINUO PARA COLABORADORES
+        // RASTREO GPS CONTINUO (DESHABILITADO: Geolocalización únicamente al presionar el botón de fichar)
         let watchId = null;
-        window.startLocationTracking = function(role) { return; // MAP DESHABILITADO
-
-            if (role !== 'Colaborador') return;
-            const uid = localStorage.getItem('electrofrio_uid');
-            if (!uid) return;
-
-            if (navigator.geolocation) {
-                if (watchId) navigator.geolocation.clearWatch(watchId);
-                
-                let lastLocationUpdate = 0;
-                const updateLocation = (position) => {
-                    const now = Date.now();
-                    if (now - lastLocationUpdate < 120000) return;
-                    lastLocationUpdate = now;
-                    db.collection('usuarios').doc(uid).update({
-                        location: {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                            timestamp: Date.now()
-                        }
-                    }).catch(err => console.error("Error al actualizar ubicación en vivo:", err));
-                };
-
-                const logError = (error) => {
-                    console.warn("GPS tracking error:", error);
-                };
-
-                // Forzar una actualización inmediata rápida (sin alta precisión)
-                navigator.geolocation.getCurrentPosition(updateLocation, logError, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
-                
-                // Empezar a escuchar cambios con alta precisión
-                watchId = navigator.geolocation.watchPosition(updateLocation, logError, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
-            }
+        window.startLocationTracking = function(role) {
+            return;
         };
 
         window.fixCapitalizationMigration = async function() {
