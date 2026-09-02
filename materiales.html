@@ -696,6 +696,12 @@
             gap: 12px;
         }
 
+        .form-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
         .form-group {
             display: flex;
             flex-direction: column;
@@ -989,7 +995,7 @@
             .search-box {
                 max-width: 100%;
             }
-            .form-grid-2, .form-grid-3 {
+            .form-grid-2, .form-grid-3, .form-grid-4 {
                 grid-template-columns: 1fr;
             }
         }
@@ -1053,8 +1059,8 @@
                         <option value="code-asc">Código (A-Z)</option>
                         <option value="code-desc">Código (Z-A)</option>
                         <option value="name-asc">Producto (A-Z)</option>
-                        <option value="price-desc">Costo (Mayor a Menor)</option>
-                        <option value="price-asc">Costo (Menor a Mayor)</option>
+                        <option value="price-desc">Precio (Mayor a Menor)</option>
+                        <option value="price-asc">Precio (Menor a Mayor)</option>
                     </select>
 
                     <!-- Selector de Columnas Visibles -->
@@ -1097,7 +1103,7 @@
                             </label>
                             <label class="column-check-item">
                                 <input type="checkbox" data-col="cost" checked onchange="toggleColumnVisibility('cost', this.checked)">
-                                <span>Costo ($ ARS)</span>
+                                <span>Precio ($ ARS)</span>
                             </label>
                             <label class="column-check-item">
                                 <input type="checkbox" data-col="bultos" onchange="toggleColumnVisibility('bultos', this.checked)">
@@ -1145,7 +1151,7 @@
                             <th class="col-rubro" style="width: 150px;">RUBRO / SUB-RUBRO</th>
                             <th class="col-supplier" style="width: 130px;">PROVEEDOR</th>
                             <th class="col-unit" style="width: 90px;">UNIDAD</th>
-                            <th class="col-cost" style="width: 140px; text-align: right;">COSTO ($ ARS)</th>
+                            <th class="col-cost" style="width: 140px; text-align: right;">PRECIO ($ ARS)</th>
                             <th class="col-bultos" style="width: 90px; text-align: center;">BULTOS</th>
                             <th class="col-iva" style="width: 80px; text-align: center;">% IVA</th>
                             <th class="col-updated" style="width: 130px; text-align: center;">ACTUALIZADO</th>
@@ -1220,10 +1226,14 @@
                         </div>
                     </div>
 
-                    <div class="form-grid-3">
+                    <div class="form-grid-4">
                         <div class="form-group">
-                            <label for="new-costo">Costo ($ ARS) *</label>
+                            <label for="new-costo">Precio ($ ARS) *</label>
                             <input type="number" id="new-costo" class="form-input" placeholder="0" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-iva">% IVA</label>
+                            <input type="number" id="new-iva" class="form-input" placeholder="21" min="0" max="100" step="any" value="21">
                         </div>
                         <div class="form-group">
                             <label for="new-unidad">Unidad Medida</label>
@@ -1305,10 +1315,14 @@
                         </div>
                     </div>
 
-                    <div class="form-grid-3">
+                    <div class="form-grid-4">
                         <div class="form-group">
-                            <label for="edit-costo">Costo ($ ARS) *</label>
+                            <label for="edit-costo">Precio ($ ARS) *</label>
                             <input type="number" id="edit-costo" class="form-input" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-iva">% IVA</label>
+                            <input type="number" id="edit-iva" class="form-input" min="0" max="100" step="any" placeholder="21">
                         </div>
                         <div class="form-group">
                             <label for="edit-unidad">Unidad Medida</label>
@@ -1381,11 +1395,11 @@
                         <div class="val" id="view-unidad">-</div>
                     </div>
                     <div class="detail-item">
-                        <div class="lbl">Costo Unitario ($ ARS)</div>
+                        <div class="lbl">Precio Unitario ($ ARS)</div>
                         <div class="val" style="color:#34d399; font-size:1.1rem; font-family:'Outfit', sans-serif;" id="view-costo">$ 0</div>
                     </div>
                     <div class="detail-item">
-                        <div class="lbl">Costo Total ($ ARS)</div>
+                        <div class="lbl">Precio Total ($ ARS)</div>
                         <div class="val" id="view-costototal">$ 0</div>
                     </div>
                     <div class="detail-item">
@@ -1451,7 +1465,7 @@
                             <select id="map-col-desc" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                         <div class="column-mapper-item">
-                            <label>Columna Costo / Precio:</label>
+                            <label>Columna Precio:</label>
                             <select id="map-col-price" class="form-select-sm" onchange="reprocessParsedRows()"></select>
                         </div>
                         <div class="column-mapper-item">
@@ -1471,7 +1485,7 @@
                     <div class="import-options-bar">
                         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary);">
                             <input type="checkbox" id="chk-update-existing" checked onchange="reprocessParsedRows()" style="width:16px; height:16px; cursor:pointer; accent-color:var(--color-blue);">
-                            <span>🔄 Actualizar materiales existentes si el código ya existe (Actualiza costos y datos)</span>
+                            <span>🔄 Actualizar materiales existentes si el código ya existe (Actualiza precios y datos)</span>
                         </label>
                     </div>
 
@@ -1505,7 +1519,7 @@
                                     <th>PRODUCTO / MATERIAL</th>
                                     <th>MARCA</th>
                                     <th>RUBRO</th>
-                                    <th>COSTO</th>
+                                    <th>PRECIO</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-import-preview">
@@ -1876,11 +1890,16 @@
             if (marcas.has(currentMarca)) selMarca.value = currentMarca;
         }
 
+        let searchDebounceTimeout = null;
         function handleSearchInput() {
             const val = document.getElementById('input-search').value;
             const clearBtn = document.getElementById('btn-clear-search');
             if (clearBtn) clearBtn.style.display = val.length > 0 ? 'inline-block' : 'none';
-            applyFilters();
+
+            clearTimeout(searchDebounceTimeout);
+            searchDebounceTimeout = setTimeout(() => {
+                applyFilters();
+            }, 150);
         }
 
         function clearSearch() {
@@ -1890,7 +1909,10 @@
             applyFilters();
         }
 
+        let displayLimit = 100;
+
         function applyFilters() {
+            displayLimit = 100;
             const searchVal = (document.getElementById('input-search')?.value || '').trim().toLowerCase();
             const rubroFilter = document.getElementById('select-rubro-filter')?.value || 'ALL';
             const marcaFilter = document.getElementById('select-marca-filter')?.value || 'ALL';
@@ -1955,7 +1977,16 @@
             updateFilteredCounts();
         }
 
-        // --- 8. RENDERIZADO DE TABLA ---
+        function formatIva(item) {
+            let val = item && item.iva !== undefined && item.iva !== null && item.iva !== '' ? item.iva : (item ? item.porcentaje_iva : undefined);
+            if (val === undefined || val === null || val === '') return '21%';
+            let num = parseFloat(val);
+            if (isNaN(num) || num > 100 || num < 0) return '21%';
+            num = Math.round(num * 100) / 100;
+            return `${num}%`;
+        }
+
+        // --- 8. RENDERIZADO DE TABLA (OPTIMIZADO POR LOTES) ---
         function renderCatalog() {
             const tbody = document.getElementById('tbody-materiales');
             if (!tbody) return;
@@ -1973,8 +2004,9 @@
                 return;
             }
 
+            const itemsToRender = filteredData.slice(0, displayLimit);
             let html = '';
-            filteredData.forEach(item => {
+            itemsToRender.forEach(item => {
                 const code = sanitizeCode(item.codigo || item.id || '');
                 const barcode = item.cod_barra || item.codigo_externo || '-';
                 const prod = item.producto || item.descripcion || '-';
@@ -1985,7 +2017,7 @@
                 const unit = item.unidad_medida || 'Unidad';
                 const cost = formatMoney(item.costo || item.precio);
                 const bultos = item.bultos || item.indica_ctd_bultos || '1';
-                const iva = item.iva || item.porcentaje_iva ? `${item.iva || item.porcentaje_iva}%` : '21%';
+                const ivaText = formatIva(item);
                 const updateDate = formatDate(item);
 
                 html += `
@@ -2019,7 +2051,7 @@
                             <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(bultos)}</span>
                         </td>
                         <td class="col-iva" style="text-align: center;">
-                            <span style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(iva)}</span>
+                            <span style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(ivaText)}</span>
                         </td>
                         <td class="col-updated" style="text-align: center;">
                             <span class="date-badge" title="Fecha de última actualización">📅 ${escapeHtml(updateDate)}</span>
@@ -2041,13 +2073,36 @@
                 `;
             });
 
+            if (filteredData.length > displayLimit) {
+                const remaining = filteredData.length - displayLimit;
+                html += `
+                    <tr id="row-load-more">
+                        <td colspan="12" style="text-align: center; padding: 14px; background: rgba(0, 191, 255, 0.04);">
+                            <button class="btn btn-secondary" onclick="loadMoreMaterials()" style="padding: 8px 24px; font-weight: 700; border-color: var(--color-blue); color: var(--color-blue);">
+                                ⬇️ Cargar más materiales (${remaining} restantes)
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
             tbody.innerHTML = html;
+        }
+
+        function loadMoreMaterials() {
+            displayLimit += 150;
+            renderCatalog();
+            updateFilteredCounts();
         }
 
         function updateFilteredCounts() {
             const countLabel = document.getElementById('table-count-label');
             if (countLabel) {
-                countLabel.textContent = `${filteredData.length} de ${materialesData.length} materiales`;
+                if (filteredData.length > displayLimit) {
+                    countLabel.textContent = `Mostrando ${displayLimit} de ${filteredData.length} (${materialesData.length} totales)`;
+                } else {
+                    countLabel.textContent = `${filteredData.length} de ${materialesData.length} materiales`;
+                }
             }
         }
 
@@ -2055,6 +2110,8 @@
         function openNewModal() {
             const form = document.getElementById('form-new-item');
             if (form) form.reset();
+            const ivaInput = document.getElementById('new-iva');
+            if (ivaInput) ivaInput.value = '21';
             openModal('modal-new');
             setTimeout(() => document.getElementById('new-codigo')?.focus(), 150);
         }
@@ -2071,6 +2128,8 @@
             const subrubro = document.getElementById('new-subrubro').value.trim();
             const prov = document.getElementById('new-proveedor').value.trim();
             const costo = Math.round(parseFloat(document.getElementById('new-costo').value) || 0);
+            const ivaInputVal = document.getElementById('new-iva').value.trim();
+            const ivaNum = ivaInputVal !== '' ? (parseFloat(ivaInputVal) || 0) : 21;
             const unidad = document.getElementById('new-unidad').value.trim() || 'Unidad';
             const bultos = document.getElementById('new-bultos').value.trim() || '1';
             const desc = document.getElementById('new-descripcion').value.trim();
@@ -2102,7 +2161,11 @@
                     sub_rubro: subrubro,
                     proveedor: prov,
                     costo: costo,
+                    precio: costo,
                     costo_total: costo,
+                    precio_total: costo,
+                    iva: ivaNum,
+                    porcentaje_iva: ivaNum,
                     unidad_medida: unidad,
                     bultos: bultos,
                     descripcion: desc,
@@ -2140,6 +2203,17 @@
             document.getElementById('edit-rubro').value = item.rubro || '';
             document.getElementById('edit-subrubro').value = item.sub_rubro || '';
             document.getElementById('edit-costo').value = Math.round(parseFloat(item.costo || item.precio) || 0);
+
+            let currentIva = item.iva !== undefined && item.iva !== null && item.iva !== '' ? item.iva : item.porcentaje_iva;
+            if (currentIva === undefined || currentIva === null || currentIva === '' || parseFloat(currentIva) > 100 || parseFloat(currentIva) < 0) {
+                currentIva = 21;
+            } else {
+                currentIva = parseFloat(currentIva);
+                if (isNaN(currentIva)) currentIva = 21;
+                else currentIva = Math.round(currentIva * 100) / 100;
+            }
+            document.getElementById('edit-iva').value = currentIva;
+
             document.getElementById('edit-unidad').value = item.unidad_medida || 'Unidad';
             document.getElementById('edit-bultos').value = item.bultos || '1';
             document.getElementById('edit-descripcion').value = item.descripcion || '';
@@ -2160,6 +2234,8 @@
             const subrubro = document.getElementById('edit-subrubro').value.trim();
             const prov = document.getElementById('edit-proveedor').value.trim();
             const costo = Math.round(parseFloat(document.getElementById('edit-costo').value) || 0);
+            const ivaInputVal = document.getElementById('edit-iva').value.trim();
+            const ivaNum = ivaInputVal !== '' ? (parseFloat(ivaInputVal) || 0) : 21;
             const unidad = document.getElementById('edit-unidad').value.trim() || 'Unidad';
             const bultos = document.getElementById('edit-bultos').value.trim() || '1';
             const desc = document.getElementById('edit-descripcion').value.trim();
@@ -2183,7 +2259,11 @@
                     sub_rubro: subrubro,
                     proveedor: prov,
                     costo: costo,
+                    precio: costo,
                     costo_total: costo,
+                    precio_total: costo,
+                    iva: ivaNum,
+                    porcentaje_iva: ivaNum,
                     unidad_medida: unidad,
                     bultos: bultos,
                     descripcion: desc,
@@ -2220,7 +2300,7 @@
             document.getElementById('view-costototal').textContent = formatMoney(item.costo_total || item.costo || item.precio);
             document.getElementById('view-bultos').textContent = item.bultos || item.indica_ctd_bultos || '-';
             document.getElementById('view-tipoproducto').textContent = item.tipo_producto || '-';
-            document.getElementById('view-iva').textContent = item.iva || item.porcentaje_iva ? `${item.iva || item.porcentaje_iva}%` : '21%';
+            document.getElementById('view-iva').textContent = formatIva(item);
             document.getElementById('view-fecha').textContent = `📅 ${formatDate(item)}`;
             document.getElementById('view-descripcion').textContent = item.descripcion || 'Sin observaciones adicionales';
 
@@ -2535,7 +2615,7 @@
                 let unit = colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : 'Unidad';
                 let bultos = colMap.bultos !== undefined ? String(row[colMap.bultos] || '').trim() : '1';
                 let tipo = colMap.tipo !== undefined ? String(row[colMap.tipo] || '').trim() : '';
-                let iva = colMap.iva !== undefined ? String(row[colMap.iva] || '').trim() : '';
+                let ivaVal = colMap.iva !== undefined ? String(row[colMap.iva] || '').trim() : '';
 
                 if (!code && !prod) continue;
 
@@ -2583,7 +2663,7 @@
                     unidad_medida: unit,
                     bultos: bultos,
                     tipo_producto: tipo,
-                    iva: iva,
+                    iva: ivaVal,
                     status: actionStatus
                 };
 
