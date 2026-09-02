@@ -4585,7 +4585,7 @@
                             <tbody>
                                 <tr>
                                     <td style="padding: 6px 4px;">
-                                        <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                                        <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
                                         <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
                                     </td>
                                     <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
@@ -8720,6 +8720,16 @@
             }
         }
 
+        let isPlanillaDigitalFormDirty = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pdigFormElem = document.getElementById('planillaDigitalForm');
+            if (pdigFormElem) {
+                pdigFormElem.addEventListener('input', () => { isPlanillaDigitalFormDirty = true; });
+                pdigFormElem.addEventListener('change', () => { isPlanillaDigitalFormDirty = true; });
+            }
+        });
+
         function openPlanillaDigitalModalCentered() {
             const modalNav = document.getElementById('modalNuevaPlanillaDigital');
             if (!modalNav) return;
@@ -8743,7 +8753,7 @@
                 tbodyMo.innerHTML = `
                     <tr>
                         <td style="padding: 6px 4px;">
-                            <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                            <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
                             <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
                         </td>
                         <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
@@ -8804,15 +8814,22 @@
             modalNav.style.background = 'rgba(0,0,0,0.85)';
             modalNav.style.zIndex = '99999';
             modalNav.classList.add('show');
+            isPlanillaDigitalFormDirty = false;
         }
         window.openPlanillaDigitalModalCentered = openPlanillaDigitalModalCentered;
 
-        function closePlanillaDigitalModal() {
+        function closePlanillaDigitalModal(force = false) {
+            if (!force && isPlanillaDigitalFormDirty) {
+                const confirmExit = confirm("⚠️ Tienes cambios sin guardar.\n\n¿Estás seguro de que deseas salir? Se perderán los datos ingresados.");
+                if (!confirmExit) return false;
+            }
             const modalNav = document.getElementById('modalNuevaPlanillaDigital');
             if (modalNav) {
                 modalNav.classList.remove('show');
                 modalNav.style.display = 'none';
             }
+            isPlanillaDigitalFormDirty = false;
+            return true;
         }
         window.closePlanillaDigitalModal = closePlanillaDigitalModal;
 
@@ -8869,7 +8886,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="padding: 6px 4px;">
-                        <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                        <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
                         <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
                     </td>
                     <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
@@ -9115,11 +9132,7 @@
                     planillaDigitalForm.reset();
                     
                     // 4. Cerrar el modal y lanzar Toast al instante
-                    const modalNav = document.getElementById('modalNuevaPlanillaDigital');
-                    if (modalNav) {
-                        modalNav.classList.remove('show');
-                        modalNav.style.display = 'none';
-                    }
+                    closePlanillaDigitalModal(true);
 
                     if (statusVal === 'Borrador') {
                         showToast("¡Borrador de planilla guardado con éxito!", "success");
@@ -12057,7 +12070,7 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="padding: 6px 4px;">
-                            <input type="text" class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                            <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
                             <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
                         </td>
                         <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
@@ -12075,7 +12088,7 @@
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td style="padding: 6px 4px;">
-                                <input type="text" class="pdig-mo-accion" value="${accionVal.replace(/"/g, '&quot;')}" placeholder="Ej: Instalación, Diagnóstico" required style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px;">
+                                <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;">${accionVal.replace(/"/g, '&quot;')}</textarea>
                                 <input type="text" class="pdig-mo-zona" value="${zonaVal.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
                             </td>
                             <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
@@ -12262,6 +12275,7 @@
                 if (pdigHE) pdigHE.value = startTime;
                 if (pdigHS) pdigHS.value = endTime;
             }
+            setTimeout(() => { isPlanillaDigitalFormDirty = false; }, 100);
         };
 
         // 2. EDITAR PLANILLA DE TRABAJO
