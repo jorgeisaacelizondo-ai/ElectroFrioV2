@@ -1106,6 +1106,10 @@
                                 <span>Precio ($ ARS)</span>
                             </label>
                             <label class="column-check-item">
+                                <input type="checkbox" data-col="stock" checked onchange="toggleColumnVisibility('stock', this.checked)">
+                                <span>Stock</span>
+                            </label>
+                            <label class="column-check-item">
                                 <input type="checkbox" data-col="bultos" onchange="toggleColumnVisibility('bultos', this.checked)">
                                 <span>Ctd. Bultos</span>
                             </label>
@@ -1131,10 +1135,16 @@
         <!-- Tabla de Materiales -->
         <section class="table-card">
             <div class="table-header-bar">
-                <h2>
-                    Catálogo de Materiales
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <h2 id="table-title-heading">
+                        Catálogo de Materiales
+                    </h2>
                     <span class="table-count-badge" id="table-count-label">0 materiales</span>
-                </h2>
+                    <div class="view-tab-buttons" style="display: inline-flex; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 3px; gap: 4px;">
+                        <button id="btn-tab-catalog" type="button" class="btn btn-sm btn-primary" onclick="setActiveTab('catalog')" style="padding: 5px 14px; font-size: 0.8rem; border-radius: var(--radius-sm);">📦 Catálogo</button>
+                        <button id="btn-tab-stock" type="button" class="btn btn-sm btn-secondary" onclick="setActiveTab('stock')" style="padding: 5px 14px; font-size: 0.8rem; border-radius: var(--radius-sm);">📊 Tabla de Stock</button>
+                    </div>
+                </div>
                 <div style="font-size: 0.78rem; color: var(--text-muted);" id="last-sync-time">
                     Sincronizado en tiempo real
                 </div>
@@ -1152,6 +1162,7 @@
                             <th class="col-supplier" style="width: 130px;">PROVEEDOR</th>
                             <th class="col-unit" style="width: 90px;">UNIDAD</th>
                             <th class="col-cost" style="width: 140px; text-align: right;">PRECIO ($ ARS)</th>
+                            <th class="col-stock" style="width: 130px; text-align: center;">STOCK</th>
                             <th class="col-bultos" style="width: 90px; text-align: center;">BULTOS</th>
                             <th class="col-iva" style="width: 80px; text-align: center;">% IVA</th>
                             <th class="col-updated" style="width: 130px; text-align: center;">ACTUALIZADO</th>
@@ -1160,7 +1171,7 @@
                     </thead>
                     <tbody id="tbody-materiales">
                         <tr>
-                            <td colspan="12" class="empty-state">
+                            <td colspan="13" class="empty-state">
                                 <div class="empty-state-icon">⏳</div>
                                 <h3>Cargando lista de materiales...</h3>
                                 <p>Obteniendo información desde la base de datos de ElectroFrío</p>
@@ -1232,16 +1243,16 @@
                             <input type="number" id="new-costo" class="form-input" placeholder="0" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
                         </div>
                         <div class="form-group">
+                            <label for="new-stock">Stock Actual</label>
+                            <input type="number" id="new-stock" class="form-input" placeholder="0" min="0" value="0" style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:var(--color-blue);">
+                        </div>
+                        <div class="form-group">
                             <label for="new-iva">% IVA</label>
                             <input type="number" id="new-iva" class="form-input" placeholder="21" min="0" max="100" step="any" value="21">
                         </div>
                         <div class="form-group">
                             <label for="new-unidad">Unidad Medida</label>
                             <input type="text" id="new-unidad" class="form-input" placeholder="Unidad, Metro, Kg...">
-                        </div>
-                        <div class="form-group">
-                            <label for="new-bultos">Ctd. Bultos</label>
-                            <input type="text" id="new-bultos" class="form-input" placeholder="1">
                         </div>
                     </div>
 
@@ -1321,16 +1332,16 @@
                             <input type="number" id="edit-costo" class="form-input" min="0" step="1" required style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:#34d399;">
                         </div>
                         <div class="form-group">
+                            <label for="edit-stock">Stock Actual</label>
+                            <input type="number" id="edit-stock" class="form-input" min="0" value="0" style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:700; color:var(--color-blue);">
+                        </div>
+                        <div class="form-group">
                             <label for="edit-iva">% IVA</label>
                             <input type="number" id="edit-iva" class="form-input" min="0" max="100" step="any" placeholder="21">
                         </div>
                         <div class="form-group">
                             <label for="edit-unidad">Unidad Medida</label>
                             <input type="text" id="edit-unidad" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-bultos">Ctd. Bultos</label>
-                            <input type="text" id="edit-bultos" class="form-input">
                         </div>
                     </div>
 
@@ -1397,6 +1408,10 @@
                     <div class="detail-item">
                         <div class="lbl">Precio Unitario ($ ARS)</div>
                         <div class="val" style="color:#34d399; font-size:1.1rem; font-family:'Outfit', sans-serif;" id="view-costo">$ 0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="lbl">Cantidad en Stock</div>
+                        <div class="val" style="color:var(--color-blue); font-size:1.1rem; font-family:'Outfit', sans-serif;" id="view-stock">0</div>
                     </div>
                     <div class="detail-item">
                         <div class="lbl">Precio Total ($ ARS)</div>
@@ -1623,6 +1638,7 @@
         let itemsToCommit = [];         // Items listos para guardar en Firestore
         let itemToDeleteId = null;      // ID a eliminar
         let unsubscribeFirestore = null;
+        let currentTab = 'catalog';     // 'catalog' o 'stock'
 
         // Configuración de visibilidad de columnas por defecto
         const defaultVisibleCols = {
@@ -1634,6 +1650,7 @@
             supplier: true,
             unit: true,
             cost: true,
+            stock: true,
             bultos: false,
             iva: false,
             updated: true,
@@ -1723,6 +1740,75 @@
             const badge = document.getElementById('header-total-badge');
             if (badge) {
                 badge.textContent = `📦 ${materialesData.length} Materiales`;
+            }
+        }
+
+        // --- 4.1. CAMBIO DE PESTAÑA (CATÁLOGO / TABLA DE STOCK) ---
+        function setActiveTab(tab) {
+            currentTab = tab;
+            const btnCat = document.getElementById('btn-tab-catalog');
+            const btnStock = document.getElementById('btn-tab-stock');
+            const titleHeading = document.getElementById('table-title-heading');
+
+            if (tab === 'stock') {
+                if (btnCat) { btnCat.className = 'btn btn-sm btn-secondary'; }
+                if (btnStock) { btnStock.className = 'btn btn-sm btn-primary'; }
+                if (titleHeading) { titleHeading.textContent = 'Tabla de Control de Stock'; }
+                visibleCols.cost = false;
+                visibleCols.supplier = false;
+                visibleCols.stock = true;
+            } else {
+                if (btnCat) { btnCat.className = 'btn btn-sm btn-primary'; }
+                if (btnStock) { btnStock.className = 'btn btn-sm btn-secondary'; }
+                if (titleHeading) { titleHeading.textContent = 'Catálogo de Materiales'; }
+                loadColumnPreferences();
+            }
+            applyColumnStyles();
+            applyFilters();
+        }
+
+        async function adjustStock(docId, delta) {
+            const item = materialesData.find(x => x.id === docId);
+            if (!item) return;
+            const currentStock = parseInt(item.stock, 10) || 0;
+            const newStock = Math.max(0, currentStock + delta);
+
+            item.stock = newStock;
+            renderCatalog();
+
+            try {
+                await db.collection('materiales').doc(docId).update({
+                    stock: newStock,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (err) {
+                console.error("Error al actualizar stock:", err);
+                showToast("Error al actualizar stock: " + err.message, "error");
+            }
+        }
+
+        async function promptEditStock(docId, currentStock) {
+            const input = prompt("Ingresa la nueva cantidad de stock:", currentStock);
+            if (input === null) return;
+            const newStock = parseInt(input.trim(), 10);
+            if (isNaN(newStock) || newStock < 0) {
+                showToast("Por favor ingresa un número de stock válido", "warning");
+                return;
+            }
+
+            const item = materialesData.find(x => x.id === docId);
+            if (item) item.stock = newStock;
+            renderCatalog();
+
+            try {
+                await db.collection('materiales').doc(docId).update({
+                    stock: newStock,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Stock actualizado correctamente", "success");
+            } catch (err) {
+                console.error("Error al actualizar stock:", err);
+                showToast("Error al actualizar stock: " + err.message, "error");
             }
         }
 
@@ -1994,7 +2080,7 @@
             if (filteredData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" class="empty-state">
+                        <td colspan="13" class="empty-state">
                             <div class="empty-state-icon">🔍</div>
                             <h3>No se encontraron materiales</h3>
                             <p>Prueba buscando con otro término o importa tu lista desde el botón "📁 Importar Excel / CSV".</p>
@@ -2016,6 +2102,7 @@
                 const prov = item.proveedor || '-';
                 const unit = item.unidad_medida || 'Unidad';
                 const cost = formatMoney(item.costo || item.precio);
+                const stock = item.stock !== undefined && item.stock !== null && item.stock !== '' ? parseInt(item.stock, 10) : 0;
                 const bultos = item.bultos || item.indica_ctd_bultos || '1';
                 const ivaText = formatIva(item);
                 const updateDate = formatDate(item);
@@ -2047,6 +2134,13 @@
                         <td class="col-cost" style="text-align: right;">
                             <span class="price-tag">${cost}</span>
                         </td>
+                        <td class="col-stock" style="text-align: center;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(0, 191, 255, 0.08); border: 1px solid rgba(0, 191, 255, 0.25); border-radius: var(--radius-md); padding: 3px 8px;">
+                                <button type="button" style="background:none; border:none; color:var(--color-red); cursor:pointer; font-weight:800; font-size:1.1rem; padding: 0 4px; line-height:1;" onclick="adjustStock('${item.id}', -1)" title="Disminuir stock en 1">-</button>
+                                <span style="font-family:'Outfit', sans-serif; font-weight:700; font-size:0.95rem; min-width:32px; text-align:center; color: var(--color-blue); cursor:pointer;" onclick="promptEditStock('${item.id}', ${stock})" title="Haz clic para editar la cantidad de stock">${stock}</span>
+                                <button type="button" style="background:none; border:none; color:var(--color-green); cursor:pointer; font-weight:800; font-size:1.1rem; padding: 0 4px; line-height:1;" onclick="adjustStock('${item.id}', 1)" title="Aumentar stock en 1">+</button>
+                            </div>
+                        </td>
                         <td class="col-bultos" style="text-align: center;">
                             <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(bultos)}</span>
                         </td>
@@ -2077,7 +2171,7 @@
                 const remaining = filteredData.length - displayLimit;
                 html += `
                     <tr id="row-load-more">
-                        <td colspan="12" style="text-align: center; padding: 14px; background: rgba(0, 191, 255, 0.04);">
+                        <td colspan="13" style="text-align: center; padding: 14px; background: rgba(0, 191, 255, 0.04);">
                             <button class="btn btn-secondary" onclick="loadMoreMaterials()" style="padding: 8px 24px; font-weight: 700; border-color: var(--color-blue); color: var(--color-blue);">
                                 ⬇️ Cargar más materiales (${remaining} restantes)
                             </button>
@@ -2128,10 +2222,11 @@
             const subrubro = document.getElementById('new-subrubro').value.trim();
             const prov = document.getElementById('new-proveedor').value.trim();
             const costo = Math.round(parseFloat(document.getElementById('new-costo').value) || 0);
+            const stockVal = parseInt(document.getElementById('new-stock')?.value, 10) || 0;
             const ivaInputVal = document.getElementById('new-iva').value.trim();
             const ivaNum = ivaInputVal !== '' ? (parseFloat(ivaInputVal) || 0) : 21;
             const unidad = document.getElementById('new-unidad').value.trim() || 'Unidad';
-            const bultos = document.getElementById('new-bultos').value.trim() || '1';
+            const bultos = '1';
             const desc = document.getElementById('new-descripcion').value.trim();
 
             if (!code || !prod) {
@@ -2164,6 +2259,7 @@
                     precio: costo,
                     costo_total: costo,
                     precio_total: costo,
+                    stock: stockVal,
                     iva: ivaNum,
                     porcentaje_iva: ivaNum,
                     unidad_medida: unidad,
@@ -2203,6 +2299,9 @@
             document.getElementById('edit-rubro').value = item.rubro || '';
             document.getElementById('edit-subrubro').value = item.sub_rubro || '';
             document.getElementById('edit-costo').value = Math.round(parseFloat(item.costo || item.precio) || 0);
+            if (document.getElementById('edit-stock')) {
+                document.getElementById('edit-stock').value = parseInt(item.stock, 10) || 0;
+            }
 
             let currentIva = item.iva !== undefined && item.iva !== null && item.iva !== '' ? item.iva : item.porcentaje_iva;
             if (currentIva === undefined || currentIva === null || currentIva === '' || parseFloat(currentIva) > 100 || parseFloat(currentIva) < 0) {
@@ -2215,7 +2314,6 @@
             document.getElementById('edit-iva').value = currentIva;
 
             document.getElementById('edit-unidad').value = item.unidad_medida || 'Unidad';
-            document.getElementById('edit-bultos').value = item.bultos || '1';
             document.getElementById('edit-descripcion').value = item.descripcion || '';
 
             openModal('modal-edit');
@@ -2234,10 +2332,11 @@
             const subrubro = document.getElementById('edit-subrubro').value.trim();
             const prov = document.getElementById('edit-proveedor').value.trim();
             const costo = Math.round(parseFloat(document.getElementById('edit-costo').value) || 0);
+            const stockVal = parseInt(document.getElementById('edit-stock')?.value, 10) || 0;
             const ivaInputVal = document.getElementById('edit-iva').value.trim();
             const ivaNum = ivaInputVal !== '' ? (parseFloat(ivaInputVal) || 0) : 21;
             const unidad = document.getElementById('edit-unidad').value.trim() || 'Unidad';
-            const bultos = document.getElementById('edit-bultos').value.trim() || '1';
+            const bultos = '1';
             const desc = document.getElementById('edit-descripcion').value.trim();
 
             if (!prod) {
@@ -2262,6 +2361,7 @@
                     precio: costo,
                     costo_total: costo,
                     precio_total: costo,
+                    stock: stockVal,
                     iva: ivaNum,
                     porcentaje_iva: ivaNum,
                     unidad_medida: unidad,
@@ -2297,6 +2397,9 @@
             document.getElementById('view-proveedor').textContent = item.proveedor || '-';
             document.getElementById('view-unidad').textContent = item.unidad_medida || 'Unidad';
             document.getElementById('view-costo').textContent = formatMoney(item.costo || item.precio);
+            if (document.getElementById('view-stock')) {
+                document.getElementById('view-stock').textContent = parseInt(item.stock, 10) || 0;
+            }
             document.getElementById('view-costototal').textContent = formatMoney(item.costo_total || item.costo || item.precio);
             document.getElementById('view-bultos').textContent = item.bultos || item.indica_ctd_bultos || '-';
             document.getElementById('view-tipoproducto').textContent = item.tipo_producto || '-';
