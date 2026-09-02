@@ -1413,6 +1413,10 @@
             <button class="btn btn-secondary" onclick="exportToExcel()">
                 📊 Exportar Excel
             </button>
+            <button id="btnVerHistorialPresupuestos" class="btn btn-secondary" onclick="loadPresupuestosHistorial()"
+                style="background-color: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.5); color: #a78bfa;">
+                📂 Ver historial
+            </button>
             <button class="btn btn-primary" onclick="openNewBudgetModal()">
                 ✨ + Nuevo Presupuesto
             </button>
@@ -2283,13 +2287,23 @@
 
         // Sincronización reactiva con Firestore
         function initFirestoreSubscriptions() {
-            // Presupuestos
-            db.collection('presupuestos').onSnapshot(snap => {
+            // Presupuestos — OPTIMIZACIÓN: solo escucha el mes actual en tiempo real.
+            // El historial anterior se carga bajo demanda con loadPresupuestosHistorial().
+            const inicioMesPres = (() => {
+                const now = new Date();
+                return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            })();
+            db.collection('presupuestos')
+                .where('createdAt', '>=', inicioMesPres)
+                .onSnapshot(snap => {
                 const list = [];
                 snap.forEach(doc => {
                     list.push({ id: doc.id, ...doc.data() });
                 });
-                presupuestosData = list;
+                // Fusionar con historial previamente cargado
+                const historical = window._presupuestosHistorial || [];
+                const currentIds = new Set(list.map(p => p.id));
+                presupuestosData = [...list, ...historical.filter(p => !currentIds.has(p.id))];
                 localStorage.setItem('electrofrio_presupuestos', JSON.stringify(presupuestosData));
                 applyFilters();
                 updateKPIs();
@@ -2323,6 +2337,34 @@
                 localStorage.setItem('electrofrio_clients', JSON.stringify(clientesData));
             }, err => console.warn("Sync clientes err:", err));
         }
+
+        // Carga presupuestos anteriores al mes actual como lectura única (getDocs).
+        window.loadPresupuestosHistorial = async function() {
+            if (window._presupuestosHistorialCargado) return;
+            const btn = document.getElementById('btnVerHistorialPresupuestos');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
+            try {
+                const finMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+                const snap = await db.collection('presupuestos')
+                    .where('createdAt', '<', finMes)
+                    .get();
+                const hist = [];
+                snap.forEach(doc => hist.push({ id: doc.id, ...doc.data() }));
+                window._presupuestosHistorial = hist;
+                window._presupuestosHistorialCargado = true;
+                const currentIds = new Set(presupuestosData.map(p => p.id));
+                presupuestosData = [...presupuestosData, ...hist.filter(p => !currentIds.has(p.id))];
+                localStorage.setItem('electrofrio_presupuestos', JSON.stringify(presupuestosData));
+                applyFilters();
+                updateKPIs();
+                if (btn) { btn.textContent = '✅ Historial cargado'; btn.disabled = true; }
+                showToast(`📂 ${hist.length} presupuestos históricos cargados`, 'success');
+            } catch(e) {
+                console.error('Error cargando historial de presupuestos:', e);
+                if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
+                showToast('Error al cargar historial de presupuestos', 'error');
+            }
+        };
 
         // --- 4. FORMATO Y HELPERS ---
         function formatMoney(amount) {

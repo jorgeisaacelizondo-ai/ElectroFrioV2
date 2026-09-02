@@ -1438,18 +1438,16 @@
             });
 
             // 2. Listener de Movimientos de Cobros
-            unsubscribeMovimientos = db.collection('cobros_movimientos').onSnapshot(snap => {
-                const list = [];
+            // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
                 snap.forEach(doc => {
                     const data = doc.data();
                     data.id = doc.id;
                     list.push(data);
                 });
-                // Deduplicar estrictamente por ID único
+                // Fusionar con historial previamente cargado
                 const map = new Map();
-                list.forEach(item => {
+                allMovs.forEach(item => {
                     if (item && item.id) map.set(item.id, item);
-                });
                 movementsList = Array.from(map.values());
                 // Ordenar por fecha descendente
                 movementsList.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
@@ -1468,8 +1466,8 @@
             });
         }
 
-        // --- 3. CÁLCULO DE SALDOS Y KPIS ---
-        function recomputeBalances() {
+        // Carga historial completo de movimientos de un cliente bajo demanda (getDocs).
+        // Se llama automáticamente al abrir el estado de cuenta.
             clientBalances = {};
 
             // Deduplicar movimientos por seguridad
@@ -2187,17 +2185,16 @@
         }
 
         // --- 6. MODAL ESTADO DE CUENTA / HISTORIAL ---
-        function openStatementModal(clientId) {
+        async function openStatementModal(clientId) {
             const client = clientsList.find(c => c.id === clientId);
             if (!client) return;
-
             document.getElementById('statement-client-id').value = clientId;
             document.getElementById('statement-client-name').textContent = client.name || 'Sin Nombre';
             document.getElementById('statement-client-details').textContent = `${client.clientCode || client.id} | Tel: ${client.phone || 'Sin teléfono'} | Domicilio: ${client.address || 'Sin especificar'}`;
 
-            renderStatementTable(clientId);
-            openModal('modal-statement');
-        }
+            // Cargar historial completo del cliente si aún no fue cargado en esta sesión
+            await loadCobrosHistorialCliente(clientId);
+
 
         function renderStatementTable(clientId) {
             const tbody = document.getElementById('statement-table-body');

@@ -3182,6 +3182,10 @@
                                         <h3 class="card-title" id="ordersListTitle" style="margin: 0;">Órdenes Pendientes / Coordinadas</h3>
                                     </div>
                                     <div style="display: flex; gap: 8px; align-items: center;">
+                                        <button type="button" class="save-btn role-admin-only" id="btnVerHistorialOrdenes" onclick="loadOrdenesHistorial()"
+                                            style="width: auto; margin-top:0; padding:8px 14px; background-color: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.5); color: #a78bfa; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; font-size: 13px;">
+                                            📂 Ver historial
+                                        </button>
                                         <button type="button" class="save-btn role-admin-only" id="btnOpenNewClientFromOrders" onclick="openNewClientModal()"
                                             style="width: auto; margin-top:0; padding:8px 14px; background-color: rgba(0, 180, 216, 0.12); border: 1px solid var(--color-blue); color: var(--color-blue); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
@@ -3424,6 +3428,10 @@
                                     <input type="date" id="filterFichajesHasta">
                                 </div>
                                 <button id="btnBuscarFichajes" class="btn-buscar">Buscar</button>
+                                <button id="btnVerHistorialFichajes" class="btn-buscar role-admin-only" onclick="loadFichajesHistorial()"
+                                    style="background-color: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.5); color: #a78bfa;">
+                                    📂 Ver historial
+                                </button>
                                 <button id="btnOpenAddFichajeModal" class="btn-nuevo-fichaje">+ Nuevo Fichaje</button>
                             </div>
                         </div>
@@ -13581,8 +13589,16 @@
             }
 
             // Activar sincronización de fichajes en tiempo real desde Firestore
+            // OPTIMIZACIÓN: Solo escucha el mes actual para reducir lecturas.
+            // El historial anterior se carga bajo demanda desde renderFichajesHistorial().
             if (!unsubscribeFichajes) {
-                unsubscribeFichajes = db.collection('fichajes').onSnapshot((querySnapshot) => {
+                const inicioMesFichajes = (() => {
+                    const now = new Date();
+                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                })();
+                unsubscribeFichajes = db.collection('fichajes')
+                    .where('timestamp', '>=', inicioMesFichajes)
+                    .onSnapshot((querySnapshot) => {
                     const updatedFichajes = [];
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
@@ -13591,7 +13607,12 @@
                     });
                     // Ordenar por timestamp descendente
                     updatedFichajes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    fichajes = updatedFichajes;
+                    // Fusionar con historial previamente cargado bajo demanda
+                    const historical = window._fichajesHistorial || [];
+                    const currentIds = new Set(updatedFichajes.map(f => f.id));
+                    const merged = [...updatedFichajes, ...historical.filter(f => !currentIds.has(f.id))];
+                    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    fichajes = merged;
                     localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
                     updateTablesAndViews();
                 }, (error) => {
@@ -13647,7 +13668,15 @@
             }
 
             if (!unsubscribeOrdenes) {
-                unsubscribeOrdenes = db.collection('ordenes').onSnapshot((querySnapshot) => {
+                // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
+                // El historial anterior se carga bajo demanda con loadOrdenesHistorial().
+                const inicioMesOrdenes = (() => {
+                    const now = new Date();
+                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                })();
+                unsubscribeOrdenes = db.collection('ordenes')
+                    .where('timestamp', '>=', inicioMesOrdenes)
+                    .onSnapshot((querySnapshot) => {
                     const updatedOrders = [];
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
@@ -13689,7 +13718,13 @@
                         }
                     }
 
-                    ordenesTrabajo = updatedOrders;
+                    // Fusionar con historial previamente cargado bajo demanda
+                    const historical = window._ordenesHistorial || [];
+                    const currentIds = new Set(updatedOrders.map(o => o.id));
+                    const merged = [...updatedOrders, ...historical.filter(o => !currentIds.has(o.id))];
+                    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    ordenesTrabajo = merged;
                     localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
                     updateTablesAndViews();
                 }, (error) => {
@@ -13715,7 +13750,14 @@
             }
 
             if (!unsubscribePlanillas) {
-                unsubscribePlanillas = db.collection('planillas').onSnapshot((querySnapshot) => {
+                // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
+                const inicioMesPlanillas = (() => {
+                    const now = new Date();
+                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                })();
+                unsubscribePlanillas = db.collection('planillas')
+                    .where('timestamp', '>=', inicioMesPlanillas)
+                    .onSnapshot((querySnapshot) => {
                     const updatedSheets = [];
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
@@ -13744,6 +13786,76 @@
                 });
             }
         }
+
+        // ─── HISTORIAL BAJO DEMANDA ──────────────────────────────────────────────
+        // Carga órdenes anteriores al mes actual como lectura única (getDocs).
+        // Se cachea en window._ordenesHistorial para no releer Firestore en la sesión.
+        window.loadOrdenesHistorial = async function() {
+            if (window._ordenesHistorialCargado) return; // ya cargado en esta sesión
+            const btn = document.getElementById('btnVerHistorialOrdenes');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
+            try {
+                const finMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+                const snap = await db.collection('ordenes')
+                    .where('timestamp', '<', finMes)
+                    .get();
+                const hist = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    hist.push(data);
+                });
+                window._ordenesHistorial = hist;
+                window._ordenesHistorialCargado = true;
+                // Refrescar vista (el listener activo fusionará automáticamente)
+                const currentIds = new Set(ordenesTrabajo.filter(o => !o._fromHist).map(o => o.id));
+                const merged = [...ordenesTrabajo.filter(o => !o._fromHist), ...hist.filter(o => !currentIds.has(o.id))];
+                merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                ordenesTrabajo = merged;
+                localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
+                updateTablesAndViews();
+                if (btn) { btn.textContent = '✅ Historial cargado'; btn.disabled = true; }
+                showToast(`📂 ${hist.length} órdenes históricas cargadas`, 'success');
+            } catch(e) {
+                console.error('Error cargando historial de órdenes:', e);
+                if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
+                showToast('Error al cargar historial de órdenes', 'error');
+            }
+        };
+
+        // Carga fichajes anteriores al mes actual como lectura única (getDocs).
+        window.loadFichajesHistorial = async function() {
+            if (window._fichajesHistorialCargado) return;
+            const btn = document.getElementById('btnVerHistorialFichajes');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
+            try {
+                const finMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+                const snap = await db.collection('fichajes')
+                    .where('timestamp', '<', finMes)
+                    .get();
+                const hist = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    hist.push(data);
+                });
+                window._fichajesHistorial = hist;
+                window._fichajesHistorialCargado = true;
+                const currentIds = new Set(fichajes.map(f => f.id));
+                const merged = [...fichajes, ...hist.filter(f => !currentIds.has(f.id))];
+                merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                fichajes = merged;
+                localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                updateTablesAndViews();
+                if (btn) { btn.textContent = '✅ Historial cargado'; btn.disabled = true; }
+                showToast(`📂 ${hist.length} fichajes históricos cargados`, 'success');
+            } catch(e) {
+                console.error('Error cargando historial de fichajes:', e);
+                if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
+                showToast('Error al cargar historial de fichajes', 'error');
+            }
+        };
+        // ────────────────────────────────────────────────────────────────────────
 
         async function checkAndSeedFirestore() {
             try {
