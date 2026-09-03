@@ -1818,7 +1818,10 @@
                     <span>📦</span>
                     <span id="catalog-picker-title">Seleccionar del Catálogo</span>
                 </div>
-                <button class="btn btn-secondary" onclick="closeCatalogModal()">✕</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-secondary" onclick="syncCatalogosBajoDemanda(true)" title="Recargar catálogo desde Firebase" style="padding: 6px 12px; font-size: 13px;">🔄 Sincronizar</button>
+                    <button class="btn btn-secondary" onclick="closeCatalogModal()">✕</button>
+                </div>
             </div>
 
             <div class="modal-body" style="padding: 16px 20px;">
@@ -2116,6 +2119,15 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Habilitar persistencia offline sincronizada entre pestañas
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Persistencia: Pestañas múltiples.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Persistencia: Navegador no compatible.");
+            }
+        });
+
         // --- 2. ESTADO GLOBAL ---
         let presupuestosData = [];
         let filteredPresupuestos = [];
@@ -2273,10 +2285,18 @@
                     updateKPIs();
                 }
                 const cachedMat = localStorage.getItem('electrofrio_materiales');
-                if (cachedMat) materialesData = JSON.parse(cachedMat);
+                if (cachedMat) {
+                    materialesData = JSON.parse(cachedMat);
+                    const badge = document.getElementById('count-picker-mat');
+                    if (badge) badge.textContent = materialesData.length;
+                }
 
                 const cachedMdo = localStorage.getItem('electrofrio_mano_obra');
-                if (cachedMdo) manoObraData = JSON.parse(cachedMdo);
+                if (cachedMdo) {
+                    manoObraData = JSON.parse(cachedMdo);
+                    const badge = document.getElementById('count-picker-mdo');
+                    if (badge) badge.textContent = manoObraData.length;
+                }
 
                 const cachedCli = localStorage.getItem('electrofrio_clients');
                 if (cachedCli) clientesData = JSON.parse(cachedCli);
@@ -2285,7 +2305,76 @@
             }
         }
 
-        // Sincronización reactiva con Firestore
+        // Sincronización bajo demanda de catálogos auxiliares (evita ~2.750 lecturas continuas de fondo)
+        window.syncCatalogosBajoDemanda = async function(forzar = false) {
+            try {
+                const promises = [];
+                if (forzar || !materialesData || materialesData.length === 0) {
+                    promises.push(
+                        db.collection('materiales').get().then(snap => {
+                            const list = [];
+                            snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                            materialesData = list;
+                            localStorage.setItem('electrofrio_materiales', JSON.stringify(materialesData));
+                            const badge = document.getElementById('count-picker-mat');
+                            if (badge) badge.textContent = materialesData.length;
+                        })
+                    );
+                }
+                if (forzar || !manoObraData || manoObraData.length === 0) {
+                    promises.push(
+                        db.collection('mano_obra').get().then(snap => {
+                            const list = [];
+                            snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                            manoObraData = list;
+                            localStorage.setItem('electrofrio_mano_obra', JSON.stringify(manoObraData));
+                            const badge = document.getElementById('count-picker-mdo');
+                            if (badge) badge.textContent = manoObraData.length;
+                        })
+                    );
+                }
+                if (forzar || !clientesData || clientesData.length === 0) {
+                    promises.push(
+                        db.collection('clientes').get().then(snap => {
+                            const list = [];
+                            snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                            clientesData = list;
+                            localStorage.setItem('electrofrio_clients', JSON.stringify(clientesData));
+                        })
+                    );
+                }
+                if (promises.length > 0) {
+                    await Promise.all(promises);
+                    if (forzar) showToast("✓ Catálogo sincronizado con la nube", "success");
+                }
+            } catch (err) {
+                console.warn("Error en syncCatalogosBajoDemanda:", err);
+                if (forzar) showToast("Error al sincronizar catálogo", "error");
+            }
+        };
+
+        // Escuchar cambios de localStorage entre pestañas (costo 0 lecturas de Firestore)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'electrofrio_materiales' && e.newValue) {
+                try {
+                    materialesData = JSON.parse(e.newValue);
+                    const badge = document.getElementById('count-picker-mat');
+                    if (badge) badge.textContent = materialesData.length;
+                } catch (err) {}
+            } else if (e.key === 'electrofrio_mano_obra' && e.newValue) {
+                try {
+                    manoObraData = JSON.parse(e.newValue);
+                    const badge = document.getElementById('count-picker-mdo');
+                    if (badge) badge.textContent = manoObraData.length;
+                } catch (err) {}
+            } else if (e.key === 'electrofrio_clients' && e.newValue) {
+                try {
+                    clientesData = JSON.parse(e.newValue);
+                } catch (err) {}
+            }
+        });
+
+        // Sincronización reactiva con Firestore (únicamente presupuestos del mes)
         function initFirestoreSubscriptions() {
             // Presupuestos — OPTIMIZACIÓN: solo escucha el mes actual en tiempo real.
             // El historial anterior se carga bajo demanda con loadPresupuestosHistorial().
@@ -2308,34 +2397,6 @@
                 applyFilters();
                 updateKPIs();
             }, err => console.error("Error sync presupuestos:", err));
-
-            // Materiales
-            db.collection('materiales').onSnapshot(snap => {
-                const list = [];
-                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
-                materialesData = list;
-                localStorage.setItem('electrofrio_materiales', JSON.stringify(materialesData));
-                const badge = document.getElementById('count-picker-mat');
-                if (badge) badge.textContent = materialesData.length;
-            }, err => console.warn("Sync materiales err:", err));
-
-            // Mano de obra
-            db.collection('mano_obra').onSnapshot(snap => {
-                const list = [];
-                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
-                manoObraData = list;
-                localStorage.setItem('electrofrio_mano_obra', JSON.stringify(manoObraData));
-                const badge = document.getElementById('count-picker-mdo');
-                if (badge) badge.textContent = manoObraData.length;
-            }, err => console.warn("Sync mano_obra err:", err));
-
-            // Clientes (CRM)
-            db.collection('clientes').onSnapshot(snap => {
-                const list = [];
-                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
-                clientesData = list;
-                localStorage.setItem('electrofrio_clients', JSON.stringify(clientesData));
-            }, err => console.warn("Sync clientes err:", err));
         }
 
         // Carga presupuestos anteriores al mes actual como lectura única (getDocs).
@@ -2903,12 +2964,16 @@
         }
 
         // --- 9. MODAL SELECTOR DE CATÁLOGO ---
-        function openCatalogModal(tab = 'mat') {
+        async function openCatalogModal(tab = 'mat') {
             activeCatalogTab = tab;
             document.getElementById('tab-picker-mat').classList.toggle('active', tab === 'mat');
             document.getElementById('tab-picker-mdo').classList.toggle('active', tab === 'mdo');
             document.getElementById('catalog-search-input').value = '';
             document.getElementById('catalog-picker-title').textContent = tab === 'mat' ? 'Catálogo de Materiales' : 'Catálogo de Mano de Obra';
+
+            if ((!materialesData || materialesData.length === 0) && (!manoObraData || manoObraData.length === 0)) {
+                await syncCatalogosBajoDemanda(false);
+            }
 
             filterCatalogPicker();
             document.getElementById('modal-catalog-picker').classList.add('active');

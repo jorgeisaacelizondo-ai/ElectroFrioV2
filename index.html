@@ -3584,32 +3584,32 @@
 
                 <!-- MATERIALES -->
                 <div id="mod-materiales" class="page-content hidden">
-                    <iframe src="materiales.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="materiales.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- MANO DE OBRA -->
                 <div id="mod-manodeobra" class="page-content hidden">
-                    <iframe src="manodeobra.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="manodeobra.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- PRESUPUESTO -->
                 <div id="mod-presupuesto" class="page-content hidden">
-                    <iframe src="presupuestos.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="presupuestos.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- PROVEEDORES -->
                 <div id="mod-proveedores" class="page-content hidden">
-                    <iframe src="proveedores.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="proveedores.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- CRM CLIENTES Y PROSPECTOS -->
                 <div id="mod-crm" class="page-content hidden">
-                    <iframe src="crm.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="crm.html" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- COBROS Y CUENTAS CORRIENTES -->
                 <div id="mod-cobros" class="page-content hidden">
-                    <iframe src="cobros.html?v=7" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
+                    <iframe data-src="cobros.html?v=7" style="width: 100%; height: calc(100vh - 80px); border: none; border-radius: 8px;"></iframe>
                 </div>
 
                 <!-- HISTORIAL DE IMPORTACIONES -->
@@ -4987,6 +4987,15 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        // Habilitar persistencia offline con sincronización entre pestañas para evitar descargas repetidas
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Persistencia: Otra pestaña no soporta concurrencia.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Persistencia: Navegador sin soporte de IndexedDB.");
+            }
+        });
 
         // Re-sincronizar Firestore de forma inmediata al volver al primer plano (wake up en celular)
         document.addEventListener('visibilitychange', () => {
@@ -13962,6 +13971,11 @@
             pages.forEach(page => {
                 if (page.id === `mod-${moduleName}`) {
                     page.classList.remove('hidden');
+                    // Carga perezosa (Lazy Load) de módulos en iframe solo al ser visitados por el usuario
+                    const iframe = page.querySelector('iframe[data-src]');
+                    if (iframe && !iframe.getAttribute('src')) {
+                        iframe.src = iframe.getAttribute('data-src');
+                    }
                 } else {
                     page.classList.add('hidden');
                 }

@@ -1332,6 +1332,15 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Habilitar persistencia offline con soporte de múltiples pestañas sincronizadas
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Persistencia: Pestañas múltiples.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Persistencia: Navegador no compatible.");
+            }
+        });
+
         // Estado local
         let clientsList = [];
         let movementsList = [];
@@ -1438,16 +1447,18 @@
             });
 
             // 2. Listener de Movimientos de Cobros
-            // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
+            unsubscribeMovimientos = db.collection('cobros_movimientos').onSnapshot(snap => {
+                const list = [];
                 snap.forEach(doc => {
                     const data = doc.data();
                     data.id = doc.id;
                     list.push(data);
                 });
-                // Fusionar con historial previamente cargado
+                // Deduplicar estrictamente por ID único
                 const map = new Map();
-                allMovs.forEach(item => {
+                list.forEach(item => {
                     if (item && item.id) map.set(item.id, item);
+                });
                 movementsList = Array.from(map.values());
                 // Ordenar por fecha descendente
                 movementsList.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
@@ -1466,8 +1477,8 @@
             });
         }
 
-        // Carga historial completo de movimientos de un cliente bajo demanda (getDocs).
-        // Se llama automáticamente al abrir el estado de cuenta.
+        // --- 3. CÁLCULO DE SALDOS Y KPIS ---
+        function recomputeBalances() {
             clientBalances = {};
 
             // Deduplicar movimientos por seguridad
@@ -2184,6 +2195,11 @@
             }
         }
 
+        // Helper para historial bajo demanda si fuese necesario
+        window.loadCobrosHistorialCliente = async function(clientId) {
+            return;
+        };
+
         // --- 6. MODAL ESTADO DE CUENTA / HISTORIAL ---
         async function openStatementModal(clientId) {
             const client = clientsList.find(c => c.id === clientId);
@@ -2192,8 +2208,12 @@
             document.getElementById('statement-client-name').textContent = client.name || 'Sin Nombre';
             document.getElementById('statement-client-details').textContent = `${client.clientCode || client.id} | Tel: ${client.phone || 'Sin teléfono'} | Domicilio: ${client.address || 'Sin especificar'}`;
 
-            // Cargar historial completo del cliente si aún no fue cargado en esta sesión
-            await loadCobrosHistorialCliente(clientId);
+            if (typeof loadCobrosHistorialCliente === 'function') {
+                await loadCobrosHistorialCliente(clientId);
+            }
+            renderStatementTable(clientId);
+            openModal('modal-statement');
+        }
 
 
         function renderStatementTable(clientId) {

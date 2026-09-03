@@ -1523,6 +1523,15 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Habilitar persistencia offline con soporte de múltiples pestañas sincronizadas
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Persistencia: Pestañas múltiples.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Persistencia: Navegador no compatible.");
+            }
+        });
+
         // Estado local de clientes y vista
         let crmData = [];
         let filteredData = [];
