@@ -13759,13 +13759,7 @@
             }
 
             if (!unsubscribePlanillas) {
-                // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
-                const inicioMesPlanillas = (() => {
-                    const now = new Date();
-                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-                })();
                 unsubscribePlanillas = db.collection('planillas')
-                    .where('timestamp', '>=', inicioMesPlanillas)
                     .onSnapshot((querySnapshot) => {
                     const updatedSheets = [];
                     querySnapshot.forEach((doc) => {
