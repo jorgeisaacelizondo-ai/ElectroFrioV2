@@ -1375,6 +1375,10 @@
             transform: translateY(0);
         }
 
+        #fichaje-gps-opt-verified[hidden] {
+            display: none !important;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -3964,12 +3968,12 @@
                             ⚠ Debes seleccionar una opción (Entrada o Salida).
                         </div>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" id="fichajeGpsGroup">
                         <label for="fichaje-gps-status">Ubicación (GPS)</label>
                         <select id="fichaje-gps-status"
                             style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 6px;">
-                            <option value="manual">Manual (Sin GPS)</option>
-                            <option value="verified">Verificado (Con Coordenadas)</option>
+                            <option value="manual" id="fichaje-gps-opt-manual">Manual (Sin GPS)</option>
+                            <option value="verified" id="fichaje-gps-opt-verified" hidden style="display: none;" disabled>Verificado (Con Coordenadas)</option>
                         </select>
                     </div>
                 </div>
@@ -5176,6 +5180,26 @@
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 fichajeDate.textContent = now.toLocaleDateString('es-AR', options);
             }
+            // Actualizar cuenta regresiva de 5 minutos en el botón de fichaje del colaborador
+            const btnUnico = document.getElementById('btnFicharUnico');
+            if (btnUnico && btnUnico.dataset.cooldownTarget) {
+                const targetTime = parseInt(btnUnico.dataset.cooldownTarget, 10);
+                const diffMs = targetTime - now.getTime();
+                if (diffMs > 0) {
+                    const sec = Math.ceil(diffMs / 1000);
+                    const m = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    const timeStr = m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+                    const nextType = btnUnico.dataset.nextType || 'Fichar';
+                    btnUnico.textContent = `Espera ${timeStr} para ${nextType}`;
+                    btnUnico.disabled = true;
+                } else {
+                    delete btnUnico.dataset.cooldownTarget;
+                    if (typeof updateDashboardStats === 'function') {
+                        updateDashboardStats();
+                    }
+                }
+            }
         }
         setInterval(updateFichajeClock, 1000);
         updateFichajeClock();
@@ -5809,6 +5833,26 @@
                     const entradasToday = myFichajesToday.filter(f => f.type === 'Entrada').length;
                     const salidasToday = myFichajesToday.filter(f => f.type === 'Salida').length;
 
+                    // Validar si el último fichaje fue hace menos de 5 minutos
+                    let isCooldownActive = false;
+                    let remainingCooldownSec = 0;
+                    if (latestFichajeToday && latestFichajeToday.timestamp) {
+                        const lastTime = new Date(latestFichajeToday.timestamp).getTime();
+                        const nowTime = getSyncedDate().getTime();
+                        const diffMs = nowTime - lastTime;
+                        const cooldownMs = 5 * 60 * 1000;
+                        if (diffMs >= 0 && diffMs < cooldownMs) {
+                            isCooldownActive = true;
+                            remainingCooldownSec = Math.ceil((cooldownMs - diffMs) / 1000);
+                        }
+                    }
+
+                    const formatCooldownText = (sec) => {
+                        const m = Math.floor(sec / 60);
+                        const s = sec % 60;
+                        return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+                    };
+
                     if (latestFichajeToday && latestFichajeToday.type === 'Entrada') {
                         shiftStatusVal.textContent = 'En Servicio';
                         shiftStatusVal.style.color = 'var(--color-green)';
@@ -5819,7 +5863,15 @@
                                 btnUnico.textContent = 'Límite de Salidas Alcanzado (2/2)';
                                 btnUnico.className = 'fichaje-btn out disabled';
                                 btnUnico.disabled = true;
+                                delete btnUnico.dataset.cooldownTarget;
+                            } else if (isCooldownActive) {
+                                btnUnico.textContent = `Espera ${formatCooldownText(remainingCooldownSec)} para Salida`;
+                                btnUnico.className = 'fichaje-btn out disabled';
+                                btnUnico.disabled = true;
+                                btnUnico.dataset.cooldownTarget = String(new Date(latestFichajeToday.timestamp).getTime() + 5 * 60 * 1000);
+                                btnUnico.dataset.nextType = 'Salida';
                             } else {
+                                delete btnUnico.dataset.cooldownTarget;
                                 btnUnico.textContent = 'Marcar Salida';
                                 btnUnico.className = 'fichaje-btn out';
                                 btnUnico.disabled = false;
@@ -5836,7 +5888,15 @@
                                 btnUnico.textContent = 'Límite de Entradas Alcanzado (2/2)';
                                 btnUnico.className = 'fichaje-btn in disabled';
                                 btnUnico.disabled = true;
+                                delete btnUnico.dataset.cooldownTarget;
+                            } else if (isCooldownActive) {
+                                btnUnico.textContent = `Espera ${formatCooldownText(remainingCooldownSec)} para Entrada`;
+                                btnUnico.className = 'fichaje-btn in disabled';
+                                btnUnico.disabled = true;
+                                btnUnico.dataset.cooldownTarget = String(new Date(latestFichajeToday.timestamp).getTime() + 5 * 60 * 1000);
+                                btnUnico.dataset.nextType = 'Entrada';
                             } else {
+                                delete btnUnico.dataset.cooldownTarget;
                                 btnUnico.textContent = 'Marcar Entrada';
                                 btnUnico.className = 'fichaje-btn in';
                                 btnUnico.disabled = false;
@@ -6671,6 +6731,39 @@
             renderTodayAttendanceControl();
         };
 
+        let fichajeOptVerifiedElement = null;
+
+        function updateFichajeGpsUI(allowVerified = false) {
+            const select = document.getElementById('fichaje-gps-status');
+            if (!fichajeOptVerifiedElement) {
+                fichajeOptVerifiedElement = document.getElementById('fichaje-gps-opt-verified');
+            }
+            if (!select) return;
+
+            if (allowVerified) {
+                if (fichajeOptVerifiedElement) {
+                    if (!fichajeOptVerifiedElement.parentNode) {
+                        select.appendChild(fichajeOptVerifiedElement);
+                    }
+                    fichajeOptVerifiedElement.hidden = false;
+                    fichajeOptVerifiedElement.style.display = '';
+                    fichajeOptVerifiedElement.disabled = false;
+                }
+                select.value = 'verified';
+            } else {
+                select.value = 'manual';
+                if (fichajeOptVerifiedElement) {
+                    fichajeOptVerifiedElement.hidden = true;
+                    fichajeOptVerifiedElement.style.display = 'none';
+                    fichajeOptVerifiedElement.disabled = true;
+                    if (fichajeOptVerifiedElement.parentNode) {
+                        fichajeOptVerifiedElement.remove();
+                    }
+                }
+            }
+        }
+        updateFichajeGpsUI(false);
+
         window.openModalFichajeForCollab = function (collabName, defaultType = 'Entrada', targetDate = null) {
             editFichajeId = null;
             const modalFichaje = document.getElementById('modalFichaje');
@@ -6718,8 +6811,7 @@
             const selectorEl = document.getElementById('fichajeTypeSelector');
             if (selectorEl) selectorEl.classList.remove('has-error');
 
-            const gpsStatus = document.getElementById('fichaje-gps-status');
-            if (gpsStatus) gpsStatus.value = 'manual';
+            updateFichajeGpsUI(false);
 
             modalFichaje.classList.add('show');
         };
@@ -7471,6 +7563,32 @@
                     // Validar límite de máximo 2 Entradas y 2 Salidas por día
                     const entradasHoy = myDocs.filter(d => d.type === 'Entrada').length;
                     const salidasHoy = myDocs.filter(d => d.type === 'Salida').length;
+
+                    // Validar tiempo mínimo de 5 minutos entre fichajes para evitar duplicados
+                    if (myDocs.length > 0) {
+                        const lastPunch = myDocs[0];
+                        const lastPunchTime = new Date(lastPunch.timestamp).getTime();
+                        const nowTime = getSyncedDate().getTime();
+                        const diffMs = nowTime - lastPunchTime;
+                        const cooldownMs = 5 * 60 * 1000;
+
+                        if (diffMs >= 0 && diffMs < cooldownMs) {
+                            const remainingSec = Math.ceil((cooldownMs - diffMs) / 1000);
+                            const remMin = Math.floor(remainingSec / 60);
+                            const remSec = remainingSec % 60;
+                            const timeText = remMin > 0 ? `${remMin}m ${String(remSec).padStart(2, '0')}s` : `${remSec}s`;
+                            const msg = `Debes esperar 5 minutos entre cada fichaje para evitar registros duplicados. Por favor espera ${timeText}.`;
+                            showToast(msg, "warning");
+                            alert(msg);
+                            if (typeof updateDashboardStats === 'function') {
+                                updateDashboardStats();
+                            } else {
+                                btnFicharUnico.disabled = false;
+                                btnFicharUnico.textContent = originalText;
+                            }
+                            return;
+                        }
+                    }
 
                     if (intendedType === 'Entrada' && entradasHoy >= 2) {
                         const msg = "Has alcanzado el límite máximo de 2 entradas registradas el día de hoy.";
@@ -13360,7 +13478,7 @@
                 const selectorEl = document.getElementById('fichajeTypeSelector');
                 if (selectorEl) selectorEl.classList.remove('has-error');
 
-                document.getElementById('fichaje-gps-status').value = 'manual';
+                updateFichajeGpsUI(false);
 
                 modalFichaje.classList.add('show');
             });
@@ -13376,6 +13494,7 @@
                 const selectorEl = document.getElementById('fichajeTypeSelector');
                 if (selectorEl) selectorEl.classList.remove('has-error');
                 editFichajeId = null;
+                updateFichajeGpsUI(false);
             });
         }
 
@@ -13398,8 +13517,8 @@
                 document.getElementById('fichaje-time').value = formatTime12hTo24h(f.time);
                 setFichajeType(f.type || 'Entrada');
 
-                const isVerified = f.gps && f.gps.verified;
-                document.getElementById('fichaje-gps-status').value = isVerified ? 'verified' : 'manual';
+                const isVerified = !!(f.gps && f.gps.verified);
+                updateFichajeGpsUI(isVerified);
 
                 modalFichaje.classList.add('show');
             }
@@ -13465,8 +13584,27 @@
 
                 // Configurar objeto GPS
                 let gpsObj = { manual: true };
-                if (gpsVal === 'verified') {
-                    gpsObj = { lat: -29.418139, lng: -66.857306, verified: true };
+                if (editFichajeId) {
+                    const existingFichaje = fichajes.find(item => item.id === editFichajeId);
+                    if (gpsVal === 'verified') {
+                        if (existingFichaje && existingFichaje.gps && existingFichaje.gps.verified && existingFichaje.gps.lat) {
+                            gpsObj = { ...existingFichaje.gps };
+                        } else {
+                            gpsObj = { lat: -29.418139, lng: -66.857306, verified: true };
+                        }
+                    } else {
+                        gpsObj = { manual: true };
+                    }
+                } else {
+                    // Al registrar un nuevo fichaje manual, siempre se guarda estrictamente como manual
+                    gpsObj = { manual: true };
+                }
+
+                const submitBtn = formFichaje.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    if (submitBtn.disabled) return;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Guardando...';
                 }
 
                 try {
@@ -13476,6 +13614,26 @@
                     const selectedCollab = colaboradores.find(c => c.name === collabName);
                     const username = selectedCollab ? selectedCollab.username : "";
                     const targetUid = selectedCollab ? (selectedCollab.uid || selectedCollab.id) : null;
+
+                    // Validar duplicados manuales a menos de 5 minutos
+                    if (!editFichajeId) {
+                        const existingRecent = fichajes.find(f => {
+                            const matchName = f.name && f.name.trim().toLowerCase() === collabName.trim().toLowerCase();
+                            if (!matchName) return false;
+                            if (f.date !== dateVal) return false;
+                            const diff = Math.abs(new Date(f.timestamp).getTime() - new Date(timestampStr).getTime());
+                            return diff < 5 * 60 * 1000;
+                        });
+                        if (existingRecent) {
+                            if (!confirm(`Atención: ${collabName} ya tiene un fichaje de ${existingRecent.type} registrado a las ${existingRecent.time} (menos de 5 minutos de diferencia).\n\n¿Deseas registrar este fichaje de todas formas?`)) {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = 'Registrar Fichaje';
+                                }
+                                return;
+                            }
+                        }
+                    }
 
                     if (editFichajeId) {
                         // Actualizar fichaje existente
@@ -13508,10 +13666,19 @@
                         });
                     }
 
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Registrar Fichaje';
+                    }
                     modalFichaje.classList.remove('show');
                     formFichaje.reset();
                     editFichajeId = null;
+                    updateFichajeGpsUI(false);
                 } catch (error) {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = editFichajeId ? 'Guardar Cambios' : 'Registrar Fichaje';
+                    }
                     console.error("Error al guardar fichaje en Firestore: ", error);
                     alert("Error al guardar fichaje: " + error.message);
                 }
