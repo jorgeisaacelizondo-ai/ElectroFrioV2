@@ -7526,21 +7526,65 @@
             });
         }
 
+        let isPunchingInProgress = false;
+
         if (btnFicharUnico) {
             btnFicharUnico.addEventListener('click', async () => {
-                const name = localStorage.getItem('electrofrio_name');
+                if (isPunchingInProgress) {
+                    console.warn("Fichaje en proceso, ignorando clic repetido.");
+                    return;
+                }
+                isPunchingInProgress = true;
+
+                const name = localStorage.getItem('electrofrio_name') || "";
                 const username = localStorage.getItem('electrofrio_user') || "";
                 
                 // Show loading
                 const originalText = btnFicharUnico.textContent;
                 btnFicharUnico.textContent = 'Validando...';
                 btnFicharUnico.disabled = true;
+                btnFicharUnico.style.pointerEvents = 'none';
 
                 try {
-                    // Strict validation in Firebase
-                    const todayStr = getLocalISODate(getSyncedDate());
-                    let intendedType = 'Entrada'; // Default if no records
-                    
+                    const now = getSyncedDate();
+                    const todayStr = getLocalISODate(now);
+
+                    // 1. Validar primero contra memoria local para respuesta instantánea antirrebote
+                    const localToday = (fichajes || []).filter(f => {
+                        const matchName = f.name && name && f.name.trim().toLowerCase() === name.trim().toLowerCase();
+                        const matchUser = f.username && username && f.username.trim().toLowerCase() === username.trim().toLowerCase();
+                        if (!matchName && !matchUser) return false;
+                        return f.date === todayStr || isFichajeToday(f.date, f.timestamp);
+                    });
+                    localToday.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    if (localToday.length > 0) {
+                        const lastLocal = localToday[0];
+                        const lastLocalTime = new Date(lastLocal.timestamp).getTime();
+                        const diffMsLocal = now.getTime() - lastLocalTime;
+                        const cooldownMs = 5 * 60 * 1000;
+
+                        if (diffMsLocal >= 0 && diffMsLocal < cooldownMs) {
+                            const remainingSec = Math.ceil((cooldownMs - diffMsLocal) / 1000);
+                            const remMin = Math.floor(remainingSec / 60);
+                            const remSec = remainingSec % 60;
+                            const timeText = remMin > 0 ? `${remMin}m ${String(remSec).padStart(2, '0')}s` : `${remSec}s`;
+                            const msg = `Debes esperar 5 minutos entre cada fichaje para evitar registros duplicados. Por favor espera ${timeText}.`;
+                            showToast(msg, "warning");
+                            alert(msg);
+                            isPunchingInProgress = false;
+                            btnFicharUnico.style.pointerEvents = 'auto';
+                            if (typeof updateDashboardStats === 'function') {
+                                updateDashboardStats();
+                            } else {
+                                btnFicharUnico.disabled = false;
+                                btnFicharUnico.textContent = originalText;
+                            }
+                            return;
+                        }
+                    }
+
+                    // 2. Validar con Firestore
                     const snapshot = await db.collection('fichajes')
                         .where('date', '==', todayStr)
                         .get();
@@ -7548,25 +7592,28 @@
                     const myDocs = [];
                     snapshot.forEach(doc => {
                         const d = doc.data();
-                        if (d.name === name || d.username === username) myDocs.push(d);
+                        const matchName = d.name && name && d.name.trim().toLowerCase() === name.trim().toLowerCase();
+                        const matchUser = d.username && username && d.username.trim().toLowerCase() === username.trim().toLowerCase();
+                        if (matchName || matchUser) myDocs.push(d);
                     });
-                    myDocs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    // Fusionar registros de Firebase y locales para asegurar el historial completo
+                    const combinedMap = new Map();
+                    myDocs.forEach(d => { if (d.timestamp) combinedMap.set(d.timestamp, d); });
+                    localToday.forEach(d => { if (d.timestamp) combinedMap.set(d.timestamp, d); });
+                    const allTodayPunches = Array.from(combinedMap.values());
+                    allTodayPunches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     
-                    const lastType = myDocs.length > 0 ? myDocs[0].type : 'Salida';
-                    
-                    if (lastType === 'Salida' || myDocs.length === 0) {
-                        intendedType = 'Entrada';
-                    } else {
-                        intendedType = 'Salida';
-                    }
+                    const lastType = allTodayPunches.length > 0 ? allTodayPunches[0].type : 'Salida';
+                    let intendedType = (lastType === 'Salida' || allTodayPunches.length === 0) ? 'Entrada' : 'Salida';
 
                     // Validar límite de máximo 2 Entradas y 2 Salidas por día
-                    const entradasHoy = myDocs.filter(d => d.type === 'Entrada').length;
-                    const salidasHoy = myDocs.filter(d => d.type === 'Salida').length;
+                    const entradasHoy = allTodayPunches.filter(d => d.type === 'Entrada').length;
+                    const salidasHoy = allTodayPunches.filter(d => d.type === 'Salida').length;
 
-                    // Validar tiempo mínimo de 5 minutos entre fichajes para evitar duplicados
-                    if (myDocs.length > 0) {
-                        const lastPunch = myDocs[0];
+                    // Validar tiempo mínimo de 5 minutos entre fichajes
+                    if (allTodayPunches.length > 0) {
+                        const lastPunch = allTodayPunches[0];
                         const lastPunchTime = new Date(lastPunch.timestamp).getTime();
                         const nowTime = getSyncedDate().getTime();
                         const diffMs = nowTime - lastPunchTime;
@@ -7580,6 +7627,8 @@
                             const msg = `Debes esperar 5 minutos entre cada fichaje para evitar registros duplicados. Por favor espera ${timeText}.`;
                             showToast(msg, "warning");
                             alert(msg);
+                            isPunchingInProgress = false;
+                            btnFicharUnico.style.pointerEvents = 'auto';
                             if (typeof updateDashboardStats === 'function') {
                                 updateDashboardStats();
                             } else {
@@ -7594,6 +7643,8 @@
                         const msg = "Has alcanzado el límite máximo de 2 entradas registradas el día de hoy.";
                         showToast(msg, "error");
                         alert(msg);
+                        isPunchingInProgress = false;
+                        btnFicharUnico.style.pointerEvents = 'auto';
                         btnFicharUnico.disabled = true;
                         btnFicharUnico.textContent = 'Límite de Entradas Alcanzado (2/2)';
                         btnFicharUnico.className = 'fichaje-btn in disabled';
@@ -7604,6 +7655,8 @@
                         const msg = "Has alcanzado el límite máximo de 2 salidas registradas el día de hoy.";
                         showToast(msg, "error");
                         alert(msg);
+                        isPunchingInProgress = false;
+                        btnFicharUnico.style.pointerEvents = 'auto';
                         btnFicharUnico.disabled = true;
                         btnFicharUnico.textContent = 'Límite de Salidas Alcanzado (2/2)';
                         btnFicharUnico.className = 'fichaje-btn out disabled';
@@ -7614,6 +7667,8 @@
                     if ((originalText === 'Marcar Entrada' && intendedType !== 'Entrada') ||
                         (originalText === 'Marcar Salida' && intendedType !== 'Salida')) {
                         showToast('Tu estado ya fue actualizado por otra vía.', 'error');
+                        isPunchingInProgress = false;
+                        btnFicharUnico.style.pointerEvents = 'auto';
                         btnFicharUnico.disabled = false;
                         btnFicharUnico.textContent = intendedType === 'Entrada' ? 'Marcar Entrada' : 'Marcar Salida';
                         btnFicharUnico.className = intendedType === 'Entrada' ? 'fichaje-btn in' : 'fichaje-btn out';
@@ -7621,55 +7676,69 @@
                     }
                     
                     const resetBtn = () => {
+                        isPunchingInProgress = false;
+                        btnFicharUnico.style.pointerEvents = 'auto';
                         btnFicharUnico.disabled = false;
                         btnFicharUnico.textContent = intendedType === 'Entrada' ? 'Marcar Entrada' : 'Marcar Salida';
                         btnFicharUnico.className = intendedType === 'Entrada' ? 'fichaje-btn in' : 'fichaje-btn out';
                     };
                     
-                    verifyGeolocationAndExecute((collab, userLat, userLng) => {
-                        const now = getSyncedDate();
-                        const dateVal = getLocalISODate(now);
-                        const timeVal = formatTime12h(now);
-                        const timestampStr = now.toISOString();
-                        const isVerified = userLat !== null && userLng !== null;
+                    verifyGeolocationAndExecute(async (collab, userLat, userLng) => {
+                        try {
+                            btnFicharUnico.textContent = 'Guardando...';
+                            const punchNow = getSyncedDate();
+                            const dateVal = getLocalISODate(punchNow);
+                            const timeVal = formatTime12h(punchNow);
+                            const timestampStr = punchNow.toISOString();
+                            const isVerified = userLat !== null && userLng !== null;
 
-                        const nuevoFichaje = {
-                            id: `fichaje-${Date.now()}`,
-                            name: name,
-                            username: username,
-                            date: dateVal,
-                            time: timeVal,
-                            timestamp: timestampStr,
-                            type: intendedType,
-                            gps: {
-                                lat: userLat !== null ? userLat : 0,
-                                lng: userLng !== null ? userLng : 0,
-                                verified: isVerified,
-                                manual: !isVerified
-                            }
-                        };
-
-                        // 1. Agregar localmente
-                        fichajes.unshift(nuevoFichaje);
-                        localStorage.setItem('electrofrio_clockins', JSON.stringify(fichajes));
-                        updateTablesAndViews();
-                        showToast('¡Se registró con éxito!', 'success');
-
-                        // 2. Grabar de fondo
-                        (async () => {
-                            try {
-                                await db.collection('fichajes').add(nuevoFichaje);
-                                if (collab && collab.uid) {
-                                    await db.collection('usuarios').doc(collab.uid).update({ status: intendedType === 'Entrada' ? 'online' : 'offline' });
+                            const nuevoFichaje = {
+                                id: `fichaje-${Date.now()}`,
+                                name: name,
+                                username: username,
+                                date: dateVal,
+                                time: timeVal,
+                                timestamp: timestampStr,
+                                type: intendedType,
+                                gps: {
+                                    lat: userLat !== null ? userLat : 0,
+                                    lng: userLng !== null ? userLng : 0,
+                                    verified: isVerified,
+                                    manual: !isVerified
                                 }
-                            } catch (error) {
-                                console.error("Error al guardar fichaje en Firestore: ", error);
+                            };
+
+                            // 1. Guardar localmente con la clave correcta 'electrofrio_fichajes'
+                            fichajes.unshift(nuevoFichaje);
+                            localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                            updateTablesAndViews();
+
+                            // 2. Grabar en Firestore esperando confirmación del servidor
+                            const docRef = await db.collection('fichajes').add(nuevoFichaje);
+                            nuevoFichaje.id = docRef.id;
+
+                            if (collab && collab.uid) {
+                                await db.collection('usuarios').doc(collab.uid).update({ 
+                                    status: intendedType === 'Entrada' ? 'online' : 'offline' 
+                                }).catch(err => console.warn("Error actualizando status usuario:", err));
                             }
-                        })();
+
+                            localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                            updateTablesAndViews();
+                            showToast('¡Se registró con éxito!', 'success');
+                        } catch (saveError) {
+                            console.error("Error al guardar fichaje en Firestore: ", saveError);
+                            showToast('Fichaje registrado localmente (se sincronizará).', 'warning');
+                        } finally {
+                            isPunchingInProgress = false;
+                            btnFicharUnico.style.pointerEvents = 'auto';
+                        }
                     }, resetBtn);
                 } catch (e) {
                     console.error(e);
                     showToast('Error validando el fichaje.', 'error');
+                    isPunchingInProgress = false;
+                    btnFicharUnico.style.pointerEvents = 'auto';
                     btnFicharUnico.disabled = false;
                     btnFicharUnico.textContent = originalText;
                 }
