@@ -4452,133 +4452,13 @@
 
                 <!-- SECCIÓN 2: SELECCIÓN DE ÁREA -->
                 <div class="form-section-title" style="border-bottom: 2px solid var(--color-blue); padding-bottom: 5px; color: var(--color-blue); font-size: 15px; font-weight: 700; margin-bottom: 15px;">2. Área Especializada</div>
-                <div class="input-group" style="margin-bottom: 20px;">
-                    <label for="pdig-area">Seleccione el Área de Trabajo</label>
-                    <select id="pdig-area" required style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                        <option value="">-- Seleccione una opción --</option>
-                        <option value="electricidad">Electricidad</option>
-                        <option value="refrigeracion">Refrigeración</option>
-                        <option value="iluminacion">Iluminación</option>
-                        <option value="electrodomesticos">Electrodomésticos (Reparación / Retiro)</option>
-                        <option value="tecnologias">Tecnologías (Cámaras, Routers, etc.)</option>
-                        <option value="domotica">Domótica</option>
-                        <option value="tareas_varias">Tareas varias</option>
-                    </select>
-                </div>
-
-                <!-- FORMULARIOS DINÁMICOS POR ÁREA -->
                 
-                <!-- REFRIGERACIÓN -->
-                <div id="pdig-sec-refrigeracion" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Refrigeración</h4>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Registre cada uno de los equipos intervenidos en este servicio:</p>
-                    
-                    <div id="pdig-contenedor-equipos">
-                        <!-- Carga dinámica -->
-                    </div>
-                    
-                    <button type="button" class="save-btn" style="width: auto; background-color: var(--color-green); color: #000; font-weight: 700; padding: 6px 14px; font-size: 13px; margin-top: 10px;" id="btnPdigAddEquipo">+ Agregar Otro Equipo</button>
+                <div id="pdig-areas-container" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 12px;">
+                    <!-- Contenedor dinámico de áreas especializadas -->
                 </div>
+                
+                <button type="button" class="save-btn" id="btnPdigAddArea" style="width: auto; background-color: var(--color-blue); color: #000; font-weight: 700; padding: 8px 16px; font-size: 13px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">Agregar Área Especializada</button>
 
-                <!-- ELECTRODOMÉSTICOS -->
-                <div id="pdig-sec-electrodomesticos" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Electrodomésticos</h4>
-                    <div class="input-group" style="margin-bottom: 12px;">
-                        <label for="pdig-el-artefacto">Artefacto / Equipo</label>
-                        <input type="text" id="pdig-el-artefacto" placeholder="Ej: Lavarropas, Microondas" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                    </div>
-                    <div class="input-group" style="margin-bottom: 12px;">
-                        <label for="pdig-el-requiere-retiro">¿Requiere retirar el producto al taller?</label>
-                        <select id="pdig-el-requiere-retiro" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                            <option value="no">No, se reparó en el domicilio</option>
-                            <option value="si">Sí, se retira para taller (Generar Constancia)</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Sub-formulario de Retiro -->
-                    <div id="pdig-sub-sec-retiro" style="display:none; background: rgba(239, 68, 68, 0.1); padding: 15px; border: 1px dashed var(--color-red); border-radius: 8px; margin-top: 10px;">
-                        <h4 style="color:var(--color-red); margin-top:0; font-size:14px;">📋 CONSTANCIA DE RETIRO PARA EL CLIENTE</h4>
-                        <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.3); color: #93c5fd; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;">Esta sección genera los datos obligatorios para el remito de retiro.</div>
-                        <div class="input-group" style="margin-bottom: 10px;">
-                            <label for="pdig-retiro-estado">Estado Estético del Producto (Rayones, golpes, faltantes)</label>
-                            <textarea id="pdig-retiro-estado" rows="2" placeholder="Describa el estado visual al momento de retirar..." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div class="input-group">
-                                <label for="pdig-retiro-serie">Número de Serie / Lote</label>
-                                <input type="text" id="pdig-retiro-serie" placeholder="S/N: 123456789" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                            </div>
-                            <div class="input-group">
-                                <label for="pdig-retiro-accesorios">Accesorios Retirados</label>
-                                <input type="text" id="pdig-retiro-accesorios" placeholder="Ej: Control remoto, cables, bandejas" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ELECTRICIDAD -->
-                <div id="pdig-sec-electricidad" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Electricidad</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="input-group">
-                            <label for="pdig-elec-tipo">Tipo de Instalación</label>
-                            <select id="pdig-elec-tipo" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                                <option value="monofasica">Monofásica</option>
-                                <option value="trifasica">Trifásica</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="pdig-elec-tension">Tensión Medida (V)</label>
-                            <input type="text" id="pdig-elec-tension" placeholder="Ej: 220V / 380V" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ILUMINACIÓN -->
-                <div id="pdig-sec-iluminacion" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Iluminación</h4>
-                    <div class="input-group">
-                        <label for="pdig-ilu-tipo">Tipo de Luminarias</label>
-                        <input type="text" id="pdig-ilu-tipo" placeholder="Ej: Paneles LED, Dicroicas" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                    </div>
-                </div>
-
-                <!-- TECNOLOGÍAS -->
-                <div id="pdig-sec-tecnologias" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Tecnologías y Conectividad</h4>
-                    <div class="input-group" style="margin-bottom: 12px;">
-                        <label for="pdig-tec-dispositivos">Dispositivos Configurados/Instalados</label>
-                        <input type="text" id="pdig-tec-dispositivos" placeholder="Ej: 4 Cámaras IP Hikvision, 1 Router TP-Link" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="input-group">
-                            <label for="pdig-tec-ips">IPs / Accesos asignados</label>
-                            <input type="text" id="pdig-tec-ips" placeholder="Ej: 192.168.1.100" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                        </div>
-                        <div class="input-group">
-                            <label for="pdig-tec-puertos">Canales/Puertos Utilizados</label>
-                            <input type="text" id="pdig-tec-puertos" placeholder="Ej: Puerto 8080, DVR Canal 1-4" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DOMÓTICA -->
-                <div id="pdig-sec-domotica" class="pdig-dynamic-section" style="display:none; background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-bottom: 20px;">
-                    <h4 style="margin-top:0; color:var(--text-primary);">Detalles de Domótica</h4>
-                    <div class="input-group" style="margin-bottom: 12px;">
-                        <label for="pdig-dom-ecosistema">Ecosistema Utilizado</label>
-                        <select id="pdig-dom-ecosistema" style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
-                            <option value="alexa">Amazon Alexa / Tuya</option>
-                            <option value="google">Google Home</option>
-                            <option value="apple">Apple HomeKit</option>
-                            <option value="independiente">Protocolo Cerrado (Sonoff, Zigbee, etc.)</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="pdig-dom-escenas">Módulos / Escenas Vinculadas</label>
-                        <textarea id="pdig-dom-escenas" rows="2" placeholder="Ej: Módulos interruptores de luces..." style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
-                    </div>
-                </div>
 
                 <!-- SECCIÓN 3: MANO DE OBRA Y MATERIALES -->
                 <div class="form-section-title" style="border-bottom: 2px solid var(--color-blue); padding-bottom: 5px; color: var(--color-blue); font-size: 15px; font-weight: 700; margin-bottom: 15px;">3. Detalles de Trabajo y Materiales</div>
@@ -8489,8 +8369,9 @@
             });
         }
 
-        // --- LÓGICA DE NUEVA PLANILLA DE TRABAJO DIGITAL (DINÁMICA) ---
-        let contadorEquiposPdig = 0;
+        // --- LÓGICA DE NUEVA PLANILLA DE TRABAJO DIGITAL (DINÁMICA MULTI-ÁREA) ---
+        let pdigAreaCounter = 0;
+        let pdigEquipoCounter = 0;
 
         window.eliminarFilaTablaPdig = function (btn) {
             const row = btn.closest('tr');
@@ -8502,28 +8383,15 @@
             }
         };
 
-        window.eliminarEquipoRefrigeracionPdig = function (id) {
-            const contenedor = document.getElementById('pdig-contenedor-equipos');
-            const equipo = document.getElementById(`pdig-equipo-${id}`);
-            if (contenedor && equipo) {
-                if (contenedor.children.length > 1) {
-                    contenedor.removeChild(equipo);
-                    actualizarNumeracionEquiposPdig();
-                } else {
-                    alert("Debe registrar al menos un equipo en el área de refrigeración.");
-                }
+        window.toggleRetiroSubform = function (selectEl) {
+            const card = selectEl.closest('.pdig-area-card');
+            if (!card) return;
+            const subSec = card.querySelector('.pdig-sub-sec-retiro');
+            if (subSec) {
+                subSec.style.display = (selectEl.value === 'si') ? 'block' : 'none';
             }
         };
 
-        function actualizarNumeracionEquiposPdig() {
-            const tarjetas = document.querySelectorAll('.pdig-equipo-card');
-            tarjetas.forEach((tarjeta, index) => {
-                const titulo = tarjeta.querySelector('.pdig-equipo-title');
-                if (titulo) titulo.textContent = `⚙️ Equipo N° ${index + 1}`;
-            });
-        }
-
-        // Manejador del cambio de tipo de equipo para habilitar/deshabilitar tecnología
         window.handlePdigTipoEquipoChange = function (selectEl) {
             const card = selectEl.closest('.pdig-equipo-card');
             if (!card) return;
@@ -8540,25 +8408,47 @@
             }
         };
 
-        window.agregarEquipoRefrigeracionDigital = function () {
-            contadorEquiposPdig++;
-            const contenedor = document.getElementById('pdig-contenedor-equipos');
-            if (!contenedor) return;
+        window.actualizarNumeracionEquiposArea = function (container) {
+            if (!container) return;
+            const tarjetas = container.querySelectorAll('.pdig-equipo-card');
+            tarjetas.forEach((tarjeta, index) => {
+                const titulo = tarjeta.querySelector('.pdig-equipo-title');
+                if (titulo) titulo.textContent = `⚙️ Equipo N° ${index + 1}`;
+            });
+        };
+
+        window.eliminarEquipoRefrigeracionArea = function (btn) {
+            const card = btn.closest('.pdig-equipo-card');
+            const container = card ? card.closest('.pdig-ref-equipos-list') : null;
+            if (container && card) {
+                if (container.children.length > 1) {
+                    container.removeChild(card);
+                    window.actualizarNumeracionEquiposArea(container);
+                } else {
+                    alert("Debe registrar al menos un equipo en el área de refrigeración.");
+                }
+            }
+        };
+
+        window.agregarEquipoRefrigeracionArea = function (areaId, datosEquipo = null) {
+            pdigEquipoCounter++;
+            const contenedor = document.getElementById(`pdig-ref-equipos-list-${areaId}`);
+            if (!contenedor) return null;
 
             const divEquipo = document.createElement('div');
             divEquipo.className = 'pdig-equipo-card';
-            divEquipo.id = `pdig-equipo-${contadorEquiposPdig}`;
-            divEquipo.style.cssText = 'background: rgba(22, 36, 61, 0.4); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative;';
+            divEquipo.id = `pdig-equipo-${pdigEquipoCounter}`;
+            divEquipo.style.cssText = 'background: rgba(22, 36, 61, 0.4); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 12px; position: relative;';
 
             divEquipo.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 6px;">
-                    <span class="pdig-equipo-title" style="font-weight: bold; color: var(--color-blue); font-size: 14px;">⚙️ Equipo N° ${contadorEquiposPdig}</span>
-                    <button type="button" class="save-btn" style="background-color: var(--color-red); color: white; border: none; padding: 4px 10px; font-size: 12px;" onclick="eliminarEquipoRefrigeracionPdig(${contadorEquiposPdig})">Eliminar Equipo</button>
+                    <span class="pdig-equipo-title" style="font-weight: bold; color: var(--color-blue); font-size: 13px;">⚙️ Equipo N° ${contenedor.children.length + 1}</span>
+                    <button type="button" class="save-btn" style="background-color: var(--color-red); color: white; border: none; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;" onclick="eliminarEquipoRefrigeracionArea(this)">Eliminar Equipo</button>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div class="input-group">
                         <label>Tipo de Equipo</label>
-                        <select class="pdig-ref-tipo" onchange="handlePdigTipoEquipoChange(this)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <select class="pdig-ref-tipo" onchange="handlePdigTipoEquipoChange(this)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                             <option value="split">Split Muro</option>
                             <option value="piso_techo">Piso Techo</option>
                             <option value="cassette">Cassette</option>
@@ -8570,37 +8460,345 @@
                     </div>
                     <div class="input-group">
                         <label>Tecnología</label>
-                        <select class="pdig-ref-tecnologia" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <select class="pdig-ref-tecnologia" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                             <option value="inverter">Inverter</option>
                             <option value="on_off">On/Off</option>
                         </select>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div class="input-group">
                         <label>Marca y Modelo</label>
-                        <input type="text" class="pdig-ref-modelo" placeholder="Ej: Samsung AR12" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="text" class="pdig-ref-modelo" placeholder="Ej: Samsung AR12" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                     </div>
                     <div class="input-group">
                         <label>Frigorías / Capacidad</label>
-                        <input type="text" class="pdig-ref-capacidad" placeholder="Ej: 3000 fg / 12000 BTU" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="text" class="pdig-ref-capacidad" placeholder="Ej: 3000 fg / 12000 BTU" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="input-group">
                         <label>Presión de Refrigerante / Tipo</label>
-                        <input type="text" class="pdig-ref-gas" placeholder="Ej: 120 PSI (R410a)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="text" class="pdig-ref-gas" placeholder="Ej: 120 PSI (R410a)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                     </div>
                     <div class="input-group">
                         <label>Ubicación (Ambiente)</label>
-                        <input type="text" class="pdig-ref-ubicacion" placeholder="Ej: Dormitorio, Living, Oficina 1" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                        <input type="text" class="pdig-ref-ubicacion" placeholder="Ej: Dormitorio, Living, Oficina 1" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                     </div>
                 </div>
             `;
 
             contenedor.appendChild(divEquipo);
-            actualizarNumeracionEquiposPdig();
+            window.actualizarNumeracionEquiposArea(contenedor);
+
+            if (datosEquipo) {
+                if (datosEquipo.tipo) {
+                    const selTipo = divEquipo.querySelector('.pdig-ref-tipo');
+                    if (selTipo) {
+                        selTipo.value = datosEquipo.tipo;
+                        window.handlePdigTipoEquipoChange(selTipo);
+                    }
+                }
+                if (datosEquipo.tecnologia) {
+                    const selTech = divEquipo.querySelector('.pdig-ref-tecnologia');
+                    if (selTech) selTech.value = datosEquipo.tecnologia;
+                }
+                if (datosEquipo.modelo) divEquipo.querySelector('.pdig-ref-modelo').value = datosEquipo.modelo;
+                if (datosEquipo.capacidad) divEquipo.querySelector('.pdig-ref-capacidad').value = datosEquipo.capacidad;
+                if (datosEquipo.gas) divEquipo.querySelector('.pdig-ref-gas').value = datosEquipo.gas;
+                if (datosEquipo.ubicacion) divEquipo.querySelector('.pdig-ref-ubicacion').value = datosEquipo.ubicacion;
+            }
+
+            return divEquipo;
         };
+
+        window.renderPdigAreaSubform = function (areaId, areaKey, datos = null) {
+            const subformCont = document.getElementById(`pdig-area-subform-${areaId}`);
+            if (!subformCont) return;
+
+            if (!areaKey) {
+                subformCont.innerHTML = '';
+                return;
+            }
+
+            if (areaKey === 'refrigeracion') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Refrigeración</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Registre cada uno de los equipos intervenidos en este servicio:</p>
+                        <div class="pdig-ref-equipos-list" id="pdig-ref-equipos-list-${areaId}"></div>
+                        <button type="button" class="save-btn" style="width: auto; background-color: var(--color-green); color: #000; font-weight: 700; padding: 6px 14px; font-size: 12px; margin-top: 8px; cursor: pointer; border-radius: 4px;" onclick="agregarEquipoRefrigeracionArea(${areaId})">+ Agregar Otro Equipo</button>
+                    </div>
+                `;
+                if (datos && datos.equipos && datos.equipos.length > 0) {
+                    datos.equipos.forEach(eq => window.agregarEquipoRefrigeracionArea(areaId, eq));
+                } else {
+                    window.agregarEquipoRefrigeracionArea(areaId);
+                }
+            } else if (areaKey === 'electrodomesticos') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Electrodomésticos</h4>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label>Artefacto / Equipo</label>
+                            <input type="text" class="pdig-el-artefacto" placeholder="Ej: Lavarropas, Microondas" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label>¿Requiere retirar el producto al taller?</label>
+                            <select class="pdig-el-requiere-retiro" onchange="toggleRetiroSubform(this)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                                <option value="no">No, se reparó en el domicilio</option>
+                                <option value="si">Sí, se retira para taller (Generar Constancia)</option>
+                            </select>
+                        </div>
+                        <div class="pdig-sub-sec-retiro" style="display:none; background: rgba(239, 68, 68, 0.1); padding: 12px; border: 1px dashed var(--color-red); border-radius: 8px; margin-top: 10px;">
+                            <h4 style="color:var(--color-red); margin-top:0; font-size:13px;">📋 CONSTANCIA DE RETIRO PARA EL CLIENTE</h4>
+                            <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.3); color: #93c5fd; padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px;">Esta sección genera los datos obligatorios para el remito de retiro.</div>
+                            <div class="input-group" style="margin-bottom: 10px;">
+                                <label>Estado Estético del Producto (Rayones, golpes, faltantes)</label>
+                                <textarea class="pdig-retiro-estado" rows="2" placeholder="Describa el estado visual al momento de retirar..." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="input-group">
+                                    <label>Número de Serie / Lote</label>
+                                    <input type="text" class="pdig-retiro-serie" placeholder="S/N: 123456789" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                                </div>
+                                <div class="input-group">
+                                    <label>Accesorios Retirados</label>
+                                    <input type="text" class="pdig-retiro-accesorios" placeholder="Ej: Control remoto, cables, bandejas" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (datos) {
+                    if (datos.artefacto) subformCont.querySelector('.pdig-el-artefacto').value = datos.artefacto;
+                    if (datos.requiereRetiro) {
+                        const selRet = subformCont.querySelector('.pdig-el-requiere-retiro');
+                        selRet.value = datos.requiereRetiro;
+                        window.toggleRetiroSubform(selRet);
+                    }
+                    if (datos.estado) subformCont.querySelector('.pdig-retiro-estado').value = datos.estado;
+                    if (datos.serie) subformCont.querySelector('.pdig-retiro-serie').value = datos.serie;
+                    if (datos.accesorios) subformCont.querySelector('.pdig-retiro-accesorios').value = datos.accesorios;
+                }
+            } else if (areaKey === 'electricidad') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Electricidad</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="input-group">
+                                <label>Tipo de Instalación</label>
+                                <select class="pdig-elec-tipo" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                                    <option value="monofasica">Monofásica</option>
+                                    <option value="trifasica">Trifásica</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Tensión Medida (V)</label>
+                                <input type="text" class="pdig-elec-tension" placeholder="Ej: 220V / 380V" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (datos) {
+                    if (datos.tipo) subformCont.querySelector('.pdig-elec-tipo').value = datos.tipo;
+                    if (datos.tension) subformCont.querySelector('.pdig-elec-tension').value = datos.tension;
+                }
+            } else if (areaKey === 'iluminacion') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Iluminación</h4>
+                        <div class="input-group">
+                            <label>Tipo de Luminarias</label>
+                            <input type="text" class="pdig-ilu-tipo" placeholder="Ej: Paneles LED, Dicroicas" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                        </div>
+                    </div>
+                `;
+                if (datos && datos.tipo) subformCont.querySelector('.pdig-ilu-tipo').value = datos.tipo;
+            } else if (areaKey === 'tecnologias') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Tecnologías y Conectividad</h4>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label>Dispositivos Configurados/Instalados</label>
+                            <input type="text" class="pdig-tec-dispositivos" placeholder="Ej: 4 Cámaras IP Hikvision, 1 Router TP-Link" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="input-group">
+                                <label>IPs / Accesos asignados</label>
+                                <input type="text" class="pdig-tec-ips" placeholder="Ej: 192.168.1.100" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                            </div>
+                            <div class="input-group">
+                                <label>Canales/Puertos Utilizados</label>
+                                <input type="text" class="pdig-tec-puertos" placeholder="Ej: Puerto 8080, DVR Canal 1-4" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (datos) {
+                    if (datos.dispositivos) subformCont.querySelector('.pdig-tec-dispositivos').value = datos.dispositivos;
+                    if (datos.ips) subformCont.querySelector('.pdig-tec-ips').value = datos.ips;
+                    if (datos.puertos) subformCont.querySelector('.pdig-tec-puertos').value = datos.puertos;
+                }
+            } else if (areaKey === 'domotica') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Domótica</h4>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label>Ecosistema Utilizado</label>
+                            <select class="pdig-dom-ecosistema" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                                <option value="alexa">Amazon Alexa / Tuya</option>
+                                <option value="google">Google Home</option>
+                                <option value="apple">Apple HomeKit</option>
+                                <option value="independiente">Protocolo Cerrado (Sonoff, Zigbee, etc.)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Módulos / Escenas Vinculadas</label>
+                            <textarea class="pdig-dom-escenas" rows="2" placeholder="Ej: Módulos interruptores de luces..." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
+                        </div>
+                    </div>
+                `;
+                if (datos) {
+                    if (datos.ecosistema) subformCont.querySelector('.pdig-dom-ecosistema').value = datos.ecosistema;
+                    if (datos.escenas) subformCont.querySelector('.pdig-dom-escenas').value = datos.escenas;
+                }
+            } else if (areaKey === 'otra') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
+                        <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Otra Especialidad</h4>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label>Nombre de la Especialidad / Disciplina</label>
+                            <input type="text" class="pdig-otra-nombre" placeholder="Ej: Plomería / Desagües, Herrería, Ventilación, Gas" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                        </div>
+                        <div class="input-group">
+                            <label>Especificaciones Técnicas Realizadas</label>
+                            <textarea class="pdig-otra-detalle" rows="2" placeholder="Describa especificaciones técnicas, diámetros, pruebas realizadas, materiales específicos, etc." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
+                        </div>
+                    </div>
+                `;
+                if (datos) {
+                    if (datos.nombre) subformCont.querySelector('.pdig-otra-nombre').value = datos.nombre;
+                    if (datos.detalle) subformCont.querySelector('.pdig-otra-detalle').value = datos.detalle;
+                }
+            } else if (areaKey === 'tareas_varias') {
+                subformCont.innerHTML = `
+                    <div style="background: rgba(255, 152, 0, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800; margin-top: 10px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; color: #ffb74d; font-size: 12px; line-height: 1.4;">
+                            <span style="font-size: 18px;">💡</span>
+                            <div>
+                                <strong>IMPORTANTE:</strong> Si realizó trabajos combinando disciplinas (ej: aire acondicionado y cableado eléctrico), presione el botón <strong>"Agregar Área Especializada"</strong> para completar los datos técnicos de cada área.
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #ffb74d; font-size: 13px;">Motivo y Detalle Específico de las Tareas Varias Realizadas (Obligatorio)</label>
+                            <textarea class="pdig-varias-detalle" rows="3" placeholder="Describa con precisión los trabajos efectuados y por qué no corresponden a un área específica..." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid #ff9800; color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
+                        </div>
+                    </div>
+                `;
+                if (datos && datos.detalle) subformCont.querySelector('.pdig-varias-detalle').value = datos.detalle;
+            }
+        };
+
+        window.handlePdigAreaCardChange = function (areaId) {
+            const card = document.getElementById(`pdig-area-card-${areaId}`);
+            if (!card) return;
+            const selectEl = card.querySelector('.pdig-area-select');
+            const val = selectEl ? selectEl.value : '';
+            window.renderPdigAreaSubform(areaId, val);
+        };
+
+        window.actualizarNumeracionAreasPdig = function () {
+            const container = document.getElementById('pdig-areas-container');
+            if (!container) return;
+            const cards = container.querySelectorAll('.pdig-area-card');
+            cards.forEach((card, idx) => {
+                const title = card.querySelector('.pdig-area-title');
+                if (title) title.textContent = `🏷️ Área Especializada N° ${idx + 1}`;
+                const removeBtn = card.querySelector('.btn-pdig-remove-area');
+                if (removeBtn) {
+                    removeBtn.style.display = (cards.length > 1) ? 'inline-block' : 'none';
+                }
+            });
+        };
+
+        window.eliminarAreaDigital = function (areaId) {
+            const container = document.getElementById('pdig-areas-container');
+            const card = document.getElementById(`pdig-area-card-${areaId}`);
+            if (container && card) {
+                if (container.children.length > 1) {
+                    container.removeChild(card);
+                    window.actualizarNumeracionAreasPdig();
+                } else {
+                    alert("Debe registrar al menos un área especializada.");
+                }
+            }
+        };
+
+        window.agregarAreaDigital = function (areaKey = '', datos = null) {
+            pdigAreaCounter++;
+            const container = document.getElementById('pdig-areas-container');
+            if (!container) return null;
+
+            const card = document.createElement('div');
+            card.className = 'pdig-area-card';
+            card.id = `pdig-area-card-${pdigAreaCounter}`;
+            card.style.cssText = 'background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; position: relative;';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <span class="pdig-area-title" style="font-weight: 700; color: var(--color-blue); font-size: 13px;">🏷️ Área Especializada</span>
+                    <button type="button" class="btn-pdig-remove-area" style="background: var(--color-red); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;" onclick="eliminarAreaDigital(${pdigAreaCounter})">✕ Quitar Área</button>
+                </div>
+                <div class="input-group" style="margin-bottom: 5px;">
+                    <label>Seleccione el Área de Trabajo</label>
+                    <select class="pdig-area-select" onchange="handlePdigAreaCardChange(${pdigAreaCounter})" style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                        <option value="">-- Seleccione una opción --</option>
+                        <option value="electricidad">Electricidad</option>
+                        <option value="refrigeracion">Refrigeración</option>
+                        <option value="iluminacion">Iluminación</option>
+                        <option value="electrodomesticos">Electrodomésticos (Reparación / Retiro)</option>
+                        <option value="tecnologias">Tecnologías (Cámaras, Routers, etc.)</option>
+                        <option value="domotica">Domótica</option>
+                        <option value="otra">Otra Especialidad (Personalizada)</option>
+                        <option value="tareas_varias">Tareas varias</option>
+                    </select>
+                </div>
+                <div class="pdig-area-subform" id="pdig-area-subform-${pdigAreaCounter}"></div>
+            `;
+
+            container.appendChild(card);
+            window.actualizarNumeracionAreasPdig();
+
+            if (areaKey) {
+                const selectEl = card.querySelector('.pdig-area-select');
+                if (selectEl) {
+                    selectEl.value = areaKey;
+                    window.renderPdigAreaSubform(pdigAreaCounter, areaKey, datos);
+                }
+            }
+
+            return card;
+        };
+
+        window.resetPdigAreas = function () {
+            const container = document.getElementById('pdig-areas-container');
+            if (!container) return;
+            container.innerHTML = '';
+            pdigAreaCounter = 0;
+            window.agregarAreaDigital();
+        };
+
+        window.agregarEquipoRefrigeracionDigital = function () {
+            const refList = document.querySelector('.pdig-ref-equipos-list');
+            if (refList) {
+                const areaCard = refList.closest('.pdig-area-card');
+                const areaIdMatch = areaCard ? areaCard.id.match(/\d+$/) : null;
+                const aId = areaIdMatch ? areaIdMatch[0] : 1;
+                window.agregarEquipoRefrigeracionArea(aId);
+            }
+        };
+
 
         const modalNuevaPlanillaDigital = document.getElementById('modalNuevaPlanillaDigital');
         const planillaDigitalForm = document.getElementById('planillaDigitalForm');
@@ -8973,9 +9171,9 @@
                     </tr>
                 `;
             }
-            const contenedorEq = document.getElementById('pdig-contenedor-equipos');
-            if (contenedorEq) {
-                contenedorEq.innerHTML = '';
+            // Inicializar áreas especializadas limpias
+            if (typeof window.resetPdigAreas === 'function') {
+                window.resetPdigAreas();
             }
 
             try {
@@ -8995,13 +9193,6 @@
 
                 if (entradaInput) entradaInput.value = '08:00';
                 if (salidaInput) salidaInput.value = '09:30';
-
-                const contenedor = document.getElementById('pdig-contenedor-equipos');
-                if (contenedor && contenedor.children.length === 0) {
-                    if (typeof window.agregarEquipoRefrigeracionDigital === 'function') {
-                        window.agregarEquipoRefrigeracionDigital();
-                    }
-                }
             } catch (err) {
                 console.error("Error al poblar modal planilla digital:", err);
             }
@@ -9056,28 +9247,12 @@
             }
         });
 
-        // Selección de Área Especializada
-        const areaSelectDigital = document.getElementById('pdig-area');
-        if (areaSelectDigital) {
-            areaSelectDigital.addEventListener('change', () => {
-                const selectedVal = areaSelectDigital.value;
-                const dynamicSections = document.querySelectorAll('.pdig-dynamic-section');
-                dynamicSections.forEach(sec => sec.style.display = 'none');
-
-                if (selectedVal) {
-                    const targetSec = document.getElementById(`pdig-sec-${selectedVal}`);
-                    if (targetSec) targetSec.style.display = 'block';
-                }
-            });
-        }
-
-        // Electrodomésticos Retiro Toggle
-        const requiereRetiroDigital = document.getElementById('pdig-el-requiere-retiro');
-        if (requiereRetiroDigital) {
-            requiereRetiroDigital.addEventListener('change', () => {
-                const subSec = document.getElementById('pdig-sub-sec-retiro');
-                if (subSec) {
-                    subSec.style.display = (requiereRetiroDigital.value === 'si') ? 'block' : 'none';
+        // Botón Agregar Área Especializada
+        const btnPdigAddArea = document.getElementById('btnPdigAddArea');
+        if (btnPdigAddArea) {
+            btnPdigAddArea.addEventListener('click', () => {
+                if (typeof window.agregarAreaDigital === 'function') {
+                    window.agregarAreaDigital();
                 }
             });
         }
@@ -9113,16 +9288,6 @@
             });
         }
 
-        // Agregar equipo de refrigeración
-        const btnPdigAddEquipo = document.getElementById('btnPdigAddEquipo');
-        if (btnPdigAddEquipo) {
-            btnPdigAddEquipo.addEventListener('click', () => {
-                if (typeof window.agregarEquipoRefrigeracionDigital === 'function') {
-                    window.agregarEquipoRefrigeracionDigital();
-                }
-            });
-        }
-
         // Submit Formulario Planilla Digital
         if (planillaDigitalForm) {
             planillaDigitalForm.addEventListener('submit', async (e) => {
@@ -9139,7 +9304,6 @@
                     const horaEntradaVal = document.getElementById('pdig-hora-entrada').value;
                     const horaSalidaVal = document.getElementById('pdig-hora-salida').value;
                     const domicilioVal = document.getElementById('pdig-domicilio').value.trim();
-                    const areaVal = document.getElementById('pdig-area').value;
                     const obsVal = document.getElementById('pdig-observaciones').value.trim();
                     const statusVal = e.submitter ? e.submitter.value : 'Enviada';
 
@@ -9217,64 +9381,131 @@
                         }
                     });
 
-                    // Resumen de Área Especializada
-                    let areaSummary = `Área: ${areaVal.toUpperCase()}`;
-                    if (areaVal === 'refrigeracion') {
-                        const eqCards = document.querySelectorAll('.pdig-equipo-card');
-                        const eqDetails = [];
-                        const tipoMap = {
-                            split: 'Split Muro',
-                            piso_techo: 'Piso Techo',
-                            cassette: 'Cassette',
-                            central: 'Central Ducto',
-                            ventana: 'Ventana',
-                            rooftop: 'Rooftop',
-                            otro: 'Otro'
-                        };
-                        const techMap = {
-                            inverter: 'Inverter',
-                            on_off: 'On/Off'
-                        };
-                        eqCards.forEach((card, idx) => {
-                            const tipoKey = card.querySelector('.pdig-ref-tipo').value;
-                            const tipo = tipoMap[tipoKey] || tipoKey;
-                            const techKey = card.querySelector('.pdig-ref-tecnologia').value;
-                            const tech = techMap[techKey] || techKey;
-                            const mod = card.querySelector('.pdig-ref-modelo').value.trim();
-                            const cap = card.querySelector('.pdig-ref-capacidad').value.trim();
-                            const gas = card.querySelector('.pdig-ref-gas').value.trim();
-                            const ubi = card.querySelector('.pdig-ref-ubicacion').value.trim();
-                            
-                            let eqStr = `Eq #${idx + 1}: ${tipo} (${tech})`;
-                            if (ubi) eqStr += ` [Ubicación: ${ubi}]`;
-                            if (mod) eqStr += ` ${mod}`;
-                            if (cap) eqStr += ` ${cap}`;
-                            if (gas) eqStr += ` ${gas}`;
-                            eqDetails.push(eqStr.trim());
-                        });
-                        if (eqDetails.length > 0) areaSummary += ` | ${eqDetails.join(' ; ')}`;
-                    } else if (areaVal === 'electrodomesticos') {
-                        const art = document.getElementById('pdig-el-artefacto').value.trim();
-                        const reqRetiro = document.getElementById('pdig-el-requiere-retiro').value;
-                        areaSummary += ` | Artefacto: ${art}` + (reqRetiro === 'si' ? ' [RETIRO A TALLER]' : '');
-                    } else if (areaVal === 'electricidad') {
-                        const tipo = document.getElementById('pdig-elec-tipo').value;
-                        const ten = document.getElementById('pdig-elec-tension').value.trim();
-                        areaSummary += ` | ${tipo} - Tension: ${ten}`;
-                    } else if (areaVal === 'iluminacion') {
-                        const tipo = document.getElementById('pdig-ilu-tipo').value.trim();
-                        areaSummary += ` | Luminarias: ${tipo}`;
-                    } else if (areaVal === 'tecnologias') {
-                        const disp = document.getElementById('pdig-tec-dispositivos').value.trim();
-                        areaSummary += ` | Disp: ${disp}`;
-                    } else if (areaVal === 'domotica') {
-                        const eco = document.getElementById('pdig-dom-ecosistema').value;
-                        areaSummary += ` | Ecosistema: ${eco}`;
-                    } else if (areaVal === 'tareas_varias') {
-                        areaSummary += ` | Tareas varias`;
+                    // Resumen de Áreas Especializadas Dinámicas
+                    const areaCards = document.querySelectorAll('.pdig-area-card');
+                    const areaSummaries = [];
+                    const areaKeys = [];
+
+                    areaCards.forEach(card => {
+                        const areaSel = card.querySelector('.pdig-area-select');
+                        if (!areaSel) return;
+                        const currentAreaKey = areaSel.value;
+                        if (!currentAreaKey) return;
+
+                        if (currentAreaKey === 'refrigeracion') {
+                            areaKeys.push('refrigeracion');
+                            let refSummary = `Área: REFRIGERACIÓN`;
+                            const eqCards = card.querySelectorAll('.pdig-equipo-card');
+                            const eqDetails = [];
+                            const tipoMap = {
+                                split: 'Split Muro',
+                                piso_techo: 'Piso Techo',
+                                cassette: 'Cassette',
+                                central: 'Central Ducto',
+                                ventana: 'Ventana',
+                                rooftop: 'Rooftop',
+                                otro: 'Otro'
+                            };
+                            const techMap = {
+                                inverter: 'Inverter',
+                                on_off: 'On/Off'
+                            };
+                            eqCards.forEach((eqCard, idx) => {
+                                const tipoKey = eqCard.querySelector('.pdig-ref-tipo')?.value || 'otro';
+                                const tipo = tipoMap[tipoKey] || tipoKey;
+                                const techKey = eqCard.querySelector('.pdig-ref-tecnologia')?.value || 'on_off';
+                                const tech = techMap[techKey] || techKey;
+                                const mod = eqCard.querySelector('.pdig-ref-modelo')?.value.trim() || '';
+                                const cap = eqCard.querySelector('.pdig-ref-capacidad')?.value.trim() || '';
+                                const gas = eqCard.querySelector('.pdig-ref-gas')?.value.trim() || '';
+                                const ubi = eqCard.querySelector('.pdig-ref-ubicacion')?.value.trim() || '';
+
+                                let eqStr = `Eq #${idx + 1}: ${tipo} (${tech})`;
+                                if (ubi) eqStr += ` [Ubicación: ${ubi}]`;
+                                if (mod) eqStr += ` ${mod}`;
+                                if (cap) eqStr += ` ${cap}`;
+                                if (gas) eqStr += ` ${gas}`;
+                                eqDetails.push(eqStr.trim());
+                            });
+                            if (eqDetails.length > 0) refSummary += ` | ${eqDetails.join(' ; ')}`;
+                            areaSummaries.push(refSummary);
+                        } else if (currentAreaKey === 'electrodomesticos') {
+                            areaKeys.push('electrodomesticos');
+                            const art = card.querySelector('.pdig-el-artefacto')?.value.trim() || '';
+                            const reqRetiro = card.querySelector('.pdig-el-requiere-retiro')?.value || 'no';
+                            let artSummary = `Área: ELECTRODOMÉSTICOS | Artefacto: ${art}` + (reqRetiro === 'si' ? ' [RETIRO A TALLER]' : '');
+                            if (reqRetiro === 'si') {
+                                const estado = card.querySelector('.pdig-retiro-estado')?.value.trim() || '';
+                                const serie = card.querySelector('.pdig-retiro-serie')?.value.trim() || '';
+                                const acc = card.querySelector('.pdig-retiro-accesorios')?.value.trim() || '';
+                                if (serie) artSummary += ` (S/N: ${serie})`;
+                                if (estado) artSummary += ` (Estado: ${estado})`;
+                                if (acc) artSummary += ` (Acc: ${acc})`;
+                            }
+                            areaSummaries.push(artSummary);
+                        } else if (currentAreaKey === 'electricidad') {
+                            areaKeys.push('electricidad');
+                            const tipo = card.querySelector('.pdig-elec-tipo')?.value || 'monofasica';
+                            const ten = card.querySelector('.pdig-elec-tension')?.value.trim() || '';
+                            areaSummaries.push(`Área: ELECTRICIDAD | ${tipo} - Tensión: ${ten}`);
+                        } else if (currentAreaKey === 'iluminacion') {
+                            areaKeys.push('iluminacion');
+                            const tipo = card.querySelector('.pdig-ilu-tipo')?.value.trim() || '';
+                            areaSummaries.push(`Área: ILUMINACIÓN | Luminarias: ${tipo}`);
+                        } else if (currentAreaKey === 'tecnologias') {
+                            areaKeys.push('tecnologias');
+                            const disp = card.querySelector('.pdig-tec-dispositivos')?.value.trim() || '';
+                            const ips = card.querySelector('.pdig-tec-ips')?.value.trim() || '';
+                            const puertos = card.querySelector('.pdig-tec-puertos')?.value.trim() || '';
+                            let tecSummary = `Área: TECNOLOGÍAS | Disp: ${disp}`;
+                            if (ips) tecSummary += ` (IPs: ${ips})`;
+                            if (puertos) tecSummary += ` (Puertos: ${puertos})`;
+                            areaSummaries.push(tecSummary);
+                        } else if (currentAreaKey === 'domotica') {
+                            areaKeys.push('domotica');
+                            const eco = card.querySelector('.pdig-dom-ecosistema')?.value || '';
+                            const escenas = card.querySelector('.pdig-dom-escenas')?.value.trim() || '';
+                            areaSummaries.push(`Área: DOMÓTICA | Ecosistema: ${eco}${escenas ? ` - Escenas: ${escenas}` : ''}`);
+                        } else if (currentAreaKey === 'otra') {
+                            const nomOtra = card.querySelector('.pdig-otra-nombre')?.value.trim() || 'Otra Especialidad';
+                            const detOtra = card.querySelector('.pdig-otra-detalle')?.value.trim() || '';
+                            areaKeys.push(nomOtra);
+                            areaSummaries.push(`Área: ${nomOtra.toUpperCase()}${detOtra ? ` | Detalle: ${detOtra}` : ''}`);
+                        } else if (currentAreaKey === 'tareas_varias') {
+                            areaKeys.push('tareas_varias');
+                            const detVarias = card.querySelector('.pdig-varias-detalle')?.value.trim() || '';
+                            areaSummaries.push(`Área: TAREAS VARIAS${detVarias ? ` | Detalle: ${detVarias}` : ''}`);
+                        }
+                    });
+
+                    if (areaKeys.length === 0 && statusVal !== 'Borrador') {
+                        alert("Por favor seleccione al menos un Área Especializada de trabajo.");
+                        if (btnD) btnD.disabled = false;
+                        if (btnS) btnS.disabled = false;
+                        return;
                     }
 
-                    const techDetailsSummary = `${areaSummary} | Trabajos: ${moList.join(', ')}`;
+                    // Validación anti-vagas en tareas varias si se envía definitiva
+                    if (statusVal !== 'Borrador') {
+                        let missingVariasDetail = false;
+                        areaCards.forEach(card => {
+                            const sel = card.querySelector('.pdig-area-select');
+                            if (sel && sel.value === 'tareas_varias') {
+                                const det = card.querySelector('.pdig-varias-detalle')?.value.trim();
+                                if (!det) missingVariasDetail = true;
+                            }
+                        });
+                        if (missingVariasDetail) {
+                            alert("Por favor ingrese el motivo y detalle específico en la sección de Tareas Varias.");
+                            if (btnD) btnD.disabled = false;
+                            if (btnS) btnS.disabled = false;
+                            return;
+                        }
+                    }
+
+                    const areaVal = areaKeys.length > 0 ? areaKeys.join(', ') : 'tareas_varias';
+                    const areaSummaryCombined = areaSummaries.length > 0 ? areaSummaries.join(' || ') : 'Área: TAREAS VARIAS';
+                    const techDetailsSummary = `${areaSummaryCombined} | Trabajos: ${moList.join(', ')}`;
                     const sparePartsSummary = matList.length > 0 ? matList.join(', ') : 'Ninguno';
                     
                     let docRef;
@@ -9307,6 +9538,7 @@
                         spareParts: sparePartsSummary,
                         observations: obsVal || 'Sin observaciones',
                         area: areaVal,
+                        areas: areaKeys,
                         status: statusVal,
                         timestamp: existingP ? (existingP.timestamp || new Date().toISOString()) : new Date().toISOString(),
                         cargado_por: existingP && existingP.cargado_por ? existingP.cargado_por : (document.getElementById('pdig-cargado-por') ? document.getElementById('pdig-cargado-por').value : (localStorage.getItem('electrofrio_name') || 'Desconocido'))
@@ -12242,13 +12474,6 @@
             
             document.getElementById('pdig-observaciones').value = p.observations || '';
             
-            if (p.area) {
-                const areaSel = document.getElementById('pdig-area');
-                if (areaSel) {
-                    areaSel.value = p.area;
-                    areaSel.dispatchEvent(new Event('change'));
-                }
-            }
 
             // Marcar checkboxes de técnicos
             const techCbs = document.querySelectorAll('.pdig-tech-cb');
@@ -12331,106 +12556,170 @@
                 }
             }
 
-            // Reconstruir equipos de refrigeración si aplica
-            if (p.area === 'refrigeracion') {
-                const contenedor = document.getElementById('pdig-contenedor-equipos');
-                if (contenedor) {
-                    contenedor.innerHTML = '';
-                    
-                    let eqStrings = [];
-                    if (p.techDetails) {
-                        const eqSectionMatch = p.techDetails.match(/Área: REFRIGERACION \| (Eq #\d+: [^|]+)/i);
-                        if (eqSectionMatch && eqSectionMatch[1]) {
-                            let rawSection = eqSectionMatch[1];
-                            if (rawSection.includes('| Trabajos:')) {
-                                rawSection = rawSection.split('| Trabajos:')[0].trim();
-                            }
-                            eqStrings = rawSection.split(' ; ').map(s => s.trim());
-                        }
-                    }
+            // Reconstruir áreas especializadas (soporte multi-área y compatibilidad retroactiva)
+            const areasContainer = document.getElementById('pdig-areas-container');
+            if (areasContainer) areasContainer.innerHTML = '';
+            pdigAreaCounter = 0;
 
-                    if (eqStrings.length === 0) {
-                        window.agregarEquipoRefrigeracionDigital();
-                    } else {
+            let rawAreas = [];
+            if (Array.isArray(p.areas) && p.areas.length > 0) {
+                rawAreas = p.areas;
+            } else if (p.area) {
+                rawAreas = p.area.split(',').map(s => s.trim());
+            }
+
+            if (rawAreas.length === 0) {
+                rawAreas = [''];
+            }
+
+            const normalizeAreaKey = (key) => {
+                const k = (key || '').toLowerCase().trim();
+                if (k.includes('refrig')) return 'refrigeracion';
+                if (k.includes('electr') && !k.includes('electrodom')) return 'electricidad';
+                if (k.includes('electrodom')) return 'electrodomesticos';
+                if (k.includes('ilumin')) return 'iluminacion';
+                if (k.includes('tecnolog') || k.includes('camara') || k.includes('router')) return 'tecnologias';
+                if (k.includes('domot')) return 'domotica';
+                if (k.includes('varia') || k.includes('varias')) return 'tareas_varias';
+                if (k === '') return '';
+                return 'otra';
+            };
+
+            const techSec = (p.techDetails || '').split('| Trabajos:')[0] || '';
+            const techAreaBlocks = techSec.split('||').map(b => b.trim());
+
+            rawAreas.forEach(rawItem => {
+                const normKey = normalizeAreaKey(rawItem);
+                let datosArea = null;
+
+                const matchingBlock = techAreaBlocks.find(b => {
+                    const bUpper = b.toUpperCase();
+                    if (normKey === 'refrigeracion' && bUpper.includes('REFRIGERACI')) return true;
+                    if (normKey === 'electricidad' && bUpper.includes('ELECTRICIDAD')) return true;
+                    if (normKey === 'electrodomesticos' && bUpper.includes('ELECTRODOM')) return true;
+                    if (normKey === 'iluminacion' && bUpper.includes('ILUMINACI')) return true;
+                    if (normKey === 'tecnologias' && bUpper.includes('TECNOLOG')) return true;
+                    if (normKey === 'domotica' && bUpper.includes('DOM')) return true;
+                    if (normKey === 'tareas_varias' && bUpper.includes('TAREAS VARIAS')) return true;
+                    if (normKey === 'otra' && bUpper.includes(rawItem.toUpperCase())) return true;
+                    return false;
+                }) || (rawAreas.length === 1 ? techAreaBlocks[0] : '');
+
+                if (normKey === 'refrigeracion') {
+                    const eqList = [];
+                    if (matchingBlock && matchingBlock.includes('|')) {
+                        const rawEqs = matchingBlock.split('|').slice(1).join('|').trim();
+                        const eqStrings = rawEqs.split(' ; ').map(s => s.trim()).filter(s => s.startsWith('Eq #'));
                         eqStrings.forEach(eqStr => {
-                            window.agregarEquipoRefrigeracionDigital();
-                            const currentCard = document.getElementById(`pdig-equipo-${contadorEquiposPdig}`);
-                            if (currentCard) {
-                                const typeSelect = currentCard.querySelector('.pdig-ref-tipo');
-                                const techSelect = currentCard.querySelector('.pdig-ref-tecnologia');
-                                const modInput = currentCard.querySelector('.pdig-ref-modelo');
-                                const capInput = currentCard.querySelector('.pdig-ref-capacidad');
-                                const gasInput = currentCard.querySelector('.pdig-ref-gas');
-                                const ubiInput = currentCard.querySelector('.pdig-ref-ubicacion');
+                            const cleanEq = eqStr.replace(/^Eq #\d+:\s*/, '');
+                            let detectedType = 'otro';
+                            if (cleanEq.includes('Split Muro')) detectedType = 'split';
+                            else if (cleanEq.includes('Piso Techo')) detectedType = 'piso_techo';
+                            else if (cleanEq.includes('Cassette')) detectedType = 'cassette';
+                            else if (cleanEq.includes('Central Ducto')) detectedType = 'central';
+                            else if (cleanEq.includes('Ventana')) detectedType = 'ventana';
+                            else if (cleanEq.includes('Rooftop')) detectedType = 'rooftop';
 
-                                const cleanEq = eqStr.replace(/^Eq #\d+:\s*/, '');
-                                
-                                let detectedType = 'otro';
-                                if (cleanEq.includes('Split Muro')) {
-                                    detectedType = 'split';
-                                } else if (cleanEq.includes('Piso Techo')) {
-                                    detectedType = 'piso_techo';
-                                } else if (cleanEq.includes('Cassette')) {
-                                    detectedType = 'cassette';
-                                } else if (cleanEq.includes('Central Ducto')) {
-                                    detectedType = 'central';
-                                } else if (cleanEq.includes('Ventana')) {
-                                    detectedType = 'ventana';
-                                } else if (cleanEq.includes('Rooftop')) {
-                                    detectedType = 'rooftop';
-                                }
-                                
-                                if (typeSelect) {
-                                    typeSelect.value = detectedType;
-                                    window.handlePdigTipoEquipoChange(typeSelect);
-                                }
+                            let detectedTech = 'on_off';
+                            if (cleanEq.includes('(Inverter)')) detectedTech = 'inverter';
+                            else if (cleanEq.includes('(On/Off)')) detectedTech = 'on_off';
 
-                                if (techSelect) {
-                                    if (cleanEq.includes('(Inverter)')) {
-                                        techSelect.value = 'inverter';
-                                    } else if (cleanEq.includes('(On/Off)')) {
-                                        techSelect.value = 'on_off';
-                                    }
-                                }
+                            let ubi = '';
+                            const ubiMatch = cleanEq.match(/\[Ubicación:\s*([^\]]+)\]/i);
+                            if (ubiMatch && ubiMatch[1]) ubi = ubiMatch[1].trim();
 
-                                const ubiMatch = cleanEq.match(/\[Ubicación:\s*([^\]]+)\]/i);
-                                if (ubiMatch && ubiMatch[1]) {
-                                    if (ubiInput) ubiInput.value = ubiMatch[1].trim();
-                                }
+                            let remaining = cleanEq;
+                            const typeNames = ['Split Muro', 'Piso Techo', 'Cassette', 'Central Ducto', 'Ventana', 'Rooftop', 'Otro'];
+                            typeNames.forEach(tn => { remaining = remaining.replace(tn, ''); });
+                            remaining = remaining.replace('(Inverter)', '').replace('(On/Off)', '');
+                            if (ubiMatch && ubiMatch[0]) remaining = remaining.replace(ubiMatch[0], '');
 
-                                let remaining = cleanEq;
-                                const typeLabel = typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : '';
-                                const techLabel = techSelect ? techSelect.options[techSelect.selectedIndex].text : '';
-                                if (typeLabel) {
-                                    remaining = remaining.replace(typeLabel, '').trim();
-                                }
-                                if (techLabel) {
-                                    remaining = remaining.replace(`(${techLabel})`, '').trim();
-                                }
-                                if (ubiMatch && ubiMatch[0]) {
-                                    remaining = remaining.replace(ubiMatch[0], '').trim();
-                                }
-                                
-                                if (modInput) modInput.value = remaining.trim();
-                            }
+                            eqList.push({
+                                tipo: detectedType,
+                                tecnologia: detectedTech,
+                                modelo: remaining.trim(),
+                                ubicacion: ubi
+                            });
                         });
                     }
+                    datosArea = { equipos: eqList };
+                } else if (normKey === 'electrodomesticos') {
+                    let artVal = '';
+                    let reqRetiroVal = 'no';
+                    let estadoVal = '';
+                    let serieVal = '';
+                    let accVal = '';
+                    if (matchingBlock) {
+                        if (matchingBlock.includes('Artefacto:')) {
+                            artVal = matchingBlock.split('Artefacto:')[1].split(' [')[0].split(' (')[0].trim();
+                        }
+                        if (matchingBlock.includes('[RETIRO A TALLER]')) reqRetiroVal = 'si';
+                        const sMatch = matchingBlock.match(/\(S\/N:\s*([^\)]+)\)/i);
+                        if (sMatch) serieVal = sMatch[1].trim();
+                        const eMatch = matchingBlock.match(/\(Estado:\s*([^\)]+)\)/i);
+                        if (eMatch) estadoVal = eMatch[1].trim();
+                        const aMatch = matchingBlock.match(/\(Acc:\s*([^\)]+)\)/i);
+                        if (aMatch) accVal = aMatch[1].trim();
+                    }
+                    datosArea = { artefacto: artVal, requiereRetiro: reqRetiroVal, estado: estadoVal, serie: serieVal, accesorios: accVal };
+                } else if (normKey === 'electricidad') {
+                    let tipoVal = 'monofasica';
+                    let tenVal = '220V';
+                    if (matchingBlock) {
+                        if (matchingBlock.toLowerCase().includes('trifasica')) tipoVal = 'trifasica';
+                        if (matchingBlock.includes('Tensión:') || matchingBlock.includes('Tension:')) {
+                            tenVal = (matchingBlock.split(/Tensi[oó]n:/i)[1] || '').split('|')[0].split(';')[0].trim();
+                        }
+                    }
+                    datosArea = { tipo: tipoVal, tension: tenVal };
+                } else if (normKey === 'iluminacion') {
+                    let lumVal = '';
+                    if (matchingBlock && matchingBlock.includes('Luminarias:')) {
+                        lumVal = matchingBlock.split('Luminarias:')[1].split('|')[0].trim();
+                    }
+                    datosArea = { tipo: lumVal };
+                } else if (normKey === 'tecnologias') {
+                    let dispVal = '';
+                    let ipsVal = '';
+                    let puertosVal = '';
+                    if (matchingBlock) {
+                        if (matchingBlock.includes('Disp:')) {
+                            dispVal = matchingBlock.split('Disp:')[1].split(' (')[0].trim();
+                        }
+                        const ipMatch = matchingBlock.match(/\(IPs?:\s*([^\)]+)\)/i);
+                        if (ipMatch) ipsVal = ipMatch[1].trim();
+                        const pMatch = matchingBlock.match(/\(Puertos?:\s*([^\)]+)\)/i);
+                        if (pMatch) puertosVal = pMatch[1].trim();
+                    }
+                    datosArea = { dispositivos: dispVal, ips: ipsVal, puertos: puertosVal };
+                } else if (normKey === 'domotica') {
+                    let ecoVal = 'alexa';
+                    let escVal = '';
+                    if (matchingBlock) {
+                        if (matchingBlock.toLowerCase().includes('google')) ecoVal = 'google';
+                        else if (matchingBlock.toLowerCase().includes('apple')) ecoVal = 'apple';
+                        else if (matchingBlock.toLowerCase().includes('independiente') || matchingBlock.toLowerCase().includes('cerrado')) ecoVal = 'independiente';
+                        if (matchingBlock.includes('Escenas:')) {
+                            escVal = matchingBlock.split('Escenas:')[1].split('|')[0].trim();
+                        }
+                    }
+                    datosArea = { ecosistema: ecoVal, escenas: escVal };
+                } else if (normKey === 'otra') {
+                    let detVal = '';
+                    if (matchingBlock && matchingBlock.includes('Detalle:')) {
+                        detVal = matchingBlock.split('Detalle:')[1].split('|')[0].trim();
+                    }
+                    datosArea = { nombre: rawItem, detalle: detVal };
+                } else if (normKey === 'tareas_varias') {
+                    let detVal = '';
+                    if (matchingBlock && matchingBlock.includes('Detalle:')) {
+                        detVal = matchingBlock.split('Detalle:')[1].split('|')[0].trim();
+                    }
+                    datosArea = { detalle: detVal };
                 }
-            } else if (p.area === 'electrodomesticos') {
-                if (p.techDetails && p.techDetails.includes('| Artefacto: ')) {
-                    const artVal = p.techDetails.split('| Artefacto: ')[1].split(' [')[0].trim();
-                    document.getElementById('pdig-el-artefacto').value = artVal;
-                    const reqRetiro = p.techDetails.includes('[RETIRO A TALLER]') ? 'si' : 'no';
-                    document.getElementById('pdig-el-requiere-retiro').value = reqRetiro;
-                    document.getElementById('pdig-el-requiere-retiro').dispatchEvent(new Event('change'));
-                }
-            } else if (p.area === 'electricidad') {
-                if (p.techDetails && p.techDetails.includes('Tension: ')) {
-                    const parts = p.techDetails.split(' | ')[1].split(' - Tension: ');
-                    document.getElementById('pdig-elec-tipo').value = parts[0] || 'monofasica';
-                    document.getElementById('pdig-elec-tension').value = parts[1] || '220V';
-                }
-            }
+
+                window.agregarAreaDigital(normKey, datosArea);
+            });
         };
 
         // Abre la planilla digital para una orden de trabajo asignada
