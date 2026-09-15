@@ -9530,8 +9530,8 @@
                         horaEntrada: horaEntradaVal,
                         horaSalida: horaSalidaVal,
                         techDetails: techDetailsSummary,
-                        manoObra: manoObraSummary,
-                        materiales: sparePartsSummary,
+                        manoObra: (existingP && existingP.manoObra !== undefined) ? existingP.manoObra : '',
+                        materiales: (existingP && existingP.materiales !== undefined) ? existingP.materiales : '',
                         spareParts: sparePartsSummary,
                         observations: obsVal || 'Sin observaciones',
                         area: areaVal,
@@ -12306,15 +12306,15 @@
                         <div class="pdt-code">${pdtCode}</div>
                     </div>
 
-                    <!-- SECCIÓN COMPROBANTE PARA LLENADO MANUAL POST-FACTURACIÓN -->
+                    <!-- SECCIÓN COMPROBANTE PARA LLENADO MANUAL POST-FACTURACIÓN O VISUALIZACIÓN DE COMPROBANTE CARGADO -->
                     <div style="margin-bottom: 20px; padding: 12px 16px; border: 1.5px dashed #555; border-radius: 6px; background: #fafafa; font-size: 11px; font-weight: 700; color: #111; text-transform: uppercase;">
                         <div style="margin-bottom: 10px; display: flex; align-items: baseline; gap: 6px;">
                             <span style="white-space: nowrap;">MANO DE OBRA REALIZADA - COMPROBANTE:</span>
-                            <span style="flex: 1; border-bottom: 1px dotted #333; height: 12px; display: inline-block;"></span>
+                            <span style="flex: 1; border-bottom: 1px dotted #333; min-height: 14px; padding-left: 8px; font-size: 12px; font-weight: 800; color: #0b192c; letter-spacing: 0.5px; display: inline-block;">${p.manoObra ? p.manoObra : '&nbsp;'}</span>
                         </div>
                         <div style="display: flex; align-items: baseline; gap: 6px;">
                             <span style="white-space: nowrap;">MATERIALES UTILIZADOS - COMPROBANTE:</span>
-                            <span style="flex: 1; border-bottom: 1px dotted #333; height: 12px; display: inline-block;"></span>
+                            <span style="flex: 1; border-bottom: 1px dotted #333; min-height: 14px; padding-left: 8px; font-size: 12px; font-weight: 800; color: #0b192c; letter-spacing: 0.5px; display: inline-block;">${p.materiales ? p.materiales : '&nbsp;'}</span>
                         </div>
                         <!-- PRECIO SUGERIDO: nota discreta debajo del comprobante -->
                         <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dotted #bbb; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 400; color: #666; text-transform: none; letter-spacing: 0;">
@@ -12600,7 +12600,7 @@
                     let fallbackJobsStr = '';
                     if (rawTechDetails && rawTechDetails.includes('| Trabajos:')) {
                         fallbackJobsStr = rawTechDetails.split('| Trabajos:').pop() || '';
-                    } else if (p.manoObra) {
+                    } else if (p.manoObra && !rawTechDetails && !p.manoObra.startsWith('CX-') && !/^\s*(?:GARANTIA|PENDIENTE|REVISAR|OBRA|DELIVERY|FACTURADO|COBRADO)\s*$/i.test(p.manoObra)) {
                         fallbackJobsStr = p.manoObra;
                     }
                     if (fallbackJobsStr) {
