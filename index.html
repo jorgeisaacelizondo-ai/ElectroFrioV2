@@ -4460,33 +4460,8 @@
                 <button type="button" class="save-btn" id="btnPdigAddArea" style="width: auto; background-color: var(--color-blue); color: #000; font-weight: 700; padding: 8px 16px; font-size: 13px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">Agregar Área Especializada</button>
 
 
-                <!-- SECCIÓN 3: MANO DE OBRA Y MATERIALES -->
-                <div class="form-section-title" style="border-bottom: 2px solid var(--color-blue); padding-bottom: 5px; color: var(--color-blue); font-size: 15px; font-weight: 700; margin-bottom: 15px;">3. Detalles de Trabajo y Materiales</div>
-                
-                <!-- Mano de Obra -->
-                <div class="input-group" style="margin-bottom: 20px;">
-                    <label>Mano de Obra Realizada</label>
-                    <div class="table-responsive" style="margin-top: 5px;">
-                        <table class="custom-table" id="pdig-tablaManoObra">
-                            <thead>
-                                <tr>
-                                    <th style="width: 85%;">Acción / Tarea</th>
-                                    <th style="width: 15%; text-align: center;">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="padding: 6px 4px;">
-                                        <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
-                                        <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
-                                    </td>
-                                    <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <button type="button" class="save-btn" id="btnPdigAddManoObra" style="width: auto; padding: 6px 12px; font-size: 12px; margin-top: 8px;">+ Agregar Fila</button>
-                </div>
+                <!-- SECCIÓN 3: MATERIALES Y REPUESTOS -->
+                <div class="form-section-title" style="border-bottom: 2px solid var(--color-blue); padding-bottom: 5px; color: var(--color-blue); font-size: 15px; font-weight: 700; margin-bottom: 15px;">3. Materiales y Repuestos Utilizados</div>
 
                 <!-- Materiales -->
                 <div class="input-group" style="margin-bottom: 20px;">
@@ -8735,24 +8710,43 @@
             }
         };
 
+        window.agregarFilaManoObraArea = function (areaId, accion = '', zona = '') {
+            const tbody = document.getElementById(`pdig-tbody-mo-${areaId}`);
+            if (!tbody) return null;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 6px 4px;">
+                    <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico, Mantenimiento..." required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;">${accion.replace(/"/g, '&quot;')}</textarea>
+                    <input type="text" class="pdig-mo-zona" value="${zona.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                </td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            return tr;
+        };
+
         window.agregarAreaDigital = function (areaKey = '', datos = null) {
             pdigAreaCounter++;
+            const currentAreaId = pdigAreaCounter;
             const container = document.getElementById('pdig-areas-container');
             if (!container) return null;
 
             const card = document.createElement('div');
             card.className = 'pdig-area-card';
-            card.id = `pdig-area-card-${pdigAreaCounter}`;
+            card.id = `pdig-area-card-${currentAreaId}`;
             card.style.cssText = 'background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; position: relative;';
 
             card.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
                     <span class="pdig-area-title" style="font-weight: 700; color: var(--color-blue); font-size: 13px;">🏷️ Área Especializada</span>
-                    <button type="button" class="btn-pdig-remove-area" style="background: var(--color-red); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;" onclick="eliminarAreaDigital(${pdigAreaCounter})">✕ Quitar Área</button>
+                    <button type="button" class="btn-pdig-remove-area" style="background: var(--color-red); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;" onclick="eliminarAreaDigital(${currentAreaId})">✕ Quitar Área</button>
                 </div>
                 <div class="input-group" style="margin-bottom: 5px;">
                     <label>Seleccione el Área de Trabajo</label>
-                    <select class="pdig-area-select" onchange="handlePdigAreaCardChange(${pdigAreaCounter})" style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                    <select class="pdig-area-select" onchange="handlePdigAreaCardChange(${currentAreaId})" style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                         <option value="">-- Seleccione una opción --</option>
                         <option value="electricidad">Electricidad</option>
                         <option value="refrigeracion">Refrigeración</option>
@@ -8764,17 +8758,47 @@
                         <option value="tareas_varias">Tareas varias</option>
                     </select>
                 </div>
-                <div class="pdig-area-subform" id="pdig-area-subform-${pdigAreaCounter}"></div>
+                <div class="pdig-area-subform" id="pdig-area-subform-${currentAreaId}"></div>
+
+                <!-- MANO DE OBRA INTEGRADA EN ESTA ÁREA -->
+                <div class="pdig-area-mo-section" style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; margin: 0;">
+                            <span>🛠️ Mano de Obra Realizada en esta Área</span>
+                        </label>
+                    </div>
+                    <div class="table-responsive" style="margin-top: 5px;">
+                        <table class="custom-table pdig-tabla-mano-obra" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 85%;">Acción / Tarea</th>
+                                    <th style="width: 15%; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pdig-tbody-mo-${currentAreaId}"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="save-btn" style="width: auto; padding: 6px 12px; font-size: 12px; margin-top: 8px; background: rgba(36, 54, 78, 0.7); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; cursor: pointer;" onclick="agregarFilaManoObraArea(${currentAreaId})">+ Agregar Fila de Mano de Obra</button>
+                </div>
             `;
 
             container.appendChild(card);
             window.actualizarNumeracionAreasPdig();
 
+            // Cargar trabajos de mano de obra si vienen en datos, o inicializar 1 fila vacía
+            if (datos && Array.isArray(datos.trabajos) && datos.trabajos.length > 0) {
+                datos.trabajos.forEach(t => {
+                    window.agregarFilaManoObraArea(currentAreaId, t.accion || '', t.zona || '');
+                });
+            } else {
+                window.agregarFilaManoObraArea(currentAreaId);
+            }
+
             if (areaKey) {
                 const selectEl = card.querySelector('.pdig-area-select');
                 if (selectEl) {
                     selectEl.value = areaKey;
-                    window.renderPdigAreaSubform(pdigAreaCounter, areaKey, datos);
+                    window.renderPdigAreaSubform(currentAreaId, areaKey, datos);
                 }
             }
 
@@ -9150,18 +9174,7 @@
             renderAddressChoices(null, 'pdig-address-choices', 'pdig-domicilio', '', 'pdig');
 
             // Limpiar contenedores dinámicos
-            const tbodyMo = document.getElementById('pdig-tablaManoObra').getElementsByTagName('tbody')[0];
-            if (tbodyMo) {
-                tbodyMo.innerHTML = `
-                    <tr>
-                        <td style="padding: 6px 4px;">
-                            <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
-                            <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
-                        </td>
-                        <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
-                    </tr>
-                `;
-            }
+
             const tbodyMat = document.getElementById('pdig-tablaMateriales').getElementsByTagName('tbody')[0];
             if (tbodyMat) {
                 tbodyMat.innerHTML = `
@@ -9257,22 +9270,7 @@
             });
         }
 
-        // Agregar fila mano de obra
-        const btnPdigAddManoObra = document.getElementById('btnPdigAddManoObra');
-        if (btnPdigAddManoObra) {
-            btnPdigAddManoObra.addEventListener('click', () => {
-                const tbody = document.getElementById('pdig-tablaManoObra').getElementsByTagName('tbody')[0];
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 6px 4px;">
-                        <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
-                        <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
-                    </td>
-                    <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+        // (Mano de obra ahora se gestiona de forma dinámica dentro de cada área especializada)
 
         // Agregar fila materiales
         const btnPdigAddMateriales = document.getElementById('btnPdigAddMateriales');
@@ -9337,35 +9335,6 @@
                         dateDisplay = `${dd}/${mm}/${yyyy}`;
                     }
 
-                    // Resumen de Mano de Obra
-                    const moRows = document.querySelectorAll('#pdig-tablaManoObra tbody tr');
-                    const moList = [];
-                    moRows.forEach(row => {
-                        const accInput = row.querySelector('.pdig-mo-accion');
-                        const zonaInput = row.querySelector('.pdig-mo-zona');
-                        const cantInput = row.querySelector('.pdig-mo-cant');
-                        const descInput = row.querySelector('.pdig-mo-desc');
-                        if (accInput) {
-                            const acc = accInput.value.trim();
-                            const zona = zonaInput ? zonaInput.value.trim() : '';
-                            const cant = cantInput ? cantInput.value.trim() : '';
-                            const desc = descInput ? descInput.value.trim() : '';
-                            if (acc) {
-                                let itemStr = acc;
-                                if (zona) {
-                                    itemStr += ` (Zona: ${zona})`;
-                                }
-                                if (cant && cant !== '1') {
-                                    itemStr += ` (x${cant})`;
-                                }
-                                if (desc) {
-                                    itemStr += `: ${desc}`;
-                                }
-                                moList.push(itemStr);
-                            }
-                        }
-                    });
-
                     // Resumen de Materiales
                     const matRows = document.querySelectorAll('#pdig-tablaMateriales tbody tr');
                     const matList = [];
@@ -9381,10 +9350,11 @@
                         }
                     });
 
-                    // Resumen de Áreas Especializadas Dinámicas
+                    // Resumen de Áreas Especializadas Dinámicas y su Mano de Obra
                     const areaCards = document.querySelectorAll('.pdig-area-card');
                     const areaSummaries = [];
                     const areaKeys = [];
+                    const allMoList = [];
 
                     areaCards.forEach(card => {
                         const areaSel = card.querySelector('.pdig-area-select');
@@ -9392,9 +9362,11 @@
                         const currentAreaKey = areaSel.value;
                         if (!currentAreaKey) return;
 
+                        let areaSummary = '';
+
                         if (currentAreaKey === 'refrigeracion') {
                             areaKeys.push('refrigeracion');
-                            let refSummary = `Área: REFRIGERACIÓN`;
+                            areaSummary = `Área: REFRIGERACIÓN`;
                             const eqCards = card.querySelectorAll('.pdig-equipo-card');
                             const eqDetails = [];
                             const tipoMap = {
@@ -9427,55 +9399,78 @@
                                 if (gas) eqStr += ` ${gas}`;
                                 eqDetails.push(eqStr.trim());
                             });
-                            if (eqDetails.length > 0) refSummary += ` | ${eqDetails.join(' ; ')}`;
-                            areaSummaries.push(refSummary);
+                            if (eqDetails.length > 0) areaSummary += ` | ${eqDetails.join(' ; ')}`;
                         } else if (currentAreaKey === 'electrodomesticos') {
                             areaKeys.push('electrodomesticos');
                             const art = card.querySelector('.pdig-el-artefacto')?.value.trim() || '';
                             const reqRetiro = card.querySelector('.pdig-el-requiere-retiro')?.value || 'no';
-                            let artSummary = `Área: ELECTRODOMÉSTICOS | Artefacto: ${art}` + (reqRetiro === 'si' ? ' [RETIRO A TALLER]' : '');
+                            areaSummary = `Área: ELECTRODOMÉSTICOS | Artefacto: ${art}` + (reqRetiro === 'si' ? ' [RETIRO A TALLER]' : '');
                             if (reqRetiro === 'si') {
                                 const estado = card.querySelector('.pdig-retiro-estado')?.value.trim() || '';
                                 const serie = card.querySelector('.pdig-retiro-serie')?.value.trim() || '';
                                 const acc = card.querySelector('.pdig-retiro-accesorios')?.value.trim() || '';
-                                if (serie) artSummary += ` (S/N: ${serie})`;
-                                if (estado) artSummary += ` (Estado: ${estado})`;
-                                if (acc) artSummary += ` (Acc: ${acc})`;
+                                if (serie) areaSummary += ` (S/N: ${serie})`;
+                                if (estado) areaSummary += ` (Estado: ${estado})`;
+                                if (acc) areaSummary += ` (Acc: ${acc})`;
                             }
-                            areaSummaries.push(artSummary);
                         } else if (currentAreaKey === 'electricidad') {
                             areaKeys.push('electricidad');
                             const tipo = card.querySelector('.pdig-elec-tipo')?.value || 'monofasica';
                             const ten = card.querySelector('.pdig-elec-tension')?.value.trim() || '';
-                            areaSummaries.push(`Área: ELECTRICIDAD | ${tipo} - Tensión: ${ten}`);
+                            areaSummary = `Área: ELECTRICIDAD | ${tipo} - Tensión: ${ten}`;
                         } else if (currentAreaKey === 'iluminacion') {
                             areaKeys.push('iluminacion');
                             const tipo = card.querySelector('.pdig-ilu-tipo')?.value.trim() || '';
-                            areaSummaries.push(`Área: ILUMINACIÓN | Luminarias: ${tipo}`);
+                            areaSummary = `Área: ILUMINACIÓN | Luminarias: ${tipo}`;
                         } else if (currentAreaKey === 'tecnologias') {
                             areaKeys.push('tecnologias');
                             const disp = card.querySelector('.pdig-tec-dispositivos')?.value.trim() || '';
                             const ips = card.querySelector('.pdig-tec-ips')?.value.trim() || '';
                             const puertos = card.querySelector('.pdig-tec-puertos')?.value.trim() || '';
-                            let tecSummary = `Área: TECNOLOGÍAS | Disp: ${disp}`;
-                            if (ips) tecSummary += ` (IPs: ${ips})`;
-                            if (puertos) tecSummary += ` (Puertos: ${puertos})`;
-                            areaSummaries.push(tecSummary);
+                            areaSummary = `Área: TECNOLOGÍAS | Disp: ${disp}`;
+                            if (ips) areaSummary += ` (IPs: ${ips})`;
+                            if (puertos) areaSummary += ` (Puertos: ${puertos})`;
                         } else if (currentAreaKey === 'domotica') {
                             areaKeys.push('domotica');
                             const eco = card.querySelector('.pdig-dom-ecosistema')?.value || '';
                             const escenas = card.querySelector('.pdig-dom-escenas')?.value.trim() || '';
-                            areaSummaries.push(`Área: DOMÓTICA | Ecosistema: ${eco}${escenas ? ` - Escenas: ${escenas}` : ''}`);
+                            areaSummary = `Área: DOMÓTICA | Ecosistema: ${eco}${escenas ? ` - Escenas: ${escenas}` : ''}`;
                         } else if (currentAreaKey === 'otra') {
                             const nomOtra = card.querySelector('.pdig-otra-nombre')?.value.trim() || 'Otra Especialidad';
                             const detOtra = card.querySelector('.pdig-otra-detalle')?.value.trim() || '';
                             areaKeys.push(nomOtra);
-                            areaSummaries.push(`Área: ${nomOtra.toUpperCase()}${detOtra ? ` | Detalle: ${detOtra}` : ''}`);
+                            areaSummary = `Área: ${nomOtra.toUpperCase()}${detOtra ? ` | Detalle: ${detOtra}` : ''}`;
                         } else if (currentAreaKey === 'tareas_varias') {
                             areaKeys.push('tareas_varias');
                             const detVarias = card.querySelector('.pdig-varias-detalle')?.value.trim() || '';
-                            areaSummaries.push(`Área: TAREAS VARIAS${detVarias ? ` | Detalle: ${detVarias}` : ''}`);
+                            areaSummary = `Área: TAREAS VARIAS${detVarias ? ` | Detalle: ${detVarias}` : ''}`;
                         }
+
+                        // Recolectar tareas de mano de obra realizadas en esta área
+                        const thisAreaMoRows = card.querySelectorAll('.pdig-tabla-mano-obra tbody tr');
+                        const thisAreaMoList = [];
+                        thisAreaMoRows.forEach(row => {
+                            const accInput = row.querySelector('.pdig-mo-accion');
+                            const zonaInput = row.querySelector('.pdig-mo-zona');
+                            if (accInput) {
+                                const acc = accInput.value.trim();
+                                const zona = zonaInput ? zonaInput.value.trim() : '';
+                                if (acc) {
+                                    let itemStr = acc;
+                                    if (zona) {
+                                        itemStr += ` (Zona: ${zona})`;
+                                    }
+                                    thisAreaMoList.push(itemStr);
+                                    allMoList.push(itemStr);
+                                }
+                            }
+                        });
+
+                        if (thisAreaMoList.length > 0) {
+                            areaSummary += ` | Trabajos: ${thisAreaMoList.join(', ')}`;
+                        }
+
+                        areaSummaries.push(areaSummary);
                     });
 
                     if (areaKeys.length === 0 && statusVal !== 'Borrador') {
@@ -9504,9 +9499,9 @@
                     }
 
                     const areaVal = areaKeys.length > 0 ? areaKeys.join(', ') : 'tareas_varias';
-                    const areaSummaryCombined = areaSummaries.length > 0 ? areaSummaries.join(' || ') : 'Área: TAREAS VARIAS';
-                    const techDetailsSummary = `${areaSummaryCombined} | Trabajos: ${moList.join(', ')}`;
+                    const techDetailsSummary = areaSummaries.length > 0 ? areaSummaries.join(' || ') : (allMoList.length > 0 ? `Área: TAREAS VARIAS | Trabajos: ${allMoList.join(', ')}` : 'Área: TAREAS VARIAS');
                     const sparePartsSummary = matList.length > 0 ? matList.join(', ') : 'Ninguno';
+                    const manoObraSummary = allMoList.length > 0 ? allMoList.join(', ') : '';
                     
                     let docRef;
                     if (planillaIdVal) {
@@ -9535,6 +9530,8 @@
                         horaEntrada: horaEntradaVal,
                         horaSalida: horaSalidaVal,
                         techDetails: techDetailsSummary,
+                        manoObra: manoObraSummary,
+                        materiales: sparePartsSummary,
                         spareParts: sparePartsSummary,
                         observations: obsVal || 'Sin observaciones',
                         area: areaVal,
@@ -12482,51 +12479,6 @@
                 cb.checked = sheetTechs.some(t => t.toLowerCase() === cb.value.toLowerCase());
             });
 
-            // Reconstruir tabla de mano de obra
-            const tbodyMo = document.getElementById('pdig-tablaManoObra').getElementsByTagName('tbody')[0];
-            if (tbodyMo) {
-                tbodyMo.innerHTML = '';
-                
-                let moList = [];
-                if (p.techDetails && p.techDetails.includes('| Trabajos: ')) {
-                    const parts = p.techDetails.split('| Trabajos: ');
-                    if (parts[1]) {
-                        moList = parts[1].split(',').map(s => s.trim()).filter(s => s !== "");
-                    }
-                }
-
-                if (moList.length === 0) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="padding: 6px 4px;">
-                            <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;"></textarea>
-                            <input type="text" class="pdig-mo-zona" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
-                        </td>
-                        <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
-                    `;
-                    tbodyMo.appendChild(tr);
-                } else {
-                    moList.forEach(item => {
-                        let accionVal = item;
-                        let zonaVal = '';
-                        const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Sector):\s*([^\]\)]+)[\)\]]/i);
-                        if (zonaMatch) {
-                            zonaVal = zonaMatch[1].trim();
-                            accionVal = item.replace(zonaMatch[0], '').trim();
-                        }
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td style="padding: 6px 4px;">
-                                <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico" required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;">${accionVal.replace(/"/g, '&quot;')}</textarea>
-                                <input type="text" class="pdig-mo-zona" value="${zonaVal.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
-                            </td>
-                            <td style="text-align: center; vertical-align: middle;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
-                        `;
-                        tbodyMo.appendChild(tr);
-                    });
-                }
-            }
-
             // Reconstruir tabla de materiales
             const tbodyMat = document.getElementById('pdig-tablaMateriales').getElementsByTagName('tbody')[0];
             if (tbodyMat) {
@@ -12556,7 +12508,7 @@
                 }
             }
 
-            // Reconstruir áreas especializadas (soporte multi-área y compatibilidad retroactiva)
+            // Reconstruir áreas especializadas con su respectiva mano de obra (soporte multi-área y compatibilidad retroactiva)
             const areasContainer = document.getElementById('pdig-areas-container');
             if (areasContainer) areasContainer.innerHTML = '';
             pdigAreaCounter = 0;
@@ -12585,10 +12537,10 @@
                 return 'otra';
             };
 
-            const techSec = (p.techDetails || '').split('| Trabajos:')[0] || '';
-            const techAreaBlocks = techSec.split('||').map(b => b.trim());
+            const rawTechDetails = p.techDetails || '';
+            const techAreaBlocks = rawTechDetails.split('||').map(b => b.trim()).filter(Boolean);
 
-            rawAreas.forEach(rawItem => {
+            rawAreas.forEach((rawItem, areaIndex) => {
                 const normKey = normalizeAreaKey(rawItem);
                 let datosArea = null;
 
@@ -12603,12 +12555,58 @@
                     if (normKey === 'tareas_varias' && bUpper.includes('TAREAS VARIAS')) return true;
                     if (normKey === 'otra' && bUpper.includes(rawItem.toUpperCase())) return true;
                     return false;
-                }) || (rawAreas.length === 1 ? techAreaBlocks[0] : '');
+                }) || (rawAreas.length === 1 ? (techAreaBlocks[0] || '') : (techAreaBlocks[areaIndex] || ''));
+
+                // Extraer trabajos propios de este bloque si existen
+                let blockTrabajosList = [];
+                let blockTechPart = matchingBlock;
+
+                if (matchingBlock.includes('| Trabajos:')) {
+                    const splitParts = matchingBlock.split('| Trabajos:');
+                    blockTechPart = splitParts[0].trim();
+                    const rawJobs = splitParts.slice(1).join('| Trabajos:').trim();
+                    if (rawJobs) {
+                        const jobItems = rawJobs.split(',').map(s => s.trim()).filter(Boolean);
+                        jobItems.forEach(item => {
+                            let accionVal = item;
+                            let zonaVal = '';
+                            const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Sector):\s*([^\]\)]+)[\)\]]/i);
+                            if (zonaMatch) {
+                                zonaVal = zonaMatch[1].trim();
+                                accionVal = item.replace(zonaMatch[0], '').trim();
+                            }
+                            blockTrabajosList.push({ accion: accionVal, zona: zonaVal });
+                        });
+                    }
+                }
+
+                // Fallback para planillas legacy que guardaban todos los trabajos al final o en p.manoObra
+                if (blockTrabajosList.length === 0 && areaIndex === 0) {
+                    let fallbackJobsStr = '';
+                    if (rawTechDetails && rawTechDetails.includes('| Trabajos:')) {
+                        fallbackJobsStr = rawTechDetails.split('| Trabajos:').pop() || '';
+                    } else if (p.manoObra) {
+                        fallbackJobsStr = p.manoObra;
+                    }
+                    if (fallbackJobsStr) {
+                        const jobItems = fallbackJobsStr.split(',').map(s => s.trim()).filter(Boolean);
+                        jobItems.forEach(item => {
+                            let accionVal = item;
+                            let zonaVal = '';
+                            const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Sector):\s*([^\]\)]+)[\)\]]/i);
+                            if (zonaMatch) {
+                                zonaVal = zonaMatch[1].trim();
+                                accionVal = item.replace(zonaMatch[0], '').trim();
+                            }
+                            blockTrabajosList.push({ accion: accionVal, zona: zonaVal });
+                        });
+                    }
+                }
 
                 if (normKey === 'refrigeracion') {
                     const eqList = [];
-                    if (matchingBlock && matchingBlock.includes('|')) {
-                        const rawEqs = matchingBlock.split('|').slice(1).join('|').trim();
+                    if (blockTechPart && blockTechPart.includes('|')) {
+                        const rawEqs = blockTechPart.split('|').slice(1).join('|').trim();
                         const eqStrings = rawEqs.split(' ; ').map(s => s.trim()).filter(s => s.startsWith('Eq #'));
                         eqStrings.forEach(eqStr => {
                             const cleanEq = eqStr.replace(/^Eq #\d+:\s*/, '');
@@ -12642,80 +12640,82 @@
                             });
                         });
                     }
-                    datosArea = { equipos: eqList };
+                    datosArea = { equipos: eqList, trabajos: blockTrabajosList };
                 } else if (normKey === 'electrodomesticos') {
                     let artVal = '';
                     let reqRetiroVal = 'no';
                     let estadoVal = '';
                     let serieVal = '';
                     let accVal = '';
-                    if (matchingBlock) {
-                        if (matchingBlock.includes('Artefacto:')) {
-                            artVal = matchingBlock.split('Artefacto:')[1].split(' [')[0].split(' (')[0].trim();
+                    if (blockTechPart) {
+                        if (blockTechPart.includes('Artefacto:')) {
+                            artVal = blockTechPart.split('Artefacto:')[1].split(' [')[0].split(' (')[0].trim();
                         }
-                        if (matchingBlock.includes('[RETIRO A TALLER]')) reqRetiroVal = 'si';
-                        const sMatch = matchingBlock.match(/\(S\/N:\s*([^\)]+)\)/i);
+                        if (blockTechPart.includes('[RETIRO A TALLER]')) reqRetiroVal = 'si';
+                        const sMatch = blockTechPart.match(/\(S\/N:\s*([^\)]+)\)/i);
                         if (sMatch) serieVal = sMatch[1].trim();
-                        const eMatch = matchingBlock.match(/\(Estado:\s*([^\)]+)\)/i);
+                        const eMatch = blockTechPart.match(/\(Estado:\s*([^\)]+)\)/i);
                         if (eMatch) estadoVal = eMatch[1].trim();
-                        const aMatch = matchingBlock.match(/\(Acc:\s*([^\)]+)\)/i);
+                        const aMatch = blockTechPart.match(/\(Acc:\s*([^\)]+)\)/i);
                         if (aMatch) accVal = aMatch[1].trim();
                     }
-                    datosArea = { artefacto: artVal, requiereRetiro: reqRetiroVal, estado: estadoVal, serie: serieVal, accesorios: accVal };
+                    datosArea = { artefacto: artVal, requiereRetiro: reqRetiroVal, estado: estadoVal, serie: serieVal, accesorios: accVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'electricidad') {
                     let tipoVal = 'monofasica';
                     let tenVal = '220V';
-                    if (matchingBlock) {
-                        if (matchingBlock.toLowerCase().includes('trifasica')) tipoVal = 'trifasica';
-                        if (matchingBlock.includes('Tensión:') || matchingBlock.includes('Tension:')) {
-                            tenVal = (matchingBlock.split(/Tensi[oó]n:/i)[1] || '').split('|')[0].split(';')[0].trim();
+                    if (blockTechPart) {
+                        if (blockTechPart.toLowerCase().includes('trifasica')) tipoVal = 'trifasica';
+                        if (blockTechPart.includes('Tensión:') || blockTechPart.includes('Tension:')) {
+                            tenVal = (blockTechPart.split(/Tensi[oó]n:/i)[1] || '').split('|')[0].split(';')[0].trim();
                         }
                     }
-                    datosArea = { tipo: tipoVal, tension: tenVal };
+                    datosArea = { tipo: tipoVal, tension: tenVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'iluminacion') {
                     let lumVal = '';
-                    if (matchingBlock && matchingBlock.includes('Luminarias:')) {
-                        lumVal = matchingBlock.split('Luminarias:')[1].split('|')[0].trim();
+                    if (blockTechPart && blockTechPart.includes('Luminarias:')) {
+                        lumVal = blockTechPart.split('Luminarias:')[1].split('|')[0].trim();
                     }
-                    datosArea = { tipo: lumVal };
+                    datosArea = { tipo: lumVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'tecnologias') {
                     let dispVal = '';
                     let ipsVal = '';
                     let puertosVal = '';
-                    if (matchingBlock) {
-                        if (matchingBlock.includes('Disp:')) {
-                            dispVal = matchingBlock.split('Disp:')[1].split(' (')[0].trim();
+                    if (blockTechPart) {
+                        if (blockTechPart.includes('Disp:')) {
+                            dispVal = blockTechPart.split('Disp:')[1].split(' (')[0].trim();
                         }
-                        const ipMatch = matchingBlock.match(/\(IPs?:\s*([^\)]+)\)/i);
+                        const ipMatch = blockTechPart.match(/\(IPs?:\s*([^\)]+)\)/i);
                         if (ipMatch) ipsVal = ipMatch[1].trim();
-                        const pMatch = matchingBlock.match(/\(Puertos?:\s*([^\)]+)\)/i);
+                        const pMatch = blockTechPart.match(/\(Puertos?:\s*([^\)]+)\)/i);
                         if (pMatch) puertosVal = pMatch[1].trim();
                     }
-                    datosArea = { dispositivos: dispVal, ips: ipsVal, puertos: puertosVal };
+                    datosArea = { dispositivos: dispVal, ips: ipsVal, puertos: puertosVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'domotica') {
                     let ecoVal = 'alexa';
                     let escVal = '';
-                    if (matchingBlock) {
-                        if (matchingBlock.toLowerCase().includes('google')) ecoVal = 'google';
-                        else if (matchingBlock.toLowerCase().includes('apple')) ecoVal = 'apple';
-                        else if (matchingBlock.toLowerCase().includes('independiente') || matchingBlock.toLowerCase().includes('cerrado')) ecoVal = 'independiente';
-                        if (matchingBlock.includes('Escenas:')) {
-                            escVal = matchingBlock.split('Escenas:')[1].split('|')[0].trim();
+                    if (blockTechPart) {
+                        if (blockTechPart.toLowerCase().includes('google')) ecoVal = 'google';
+                        else if (blockTechPart.toLowerCase().includes('apple')) ecoVal = 'apple';
+                        else if (blockTechPart.toLowerCase().includes('independiente') || blockTechPart.toLowerCase().includes('cerrado')) ecoVal = 'independiente';
+                        if (blockTechPart.includes('Escenas:')) {
+                            escVal = blockTechPart.split('Escenas:')[1].split('|')[0].trim();
                         }
                     }
-                    datosArea = { ecosistema: ecoVal, escenas: escVal };
+                    datosArea = { ecosistema: ecoVal, escenas: escVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'otra') {
                     let detVal = '';
-                    if (matchingBlock && matchingBlock.includes('Detalle:')) {
-                        detVal = matchingBlock.split('Detalle:')[1].split('|')[0].trim();
+                    if (blockTechPart && blockTechPart.includes('Detalle:')) {
+                        detVal = blockTechPart.split('Detalle:')[1].split('|')[0].trim();
                     }
-                    datosArea = { nombre: rawItem, detalle: detVal };
+                    datosArea = { nombre: rawItem, detalle: detVal, trabajos: blockTrabajosList };
                 } else if (normKey === 'tareas_varias') {
                     let detVal = '';
-                    if (matchingBlock && matchingBlock.includes('Detalle:')) {
-                        detVal = matchingBlock.split('Detalle:')[1].split('|')[0].trim();
+                    if (blockTechPart && blockTechPart.includes('Detalle:')) {
+                        detVal = blockTechPart.split('Detalle:')[1].split('|')[0].trim();
                     }
-                    datosArea = { detalle: detVal };
+                    datosArea = { detalle: detVal, trabajos: blockTrabajosList };
+                } else {
+                    datosArea = { trabajos: blockTrabajosList };
                 }
 
                 window.agregarAreaDigital(normKey, datosArea);
