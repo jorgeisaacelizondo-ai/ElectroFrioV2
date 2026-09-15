@@ -12256,6 +12256,21 @@
             const formattedPrice = Math.round(calculatedPrice).toLocaleString('es-AR');
             const formattedHours = hoursWorked % 1 === 0 ? hoursWorked.toFixed(0) : hoursWorked.toFixed(1);
 
+            // Formatear detalles técnicos para impresión: si contiene múltiples áreas (delimitadas por ||), separarlas en bloques visuales independientes (con enter y línea punteada)
+            let formattedTechDetailsHtml = 'Sin detalles técnicos registrados.';
+            if (p.techDetails) {
+                const blocks = p.techDetails.split('||').map(b => b.trim()).filter(Boolean);
+                if (blocks.length > 0) {
+                    formattedTechDetailsHtml = blocks.map((b, idx) => {
+                        let blockHtml = b;
+                        if (blockHtml.startsWith('Área:') || blockHtml.startsWith('Area:')) {
+                            blockHtml = blockHtml.replace(/^(Área:|Area:)\s*([^|]+)/i, '<strong style="color: #0b192c; font-size: 13.5px;">$1 $2</strong>');
+                        }
+                        return `<div style="${idx > 0 ? 'margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed #bbb;' : ''} line-height: 1.5; white-space: pre-wrap;">${blockHtml}</div>`;
+                    }).join('');
+                }
+            }
+
             const printWindow = window.open('', '_blank', 'width=900,height=800');
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -12322,7 +12337,7 @@
 
                     <div class="section">
                         <div class="section-title">Detalles Técnicos y Trabajos Realizados</div>
-                        <div class="val" style="white-space: pre-wrap; font-weight: normal; font-size: 13px;">${p.techDetails || 'Sin detalles técnicos registrados.'}</div>
+                        <div class="val" style="font-weight: normal; font-size: 13px;">${formattedTechDetailsHtml}</div>
                     </div>
 
                     <div class="section">
@@ -12953,6 +12968,13 @@
                     const ord = ordenesTrabajo.find(o => o.id === p.orderId);
                     const equipment = ord ? ord.type : "Equipo no especificado";
 
+                    const techHtml = (p.techDetails || 'Sin detalles')
+                        .split('||')
+                        .map(b => b.trim())
+                        .filter(Boolean)
+                        .map((b, idx) => `<div style="${idx > 0 ? 'margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-color, #e2e8f0);' : ''}">${b}</div>`)
+                        .join('') || 'Sin detalles';
+
                     const div = document.createElement('div');
                     div.className = 'client-history-item';
                     div.innerHTML = `
@@ -12961,7 +12983,7 @@
                             <span>${p.date}</span>
                         </div>
                         <div style="margin-bottom:6px;"><strong>Equipo:</strong> ${equipment}</div>
-                        <div style="margin-bottom:6px;"><strong>Trabajo Realizado:</strong> ${p.techDetails}</div>
+                        <div style="margin-bottom:6px;"><strong>Trabajo Realizado:</strong><div style="margin-top:4px; line-height:1.4;">${techHtml}</div></div>
                         <div style="margin-bottom:6px;"><strong>Repuestos Utilizados:</strong> ${p.spareParts || 'Ninguno'}</div>
                         <div><strong>Observaciones:</strong> ${p.observations || 'Sin observaciones'}</div>
                         <div style="text-align:right; font-size:11px; color:var(--text-muted); margin-top:8px;">Realizado por: ${p.completedBy || 'Técnico'}</div>
