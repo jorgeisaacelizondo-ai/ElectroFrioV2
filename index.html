@@ -1722,8 +1722,8 @@
                 margin-right: 15px;
             }
 
-            /* Para que los botones se centren o se alineen bien */
-            .custom-table td button {
+            /* Para que los botones se centren o se alineen bien en tablas de datos */
+            .custom-table:not(.pdig-form-table) td button {
                 width: 100%;
                 margin-top: 5px;
             }
@@ -1756,6 +1756,296 @@
                 font-size: 16px;
                 /* Evita zoom automático en iOS/Android */
             }
+
+            /* =========================================================
+               OPTIMIZACIÓN MÓVIL DE PLANILLA DE TRABAJO DIGITAL
+               ========================================================= */
+            #modalNuevaPlanillaDigital .modal-content,
+            #modalPlanillaTrabajo .modal-content {
+                width: 96% !important;
+                max-width: 96% !important;
+                padding: 16px 12px !important;
+                max-height: 94vh !important;
+                border-radius: 12px !important;
+            }
+
+            #modalNuevaPlanillaDigital .modal-title,
+            #modalPlanillaTrabajo .modal-title {
+                font-size: 16px !important;
+            }
+
+            #modalNuevaPlanillaDigital .form-section-title {
+                font-size: 14px !important;
+                margin-bottom: 12px !important;
+            }
+
+            /* Atajos de Horarios Rápidos en 2 columnas legibles */
+            #modalNuevaPlanillaDigital .module-quick-buttons,
+            #modalPlanillaTrabajo .module-quick-buttons {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 6px !important;
+            }
+
+            #modalNuevaPlanillaDigital .btn-module-preset,
+            #modalPlanillaTrabajo .btn-module-preset {
+                font-size: 12px !important;
+                padding: 8px 4px !important;
+                min-height: 36px !important;
+            }
+
+            /* Grillas de 2 columnas dentro de subformularios se apilan ordenadamente en 1 columna */
+            .pdig-grid-2col {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .pdig-horas-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+
+            /* MANO DE OBRA EN MÓVIL: Tarjeta individual vertical limpia por cada trabajo */
+            .pdig-tabla-mano-obra thead,
+            .custom-table.pdig-tabla-mano-obra thead {
+                display: none !important;
+            }
+
+            .pdig-tabla-mano-obra,
+            .pdig-tabla-mano-obra tbody,
+            .custom-table.pdig-tabla-mano-obra,
+            .custom-table.pdig-tabla-mano-obra tbody {
+                display: block !important;
+                width: 100% !important;
+            }
+
+            .pdig-tabla-mano-obra tr,
+            .custom-table.pdig-tabla-mano-obra tr {
+                display: flex !important;
+                flex-direction: column !important;
+                background: rgba(10, 17, 28, 0.75) !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 8px !important;
+                padding: 10px !important;
+                margin-bottom: 10px !important;
+                box-sizing: border-box !important;
+                width: 100% !important;
+            }
+
+            .pdig-tabla-mano-obra td.pdig-mo-inputs-cell,
+            .pdig-tabla-mano-obra td:first-child,
+            .custom-table.pdig-tabla-mano-obra td:first-child {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 7px !important;
+                width: 100% !important;
+                padding: 0 !important;
+                border: none !important;
+                text-align: left !important;
+            }
+
+            .pdig-tabla-mano-obra td::before,
+            .custom-table.pdig-tabla-mano-obra td::before {
+                display: none !important;
+                content: none !important;
+            }
+
+            .pdig-tabla-mano-obra .pdig-mo-accion {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                font-size: 14px !important;
+                min-height: 50px !important;
+                padding: 8px 10px !important;
+                border-radius: 6px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .pdig-tabla-mano-obra .pdig-mo-zona {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                font-size: 13px !important;
+                padding: 8px 10px !important;
+                border-radius: 6px !important;
+            }
+
+            .pdig-tabla-mano-obra td.pdig-mo-action-cell,
+            .pdig-tabla-mano-obra td:last-child,
+            .custom-table.pdig-tabla-mano-obra td:last-child {
+                display: flex !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                width: 100% !important;
+                padding: 8px 0 0 0 !important;
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .pdig-tabla-mano-obra .btn-pdig-remove-row,
+            .custom-table.pdig-tabla-mano-obra .btn-pdig-remove-row {
+                width: auto !important;
+                padding: 5px 12px !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                border-radius: 6px !important;
+                background: rgba(239, 68, 68, 0.15) !important;
+                color: #f87171 !important;
+                border: 1px solid rgba(239, 68, 68, 0.35) !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+                margin-top: 0 !important;
+                cursor: pointer !important;
+            }
+
+            .pdig-tabla-mano-obra .btn-pdig-remove-text {
+                display: inline !important;
+            }
+
+            /* TABLA MATERIALES EN MÓVIL: Fila compacta horizontal con input + botón */
+            #pdig-tablaMateriales thead,
+            .custom-table#pdig-tablaMateriales thead {
+                display: none !important;
+            }
+
+            #pdig-tablaMateriales,
+            #pdig-tablaMateriales tbody,
+            .custom-table#pdig-tablaMateriales,
+            .custom-table#pdig-tablaMateriales tbody {
+                display: block !important;
+                width: 100% !important;
+            }
+
+            #pdig-tablaMateriales tr,
+            .custom-table#pdig-tablaMateriales tr {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 8px !important;
+                margin-bottom: 8px !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: none !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            #pdig-tablaMateriales td:first-child,
+            .custom-table#pdig-tablaMateriales td:first-child {
+                flex: 1 !important;
+                display: block !important;
+                width: auto !important;
+                padding: 0 !important;
+                border: none !important;
+                text-align: left !important;
+            }
+
+            #pdig-tablaMateriales td::before,
+            .custom-table#pdig-tablaMateriales td::before {
+                display: none !important;
+                content: none !important;
+            }
+
+            #pdig-tablaMateriales .pdig-mat-nombre {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 8px 10px !important;
+                font-size: 14px !important;
+                border-radius: 6px !important;
+            }
+
+            #pdig-tablaMateriales td:last-child,
+            .custom-table#pdig-tablaMateriales td:last-child {
+                width: auto !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                border: none !important;
+                background: transparent !important;
+            }
+
+            #pdig-tablaMateriales .btn-pdig-remove-row,
+            .custom-table#pdig-tablaMateriales .btn-pdig-remove-row {
+                width: 36px !important;
+                height: 36px !important;
+                min-width: 36px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: rgba(239, 68, 68, 0.15) !important;
+                color: #f87171 !important;
+                border: 1px solid rgba(239, 68, 68, 0.35) !important;
+                border-radius: 6px !important;
+                font-size: 15px !important;
+                font-weight: bold !important;
+            }
+
+            /* Botones Agregar en móvil */
+            #btnPdigAddArea,
+            #btnPdigAddMateriales,
+            .pdig-area-mo-section button.save-btn,
+            .pdig-ref-equipos-list + button,
+            .pdig-area-card button.save-btn:not(.btn-pdig-remove-area) {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 10px 14px !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                border-radius: 6px !important;
+            }
+
+            /* Botones del pie del modal */
+            .pdig-footer-actions {
+                display: flex;
+                gap: 8px;
+                margin-top: 20px;
+            }
+
+            @media (max-width: 480px) {
+                .pdig-footer-actions {
+                    flex-direction: column !important;
+                }
+                .pdig-footer-actions button {
+                    width: 100% !important;
+                    padding: 12px !important;
+                    font-size: 14px !important;
+                }
+            }
+        }
+
+        /* Estilos generales para tablas de formulario Planilla Digital (Desktop & Tablet) */
+        .pdig-form-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 6px;
+        }
+
+        .pdig-form-table thead th {
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .pdig-form-table tbody td {
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .pdig-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         /* Estilos de Filtros para Fichajes y Jornales */
@@ -4414,7 +4704,7 @@
                     <div style="text-align: center; margin-top: 4px; font-size: 10px; color: var(--text-muted);">🥪 Almuerzo: 12:30 a 13:30 hs</div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div class="pdig-horas-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div class="input-group">
                         <label for="pdig-hora-entrada">Hora de Entrada</label>
                         <input type="time" id="pdig-hora-entrada" required style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
@@ -4457,7 +4747,7 @@
                     <!-- Contenedor dinámico de áreas especializadas -->
                 </div>
                 
-                <button type="button" class="save-btn" id="btnPdigAddArea" style="width: auto; background-color: var(--color-blue); color: #000; font-weight: 700; padding: 8px 16px; font-size: 13px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">Agregar Área Especializada</button>
+                <button type="button" class="save-btn" id="btnPdigAddArea" style="width: auto; background-color: var(--color-blue); color: #000; font-weight: 700; padding: 8px 16px; font-size: 13px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">+ Agregar Área Especializada</button>
 
 
                 <!-- SECCIÓN 3: MATERIALES Y REPUESTOS -->
@@ -4467,7 +4757,7 @@
                 <div class="input-group" style="margin-bottom: 20px;">
                     <label>Materiales y Repuestos Utilizados</label>
                     <div class="table-responsive" style="margin-top: 5px;">
-                        <table class="custom-table" id="pdig-tablaMateriales">
+                        <table class="pdig-form-table pdig-tabla-materiales" id="pdig-tablaMateriales">
                             <thead>
                                 <tr>
                                     <th style="width: 85%;">Material / Repuesto</th>
@@ -4475,9 +4765,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                                    <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                                <tr class="pdig-mat-row">
+                                    <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                                    <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -4491,7 +4781,7 @@
                     <textarea id="pdig-observaciones" rows="3" placeholder="Notas internas o recomendaciones para el cliente..." style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="pdig-footer-actions" style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="submit" formnovalidate name="submitType" value="Borrador" class="save-btn" id="btnDraftPlanillaDigital" style="flex: 1; background-color: #24364e; color: #ffffff; border: 1px solid var(--border-color); font-weight: 700; font-size: 15px; padding: 12px; cursor: pointer; border-radius: 6px;">
                         📝 Guardar Borrador
                     </button>
@@ -8420,7 +8710,7 @@
                     <span class="pdig-equipo-title" style="font-weight: bold; color: var(--color-blue); font-size: 13px;">⚙️ Equipo N° ${contenedor.children.length + 1}</span>
                     <button type="button" class="save-btn" style="background-color: var(--color-red); color: white; border: none; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;" onclick="eliminarEquipoRefrigeracionArea(this)">Eliminar Equipo</button>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div class="input-group">
                         <label>Tipo de Equipo</label>
                         <select class="pdig-ref-tipo" onchange="handlePdigTipoEquipoChange(this)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8441,7 +8731,7 @@
                         </select>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div class="input-group">
                         <label>Marca y Modelo</label>
                         <input type="text" class="pdig-ref-modelo" placeholder="Ej: Samsung AR12" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8451,7 +8741,7 @@
                         <input type="text" class="pdig-ref-capacidad" placeholder="Ej: 3000 fg / 12000 BTU" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="input-group">
                         <label>Presión de Refrigerante / Tipo</label>
                         <input type="text" class="pdig-ref-gas" placeholder="Ej: 120 PSI (R410a)" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8532,7 +8822,7 @@
                                 <label>Estado Estético del Producto (Rayones, golpes, faltantes)</label>
                                 <textarea class="pdig-retiro-estado" rows="2" placeholder="Describa el estado visual al momento de retirar..." style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;"></textarea>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div class="input-group">
                                     <label>Número de Serie / Lote</label>
                                     <input type="text" class="pdig-retiro-serie" placeholder="S/N: 123456789" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8560,7 +8850,7 @@
                 subformCont.innerHTML = `
                     <div style="background: rgba(0,0,0,0.25); padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-blue); margin-top: 10px;">
                         <h4 style="margin-top:0; color:var(--text-primary); font-size: 14px;">Detalles de Electricidad</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div class="input-group">
                                 <label>Tipo de Instalación</label>
                                 <select class="pdig-elec-tipo" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8598,7 +8888,7 @@
                             <label>Dispositivos Configurados/Instalados</label>
                             <input type="text" class="pdig-tec-dispositivos" placeholder="Ej: 4 Cámaras IP Hikvision, 1 Router TP-Link" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="pdig-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div class="input-group">
                                 <label>IPs / Accesos asignados</label>
                                 <input type="text" class="pdig-tec-ips" placeholder="Ej: 192.168.1.100" style="width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
@@ -8715,13 +9005,14 @@
             if (!tbody) return null;
 
             const tr = document.createElement('tr');
+            tr.className = 'pdig-mo-row';
             tr.innerHTML = `
-                <td style="padding: 6px 4px;">
-                    <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico, Mantenimiento..." required rows="2" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; margin-bottom: 5px; resize: vertical; min-height: 38px; font-family: inherit; font-size: 13px;">${accion.replace(/"/g, '&quot;')}</textarea>
-                    <input type="text" class="pdig-mo-zona" value="${zona.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:5px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;">
+                <td class="pdig-mo-inputs-cell" style="padding: 6px 4px;">
+                    <textarea class="pdig-mo-accion" placeholder="Ej: Instalación, Diagnóstico, Mantenimiento..." required rows="2" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; margin-bottom: 6px; resize: vertical; min-height: 42px; font-family: inherit; font-size: 13px; box-sizing: border-box;">${accion.replace(/"/g, '&quot;')}</textarea>
+                    <input type="text" class="pdig-mo-zona" value="${zona.replace(/"/g, '&quot;')}" placeholder="Zona / Sector (Ej: Cocina, Living, Tablero)" style="width:100%; padding:6px 10px; font-size: 12px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; box-sizing: border-box;">
                 </td>
-                <td style="text-align: center; vertical-align: middle;">
-                    <button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button>
+                <td class="pdig-mo-action-cell" style="text-align: center; vertical-align: middle;">
+                    <button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar tarea"><span class="btn-pdig-remove-icon">✕</span><span class="btn-pdig-remove-text" style="display:none;"> Quitar Tarea</span></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -8768,7 +9059,7 @@
                         </label>
                     </div>
                     <div class="table-responsive" style="margin-top: 5px;">
-                        <table class="custom-table pdig-tabla-mano-obra" style="width: 100%;">
+                        <table class="pdig-form-table pdig-tabla-mano-obra" style="width: 100%;">
                             <thead>
                                 <tr>
                                     <th style="width: 85%;">Acción / Tarea</th>
@@ -8778,7 +9069,7 @@
                             <tbody id="pdig-tbody-mo-${currentAreaId}"></tbody>
                         </table>
                     </div>
-                    <button type="button" class="save-btn" style="width: auto; padding: 6px 12px; font-size: 12px; margin-top: 8px; background: rgba(36, 54, 78, 0.7); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; cursor: pointer;" onclick="agregarFilaManoObraArea(${currentAreaId})">+ Agregar Fila de Mano de Obra</button>
+                    <button type="button" class="save-btn btn-pdig-add-mo" style="width: auto; padding: 6px 12px; font-size: 12px; margin-top: 8px; background: rgba(36, 54, 78, 0.7); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; cursor: pointer;" onclick="agregarFilaManoObraArea(${currentAreaId})">+ Agregar Fila de Mano de Obra</button>
                 </div>
             `;
 
@@ -9178,9 +9469,9 @@
             const tbodyMat = document.getElementById('pdig-tablaMateriales').getElementsByTagName('tbody')[0];
             if (tbodyMat) {
                 tbodyMat.innerHTML = `
-                    <tr>
-                        <td><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                        <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                    <tr class="pdig-mat-row">
+                        <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                        <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                     </tr>
                 `;
             }
@@ -9278,9 +9569,10 @@
             btnPdigAddMateriales.addEventListener('click', () => {
                 const tbody = document.getElementById('pdig-tablaMateriales').getElementsByTagName('tbody')[0];
                 const tr = document.createElement('tr');
+                tr.className = 'pdig-mat-row';
                 tr.innerHTML = `
-                    <td><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                    <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                    <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                    <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -12506,17 +12798,19 @@
 
                 if (matList.length === 0) {
                     const tr = document.createElement('tr');
+                    tr.className = 'pdig-mat-row';
                     tr.innerHTML = `
-                        <td><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                        <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                        <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                        <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                     `;
                     tbodyMat.appendChild(tr);
                 } else {
                     matList.forEach(item => {
                         const tr = document.createElement('tr');
+                        tr.className = 'pdig-mat-row';
                         tr.innerHTML = `
-                            <td><input type="text" class="pdig-mat-nombre" value="${item}" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:6px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px;"></td>
-                            <td style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background:var(--color-red); color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="eliminarFilaTablaPdig(this)">✕</button></td>
+                            <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" value="${item}" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                            <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="btn-pdig-remove-row" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; cursor: pointer;" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                         `;
                         tbodyMat.appendChild(tr);
                     });
