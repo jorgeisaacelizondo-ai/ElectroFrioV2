@@ -4162,19 +4162,19 @@
 
                 <!-- LUGAR DE TRABAJO (GPS) -->
                 <div class="form-section-title">Lugar de Trabajo (GPS)</div>
-                <div class="form-section-subtitle">Dejar vacío para usar la ubicación global de la empresa.</div>
+                <div class="form-section-subtitle">Dejar vacío para usar la ubicación global de la empresa (29°25'05.3"S 66°51'26.3"W, radio de 30m).</div>
                 <div class="form-grid-3">
                     <div class="input-group">
                         <label for="collab-gpslat">Latitud</label>
-                        <input type="text" id="collab-gpslat" placeholder="Ej: -29.41810">
+                        <input type="text" id="collab-gpslat" placeholder="Ej: -29.418139">
                     </div>
                     <div class="input-group">
                         <label for="collab-gpslng">Longitud</label>
-                        <input type="text" id="collab-gpslng" placeholder="Ej: -66.85735">
+                        <input type="text" id="collab-gpslng" placeholder="Ej: -66.857306">
                     </div>
                     <div class="input-group">
                         <label for="collab-gpsradius">Radio (m)</label>
-                        <input type="number" id="collab-gpsradius" value="700" min="0">
+                        <input type="number" id="collab-gpsradius" value="30" min="0">
                     </div>
                 </div>
 
@@ -4260,11 +4260,13 @@
                     </div>
                     <div class="input-group" id="fichajeGpsGroup">
                         <label for="fichaje-gps-status">Ubicación (GPS)</label>
-                        <select id="fichaje-gps-status"
-                            style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 6px;">
+                        <select id="fichaje-gps-status" disabled
+                            style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary, #94a3b8); border-radius: 6px; cursor: not-allowed;">
                             <option value="manual" id="fichaje-gps-opt-manual">Manual (Sin GPS)</option>
-                            <option value="verified" id="fichaje-gps-opt-verified" hidden style="display: none;" disabled>Verificado (Con Coordenadas)</option>
                         </select>
+                        <small style="display: block; color: var(--text-muted, #94a3b8); font-size: 11px; margin-top: 4px;">
+                            ℹ Los fichajes registrados o editados desde la computadora se guardan siempre como manuales.
+                        </small>
                     </div>
                 </div>
                 <button type="submit" class="save-btn" style="width: 100%; margin-top: 20px;">
@@ -5225,7 +5227,7 @@
                         premium: false,
                         hourlyRate: 3000,
                         schedule: { in: "08:00", out: "17:00", tolerance: 15 },
-                        gps: { lat: "-29.418139", lng: "-66.857306", radius: 700 },
+                        gps: { lat: "-29.418139", lng: "-66.857306", radius: 30 },
                         status: "online"
                     },
                     {
@@ -6786,9 +6788,9 @@
                 document.getElementById('collab-hourlyrate').value = collab.hourlyRate;
                 document.getElementById('collab-role').value = collab.role;
                 document.getElementById('collab-premium').checked = !!collab.premium;
-                document.getElementById('collab-gpslat').value = collab.gps.lat;
-                document.getElementById('collab-gpslng').value = collab.gps.lng;
-                document.getElementById('collab-gpsradius').value = collab.gps.radius;
+                document.getElementById('collab-gpslat').value = (collab.gps && collab.gps.lat) ? collab.gps.lat : '';
+                document.getElementById('collab-gpslng').value = (collab.gps && collab.gps.lng) ? collab.gps.lng : '';
+                document.getElementById('collab-gpsradius').value = (collab.gps && collab.gps.radius && collab.gps.radius !== 700) ? collab.gps.radius : 30;
 
                 modalNuevoColaborador.classList.add('show');
             }
@@ -6876,38 +6878,17 @@
             renderTodayAttendanceControl();
         };
 
-        let fichajeOptVerifiedElement = null;
-
-        function updateFichajeGpsUI(allowVerified = false) {
+        function updateFichajeGpsUI() {
             const select = document.getElementById('fichaje-gps-status');
-            if (!fichajeOptVerifiedElement) {
-                fichajeOptVerifiedElement = document.getElementById('fichaje-gps-opt-verified');
-            }
-            if (!select) return;
-
-            if (allowVerified) {
-                if (fichajeOptVerifiedElement) {
-                    if (!fichajeOptVerifiedElement.parentNode) {
-                        select.appendChild(fichajeOptVerifiedElement);
-                    }
-                    fichajeOptVerifiedElement.hidden = false;
-                    fichajeOptVerifiedElement.style.display = '';
-                    fichajeOptVerifiedElement.disabled = false;
-                }
-                select.value = 'verified';
-            } else {
+            if (select) {
                 select.value = 'manual';
-                if (fichajeOptVerifiedElement) {
-                    fichajeOptVerifiedElement.hidden = true;
-                    fichajeOptVerifiedElement.style.display = 'none';
-                    fichajeOptVerifiedElement.disabled = true;
-                    if (fichajeOptVerifiedElement.parentNode) {
-                        fichajeOptVerifiedElement.remove();
-                    }
-                }
+            }
+            const optVerified = document.getElementById('fichaje-gps-opt-verified');
+            if (optVerified) {
+                optVerified.remove();
             }
         }
-        updateFichajeGpsUI(false);
+        updateFichajeGpsUI();
 
         window.openModalFichajeForCollab = function (collabName, defaultType = 'Entrada', targetDate = null) {
             editFichajeId = null;
@@ -6956,7 +6937,7 @@
             const selectorEl = document.getElementById('fichajeTypeSelector');
             if (selectorEl) selectorEl.classList.remove('has-error');
 
-            updateFichajeGpsUI(false);
+            updateFichajeGpsUI();
 
             modalFichaje.classList.add('show');
         };
@@ -7598,7 +7579,7 @@
 
             const DEFAULT_LAT = -29.418139; // 29°25'05.3"S 66°51'26.3"W
             const DEFAULT_LNG = -66.857306; // 29°25'05.3"S 66°51'26.3"W
-            const DEFAULT_RADIUS = 700; // 700 metros a la redonda (~7 cuadras)
+            const DEFAULT_RADIUS = 30; // 30 metros a la redonda
 
             let allowedLat = DEFAULT_LAT;
             let allowedLng = DEFAULT_LNG;
@@ -7607,10 +7588,13 @@
             if (collab && collab.gps && collab.gps.lat && collab.gps.lng) {
                 const parsedLat = parseFloat(collab.gps.lat);
                 const parsedLng = parseFloat(collab.gps.lng);
-                allowedLat = !isNaN(parsedLat) && parsedLat !== 0 ? parsedLat : DEFAULT_LAT;
-                allowedLng = !isNaN(parsedLng) && parsedLng !== 0 ? parsedLng : DEFAULT_LNG;
+                allowedLat = (!isNaN(parsedLat) && parsedLat !== 0) ? parsedLat : DEFAULT_LAT;
+                allowedLng = (!isNaN(parsedLng) && parsedLng !== 0) ? parsedLng : DEFAULT_LNG;
                 const customRadius = parseFloat(collab.gps.radius);
-                allowedRadius = (!isNaN(customRadius) && customRadius >= 700) ? customRadius : DEFAULT_RADIUS;
+                allowedRadius = (!isNaN(customRadius) && customRadius > 0 && customRadius !== 700) ? customRadius : DEFAULT_RADIUS;
+            } else if (collab && collab.gps && collab.gps.radius) {
+                const customRadius = parseFloat(collab.gps.radius);
+                allowedRadius = (!isNaN(customRadius) && customRadius > 0 && customRadius !== 700) ? customRadius : DEFAULT_RADIUS;
             }
 
             if (!navigator.geolocation) {
@@ -7621,7 +7605,7 @@
                 return;
             }
 
-            // Estrategia de geolocalización compatible con iPhone (iOS / Safari) y Android
+            // Estrategia de geolocalización de alta precisión para radio de 30 metros (iOS / Safari y Android)
             function requestLocation(options, isRetry = false) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -7631,17 +7615,21 @@
 
                         if (distance <= allowedRadius) {
                             callback(collab, userLat, userLng);
+                        } else if (!isRetry) {
+                            // Si la primera lectura da fuera del rango de 30m (frecuente por triangulación celular o wifi), forzar lectura del chip GPS satelital
+                            console.warn(`Distancia inicial (${Math.round(distance)}m) supera ${allowedRadius}m. Reintentando con GPS satelital de alta precisión...`);
+                            requestLocation({ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }, true);
                         } else {
                             restoreBtn();
-                            const msg = `No estás en el lugar autorizado para tomar el fichaje (estás a ${Math.round(distance)}m). Por favor ponte en contacto con la administración ya que no se registrará tu fichaje.`;
+                            const msg = `No estás en el lugar autorizado para tomar el fichaje (estás a ${Math.round(distance)}m). El rango permitido es de ${allowedRadius} metros a la redonda. Por favor ponte en contacto con la administración ya que no se registrará tu fichaje.`;
                             showToast(msg, "error");
                             alert(msg);
                         }
                     },
                     (error) => {
-                        // Si el primer intento rápido falla en iOS por timeout o falta de señal, reintentar con alta precisión
+                        // Si el primer intento falla en iOS/Android por timeout o falta de señal inicial, reintentar
                         if (!isRetry && (error.code === 2 || error.code === 3)) {
-                            console.warn("Reintentando lectura GPS para iOS/Safari...");
+                            console.warn("Reintentando lectura GPS para dispositivo móvil...");
                             requestLocation({ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }, true);
                             return;
                         }
@@ -7651,9 +7639,9 @@
                         
                         let msg = "No se obtuvo tu ubicación GPS. Por favor ponte en contacto con la administración.";
                         if (error.code === 1) { // PERMISSION_DENIED
-                            msg = "Debes permitir el acceso a tu ubicación en tu iPhone/Safari (Ajustes > Privacidad y seguridad > Localización > Sitios web de Safari) para poder fichar.";
+                            msg = "Debes permitir el acceso a tu ubicación en tu navegador o dispositivo para poder fichar.";
                         } else if (error.code === 3) { // TIMEOUT
-                            msg = "Tiempo de espera agotado para obtener GPS en tu iPhone. Por favor verifica que la localización esté activa e intenta al aire libre.";
+                            msg = "Tiempo de espera agotado para obtener GPS. Por favor verifica que la localización esté activa e intenta al aire libre.";
                         }
                         
                         showToast(msg, "error");
@@ -7663,11 +7651,11 @@
                 );
             }
 
-            // Intento inicial: rápido y de alta compatibilidad con interiores en iOS/Android
+            // Intento inicial: alta precisión activada para asegurar exactitud en 30 metros
             requestLocation({
-                enableHighAccuracy: false,
-                timeout: 12000,
-                maximumAge: 30000
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 5000
             });
         }
 
@@ -14152,7 +14140,7 @@
                 const selectorEl = document.getElementById('fichajeTypeSelector');
                 if (selectorEl) selectorEl.classList.remove('has-error');
 
-                updateFichajeGpsUI(false);
+                updateFichajeGpsUI();
 
                 modalFichaje.classList.add('show');
             });
@@ -14168,7 +14156,7 @@
                 const selectorEl = document.getElementById('fichajeTypeSelector');
                 if (selectorEl) selectorEl.classList.remove('has-error');
                 editFichajeId = null;
-                updateFichajeGpsUI(false);
+                updateFichajeGpsUI();
             });
         }
 
@@ -14191,8 +14179,8 @@
                 document.getElementById('fichaje-time').value = formatTime12hTo24h(f.time);
                 setFichajeType(f.type || 'Entrada');
 
-                const isVerified = !!(f.gps && f.gps.verified);
-                updateFichajeGpsUI(isVerified);
+                // Al editar desde la compu, siempre pasa a ser Manual (Sin GPS)
+                updateFichajeGpsUI();
 
                 modalFichaje.classList.add('show');
             }
@@ -14256,23 +14244,8 @@
                     timestampStr = new Date().toISOString();
                 }
 
-                // Configurar objeto GPS
-                let gpsObj = { manual: true };
-                if (editFichajeId) {
-                    const existingFichaje = fichajes.find(item => item.id === editFichajeId);
-                    if (gpsVal === 'verified') {
-                        if (existingFichaje && existingFichaje.gps && existingFichaje.gps.verified && existingFichaje.gps.lat) {
-                            gpsObj = { ...existingFichaje.gps };
-                        } else {
-                            gpsObj = { lat: -29.418139, lng: -66.857306, verified: true };
-                        }
-                    } else {
-                        gpsObj = { manual: true };
-                    }
-                } else {
-                    // Al registrar un nuevo fichaje manual, siempre se guarda estrictamente como manual
-                    gpsObj = { manual: true };
-                }
+                // Configurar objeto GPS: cualquier fichaje registrado o editado desde la compu es estrictamente manual
+                const gpsObj = { manual: true, verified: false };
 
                 const submitBtn = formFichaje.querySelector('button[type="submit"]');
                 if (submitBtn) {
@@ -14318,6 +14291,22 @@
                             type: typeVal,
                             gps: gpsObj
                         });
+
+                        // Actualización inmediata en memoria local
+                        const localIdx = fichajes.findIndex(item => item.id === editFichajeId);
+                        if (localIdx !== -1) {
+                            fichajes[localIdx] = {
+                                ...fichajes[localIdx],
+                                date: dateVal,
+                                time: formattedTime,
+                                timestamp: timestampStr,
+                                type: typeVal,
+                                gps: gpsObj
+                            };
+                            localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                            updateTablesAndViews();
+                        }
+
                         alert("¡Fichaje actualizado exitosamente!");
                     } else {
                         // Crear nuevo fichaje manual
@@ -14347,7 +14336,7 @@
                     modalFichaje.classList.remove('show');
                     formFichaje.reset();
                     editFichajeId = null;
-                    updateFichajeGpsUI(false);
+                    updateFichajeGpsUI();
                 } catch (error) {
                     if (submitBtn) {
                         submitBtn.disabled = false;
@@ -14985,7 +14974,7 @@
             const tolerance = 0;
             const lat = document.getElementById('collab-gpslat').value.trim();
             const lng = document.getElementById('collab-gpslng').value.trim();
-            const radius = parseInt(document.getElementById('collab-gpsradius').value) || 700;
+            const radius = parseInt(document.getElementById('collab-gpsradius').value) || 30;
 
             // Si estamos editando
             if (editUsernameMode) {
