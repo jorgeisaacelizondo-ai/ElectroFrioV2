@@ -1244,30 +1244,45 @@
                 font-size: 0.8rem;
             }
 
-            /* Modales en Móvil */
+            /* Modales en Móvil: extendido a pantalla completa hacia abajo, sin scrollbar interno recortado */
             .modal-overlay {
-                padding: 6px 4px;
-                align-items: flex-start;
+                padding: 0 !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
                 width: 100% !important;
                 max-width: 100% !important;
-                overflow-x: hidden !important;
+                height: 100% !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                background: var(--bg-main) !important;
                 box-sizing: border-box !important;
             }
 
             .modal-content {
                 width: 100% !important;
                 max-width: 100% !important;
-                max-height: 98vh;
-                margin-bottom: 10px;
-                border-radius: var(--radius-md);
-                overflow-x: hidden !important;
+                min-height: 100vh !important;
+                height: auto !important;
+                max-height: none !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: visible !important;
                 box-sizing: border-box !important;
             }
 
             .modal-header {
-                padding: 12px 14px;
-                width: 100%;
-                box-sizing: border-box;
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 100 !important;
+                background: var(--bg-card) !important;
+                border-bottom: 1px solid var(--border-color) !important;
+                padding: 14px 16px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             .modal-title {
@@ -1275,12 +1290,14 @@
             }
 
             .modal-body {
-                padding: 12px 10px;
-                gap: 12px;
-                max-height: calc(98vh - 130px);
+                padding: 14px 12px !important;
+                gap: 14px !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                overflow-y: visible !important;
                 width: 100% !important;
                 max-width: 100% !important;
-                overflow-x: hidden !important;
                 box-sizing: border-box !important;
             }
 
@@ -1290,52 +1307,38 @@
             }
 
             .modal-footer {
-                padding: 12px 10px;
-                flex-direction: column-reverse;
-                gap: 10px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .modal-footer-primary-group {
+                position: relative !important;
+                background: var(--bg-card) !important;
+                border-top: 1px solid var(--border-color) !important;
+                padding: 16px 12px !important;
+                margin-top: auto !important;
                 display: flex !important;
-                gap: 8px !important;
+                flex-direction: column !important;
+                gap: 10px !important;
                 width: 100% !important;
+                box-sizing: border-box !important;
             }
 
-            .modal-footer-primary-group .btn {
-                flex: 1 !important;
-                padding: 11px 8px !important;
-                font-size: 0.88rem !important;
-                font-weight: 700 !important;
-                justify-content: center !important;
-            }
-
+            .modal-footer-primary-group,
             .modal-footer-secondary-group {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 8px !important;
                 width: 100% !important;
             }
 
-            .modal-footer-secondary-group .btn-whatsapp {
-                grid-column: 1 / -1 !important;
-                padding: 11px 8px !important;
-                font-size: 0.88rem !important;
+            .modal-footer .btn {
+                width: 100% !important;
+                padding: 12px 14px !important;
+                font-size: 0.92rem !important;
                 font-weight: 700 !important;
                 justify-content: center !important;
             }
 
-            .modal-footer-secondary-group .btn {
-                padding: 9px 6px !important;
-                font-size: 0.78rem !important;
-                justify-content: center !important;
-            }
-
-            /* Formularios en Móvil */
+            /* Formularios en Móvil: Todo extendido hacia abajo, un campo debajo de otro */
             .form-section {
-                padding: 12px 10px;
-                gap: 10px;
+                padding: 14px 12px !important;
+                gap: 12px !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
@@ -1345,7 +1348,7 @@
             .form-section-status {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                gap: 8px !important;
+                gap: 10px !important;
             }
 
             .form-section-status .form-group {
@@ -1360,26 +1363,25 @@
             }
 
             .section-actions-group {
-                width: 100%;
-                display: flex;
-                gap: 6px;
-                flex-wrap: wrap;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
             }
 
             .section-actions-group .btn {
-                flex: 1;
-                min-width: 90px;
-                padding: 7px 6px;
-                font-size: 0.76rem;
-                justify-content: center;
+                width: 100% !important;
+                padding: 10px 12px !important;
+                font-size: 0.86rem !important;
+                justify-content: center !important;
             }
 
             .grid-4, .grid-3, .grid-2 {
                 grid-template-columns: 1fr !important;
-                gap: 10px;
+                gap: 12px !important;
             }
 
-            /* Tabla de Ítems en el Editor de Presupuesto - Tarjetas Móviles Verticales */
+            /* Tabla de Ítems en el Editor de Presupuesto - Un campo debajo de otro */
             .items-table-wrapper {
                 border: none !important;
                 border-radius: 0 !important;
@@ -1404,25 +1406,28 @@
             .items-table tbody {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 10px !important;
+                gap: 12px !important;
                 width: 100% !important;
             }
 
             .items-table tbody tr.item-row {
                 display: grid !important;
-                grid-template-columns: minmax(70px, 1fr) minmax(110px, 2fr) minmax(65px, 1fr) !important;
+                grid-template-columns: 1fr auto !important;
                 grid-template-areas:
-                    "badge subtotal action"
-                    "desc desc desc"
-                    "qty price disc" !important;
-                gap: 8px 6px !important;
+                    "badge action"
+                    "subtotal subtotal"
+                    "desc desc"
+                    "qty qty"
+                    "price price"
+                    "disc disc" !important;
+                gap: 8px !important;
                 background: var(--bg-card) !important;
                 border: 1px solid var(--border-color) !important;
-                border-radius: var(--radius-sm) !important;
-                padding: 10px !important;
+                border-radius: var(--radius-md) !important;
+                padding: 12px 10px !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
-                align-items: center !important;
+                align-items: stretch !important;
             }
 
             .item-row .col-item-type {
@@ -1431,28 +1436,6 @@
                 border: none !important;
                 display: flex !important;
                 align-items: center !important;
-            }
-
-            .item-row .col-item-subtotal {
-                grid-area: subtotal !important;
-                padding: 0 !important;
-                border: none !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: flex-end !important;
-                font-size: 0.95rem !important;
-                font-weight: 700 !important;
-                color: var(--color-blue) !important;
-                text-align: right !important;
-            }
-
-            .item-row .col-item-subtotal::before {
-                content: "Subtotal: " !important;
-                display: inline-block !important;
-                font-size: 0.72rem !important;
-                font-weight: 600 !important;
-                color: var(--text-muted) !important;
-                margin-right: 4px !important;
             }
 
             .item-row .col-item-action {
@@ -1465,62 +1448,72 @@
             }
 
             .item-row .col-item-action .btn {
-                width: 32px !important;
-                height: 32px !important;
+                width: 36px !important;
+                height: 36px !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                font-size: 0.85rem !important;
+                font-size: 0.95rem !important;
                 padding: 0 !important;
             }
 
-            .item-row .col-item-desc {
-                grid-area: desc !important;
+            .item-row .col-item-subtotal {
+                grid-area: subtotal !important;
+                padding: 8px 12px !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: var(--radius-sm) !important;
+                background: rgba(0, 191, 255, 0.08) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                font-size: 1.05rem !important;
+                font-weight: 800 !important;
+                color: var(--color-blue) !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                margin-bottom: 2px !important;
+            }
+
+            .item-row .col-item-subtotal::before {
+                content: "Subtotal Ítem:" !important;
+                display: inline-block !important;
+                font-size: 0.74rem !important;
+                font-weight: 700 !important;
+                color: var(--text-secondary) !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.3px !important;
+            }
+
+            .item-row .col-item-desc,
+            .item-row .col-item-qty,
+            .item-row .col-item-price,
+            .item-row .col-item-disc {
                 padding: 0 !important;
                 border: none !important;
                 width: 100% !important;
-            }
-
-            .item-row .col-item-qty {
-                grid-area: qty !important;
-                padding: 0 !important;
-                border: none !important;
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 3px !important;
-            }
-
-            .item-row .col-item-price {
-                grid-area: price !important;
-                padding: 0 !important;
-                border: none !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 3px !important;
-            }
-
-            .item-row .col-item-disc {
-                grid-area: disc !important;
-                padding: 0 !important;
-                border: none !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 3px !important;
+                gap: 4px !important;
+                box-sizing: border-box !important;
             }
 
             .item-row .item-input {
                 width: 100% !important;
                 min-width: 0 !important;
                 box-sizing: border-box !important;
+                font-size: 16px !important;
+                padding: 10px 12px !important;
+                text-align: left !important;
             }
 
             .mobile-item-label {
                 display: block !important;
-                font-size: 0.68rem !important;
+                font-size: 0.72rem !important;
                 font-weight: 700 !important;
                 color: var(--text-muted) !important;
-                letter-spacing: 0.3px !important;
+                letter-spacing: 0.4px !important;
                 text-transform: uppercase !important;
+                margin-top: 2px !important;
             }
 
             .items-table tbody tr.item-row-empty {
@@ -3125,19 +3118,20 @@
                         <tr class="item-row" data-index="${idx}">
                             <td class="col-item-type" style="text-align: center;">${badgeType}</td>
                             <td class="col-item-desc">
+                                <span class="mobile-item-label">Descripción / Detalle</span>
                                 <input type="text" class="item-input" value="${escapeHtml(item.description)}" onchange="updateItemField(${idx}, 'description', this.value)">
                             </td>
                             <td class="col-item-qty">
-                                <span class="mobile-item-label">Cant.</span>
-                                <input type="number" step="any" min="0" class="item-input" style="text-align: right;" value="${item.quantity}" oninput="updateItemField(${idx}, 'quantity', this.value)">
+                                <span class="mobile-item-label">Cantidad</span>
+                                <input type="number" step="any" min="0" class="item-input" value="${item.quantity}" oninput="updateItemField(${idx}, 'quantity', this.value)">
                             </td>
                             <td class="col-item-price">
-                                <span class="mobile-item-label">Precio ($)</span>
-                                <input type="number" step="any" min="0" class="item-input" style="text-align: right; font-family: monospace;" value="${item.unitPrice}" oninput="updateItemField(${idx}, 'unitPrice', this.value)">
+                                <span class="mobile-item-label">Precio Unitario ($)</span>
+                                <input type="number" step="any" min="0" class="item-input" style="font-family: monospace;" value="${item.unitPrice}" oninput="updateItemField(${idx}, 'unitPrice', this.value)">
                             </td>
                             <td class="col-item-disc">
-                                <span class="mobile-item-label">% Desc</span>
-                                <input type="number" step="any" min="0" max="100" class="item-input" style="text-align: right;" value="${item.discountPercent || 0}" oninput="updateItemField(${idx}, 'discountPercent', this.value)">
+                                <span class="mobile-item-label">Descuento (%)</span>
+                                <input type="number" step="any" min="0" max="100" class="item-input" value="${item.discountPercent || 0}" oninput="updateItemField(${idx}, 'discountPercent', this.value)">
                             </td>
                             <td class="col-item-subtotal" style="text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace;" id="item-subtotal-cell-${idx}">
                                 ${formatMoney(item.subtotal)}
