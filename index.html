@@ -5222,6 +5222,7 @@
         let unsubscribeFichajes = null;
         let unsubscribeClientes = null;
         let unsubscribeOrdenes = null;
+        let unsubscribeOrdenesSinCoordinar = null;
         let unsubscribePlanillas = null;
         let unsubscribeTareas = null;
 
@@ -6303,28 +6304,28 @@
             }
 
             // --- C1. ÓRDENES SIN COORDINAR (PANEL DERECHO LATERAL) ---
-            if (activeModule === 'dashboard' || activeModule === 'ordenes') {
-                const uncoordinatedList = document.getElementById('uncoordinatedOrdersList');
-                const uncoordinatedBadge = document.getElementById('uncoordinatedCountBadge');
-                if (uncoordinatedList) {
-                    uncoordinatedList.innerHTML = '';
-                    const uncoordinatedOrders = role === 'Colaborador'
-                        ? ordenesTrabajo.filter(o => (!o.date || o.date === "") && isOrderAssignedToUser(o, currentName))
-                        : ordenesTrabajo.filter(o => !o.date || o.date === "");
+            const uncoordinatedBadge = document.getElementById('uncoordinatedCountBadge');
+            const uncoordinatedOrders = role === 'Colaborador'
+                ? ordenesTrabajo.filter(o => (!o.date || o.date === "") && o.status !== 'Completado' && isOrderAssignedToUser(o, currentName))
+                : ordenesTrabajo.filter(o => (!o.date || o.date === "") && o.status !== 'Completado');
 
-                    if (uncoordinatedBadge) {
-                        uncoordinatedBadge.textContent = uncoordinatedOrders.length;
-                    }
+            if (uncoordinatedBadge) {
+                uncoordinatedBadge.textContent = uncoordinatedOrders.length;
+            }
 
-                    window.openUncoordinatedModal = function() {
-                        const modal = document.getElementById('modalUncoordinatedOrders');
-                        if(modal) modal.classList.add('show');
-                    };
+            window.openUncoordinatedModal = function() {
+                const modal = document.getElementById('modalUncoordinatedOrders');
+                if(modal) modal.classList.add('show');
+            };
 
-                    window.closeUncoordinatedModal = function() {
-                        const modal = document.getElementById('modalUncoordinatedOrders');
-                        if(modal) modal.classList.remove('show');
-                    };
+            window.closeUncoordinatedModal = function() {
+                const modal = document.getElementById('modalUncoordinatedOrders');
+                if(modal) modal.classList.remove('show');
+            };
+
+            const uncoordinatedList = document.getElementById('uncoordinatedOrdersList');
+            if (uncoordinatedList && (activeModule === 'dashboard' || activeModule === 'ordenes')) {
+                uncoordinatedList.innerHTML = '';
 
                     if (uncoordinatedOrders.length === 0) {
                         uncoordinatedList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px;">Sin órdenes sin coordinar.</div>`;
@@ -13635,7 +13636,8 @@
                                 time: time,
                                 timeEnd: timeEnd,
                                 timeRange: timeRangeVal,
-                                assignees: assignees.length > 0 ? assignees : ["Sin Asignar"]
+                                assignees: assignees.length > 0 ? assignees : ["Sin Asignar"],
+                                timestamp: getSyncedDate().toISOString()
                             });
                             await saveNewAddressToClient("", clientVal, addressVal);
                             
@@ -14517,6 +14519,27 @@
                 });
             }
 
+            // Función para fusionar órdenes del mes actual, órdenes sin coordinar e historial bajo demanda
+            function mergeOrdenesTrabajo() {
+                const currentMonth = window._ordenesMesActual || [];
+                const uncoordinated = window._ordenesSinCoordinar || [];
+                const historical = window._ordenesHistorial || [];
+
+                const map = new Map();
+                // 1. Histórico bajo demanda (si el usuario hizo clic en "Ver historial")
+                historical.forEach(o => map.set(o.id, o));
+                // 2. Órdenes sin coordinar (siempre visibles sin cargar todo el historial)
+                uncoordinated.forEach(o => map.set(o.id, o));
+                // 3. Órdenes del mes actual (tiempo real, máxima prioridad)
+                currentMonth.forEach(o => map.set(o.id, o));
+
+                const merged = Array.from(map.values());
+                merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                ordenesTrabajo = merged;
+                localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
+                updateTablesAndViews();
+            }
+
             if (!unsubscribeOrdenes) {
                 // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
                 // El historial anterior se carga bajo demanda con loadOrdenesHistorial().
@@ -14534,6 +14557,7 @@
                         updatedOrders.push(data);
                     });
                     updatedOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    window._ordenesMesActual = updatedOrders;
 
                     // Notificación en tiempo real de nuevas órdenes para el colaborador
                     const role = localStorage.getItem('electrofrio_role');
@@ -14568,17 +14592,31 @@
                         }
                     }
 
-                    // Fusionar con historial previamente cargado bajo demanda
-                    const historical = window._ordenesHistorial || [];
-                    const currentIds = new Set(updatedOrders.map(o => o.id));
-                    const merged = [...updatedOrders, ...historical.filter(o => !currentIds.has(o.id))];
-                    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-                    ordenesTrabajo = merged;
-                    localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
-                    updateTablesAndViews();
+                    mergeOrdenesTrabajo();
                 }, (error) => {
                     console.error("Error al sincronizar ordenes de Firestore:", error);
+                });
+            }
+
+            // Sincronización en tiempo real de órdenes SIN COORDINAR (date == '')
+            // Permite ver el contador y la lista de tareas sin coordinar al instante sin cargar todo el historial histórico
+            if (!unsubscribeOrdenesSinCoordinar) {
+                unsubscribeOrdenesSinCoordinar = db.collection('ordenes')
+                    .where('date', '==', '')
+                    .onSnapshot((querySnapshot) => {
+                    const uncoordinatedOrders = [];
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        data.id = doc.id;
+                        if (data.status !== 'Completado') {
+                            uncoordinatedOrders.push(data);
+                        }
+                    });
+                    uncoordinatedOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    window._ordenesSinCoordinar = uncoordinatedOrders;
+                    mergeOrdenesTrabajo();
+                }, (error) => {
+                    console.error("Error al sincronizar órdenes sin coordinar de Firestore:", error);
                 });
             }
 
@@ -14651,13 +14689,7 @@
                 });
                 window._ordenesHistorial = hist;
                 window._ordenesHistorialCargado = true;
-                // Refrescar vista (el listener activo fusionará automáticamente)
-                const currentIds = new Set(ordenesTrabajo.filter(o => !o._fromHist).map(o => o.id));
-                const merged = [...ordenesTrabajo.filter(o => !o._fromHist), ...hist.filter(o => !currentIds.has(o.id))];
-                merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                ordenesTrabajo = merged;
-                localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
-                updateTablesAndViews();
+                mergeOrdenesTrabajo();
                 if (btn) { btn.textContent = '✅ Historial cargado'; btn.disabled = true; }
                 showToast(`📂 ${hist.length} órdenes históricas cargadas`, 'success');
             } catch(e) {
@@ -14764,6 +14796,10 @@
             if (unsubscribeOrdenes) {
                 unsubscribeOrdenes();
                 unsubscribeOrdenes = null;
+            }
+            if (unsubscribeOrdenesSinCoordinar) {
+                unsubscribeOrdenesSinCoordinar();
+                unsubscribeOrdenesSinCoordinar = null;
             }
             
             if (unsubscribeTareas) {
