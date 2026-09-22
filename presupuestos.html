@@ -876,26 +876,91 @@
         }
 
         .catalog-list {
-            max-height: 400px;
+            max-height: 480px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
+            -webkit-overflow-scrolling: touch;
         }
         .catalog-item-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            transition: var(--transition);
+            gap: 14px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s ease;
         }
         .catalog-item-card:hover {
             border-color: var(--color-blue);
             background: var(--bg-card-hover);
+            transform: translateY(-1px);
+        }
+        .catalog-item-card:active {
+            transform: scale(0.99);
+            border-color: var(--color-blue);
+            background: rgba(0, 191, 255, 0.12);
+        }
+        .catalog-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .catalog-item-header-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .catalog-item-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--color-blue);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .catalog-item-name {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+        .catalog-item-meta {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .catalog-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+        .catalog-item-price {
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--color-blue);
+        }
+        .catalog-item-btn-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--color-blue);
+            color: #000000;
+            font-weight: 700;
+            font-size: 0.8rem;
+            transition: var(--transition);
         }
 
         /* Toast Container */
@@ -1201,7 +1266,7 @@
                 gap: 8px;
             }
 
-            .search-box {
+            .controls-bar .search-box {
                 min-width: 100%;
                 flex: 1 1 100%;
             }
@@ -1412,14 +1477,13 @@
 
             .items-table tbody tr.item-row {
                 display: grid !important;
-                grid-template-columns: 1fr auto !important;
+                grid-template-columns: 1fr 1fr !important;
                 grid-template-areas:
                     "badge action"
-                    "subtotal subtotal"
                     "desc desc"
-                    "qty qty"
+                    "qty disc"
                     "price price"
-                    "disc disc" !important;
+                    "subtotal subtotal" !important;
                 gap: 8px !important;
                 background: var(--bg-card) !important;
                 border: 1px solid var(--border-color) !important;
@@ -1549,29 +1613,179 @@
                 padding: 4px 8px;
             }
 
-            /* Modales de Catálogo y Emisores */
-            .catalog-tabs, .issuer-tabs {
+            /* ================= MODAL DE CATÁLOGO EN MÓVIL ================= */
+            #modal-catalog-picker {
+                padding: 0 !important;
+                background: rgba(0, 0, 0, 0.85) !important;
+                backdrop-filter: blur(10px) !important;
+            }
+
+            #modal-catalog-picker .catalog-modal {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                min-height: 100dvh !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+                background: var(--bg-main) !important;
+            }
+
+            #modal-catalog-picker .modal-header {
+                flex-shrink: 0 !important;
+                position: relative !important;
+                top: 0 !important;
+                z-index: 10 !important;
+                padding: 12px 14px !important;
+                background: var(--bg-card) !important;
+                border-bottom: 1px solid var(--border-color) !important;
+            }
+
+            #modal-catalog-picker .modal-body {
+                flex: 1 1 auto !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+                padding: 12px 14px !important;
+                gap: 10px !important;
+                height: 100% !important;
+                max-height: none !important;
+                min-height: 0 !important;
+            }
+
+            #modal-catalog-picker .catalog-tabs {
+                flex: 0 0 auto !important;
+                display: flex !important;
+                gap: 8px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+                border-bottom: none !important;
+            }
+
+            #modal-catalog-picker .catalog-tab {
+                flex: 1 !important;
+                padding: 10px 8px !important;
+                font-size: 0.82rem !important;
+                font-weight: 700 !important;
+                text-align: center !important;
+                border-radius: var(--radius-sm) !important;
+            }
+
+            #modal-catalog-picker .search-box {
+                flex: 0 0 auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            #modal-catalog-picker .search-box input {
+                width: 100% !important;
+                font-size: 16px !important;
+                padding: 10px 12px 10px 38px !important;
+                box-sizing: border-box !important;
+            }
+
+            #modal-catalog-picker .catalog-list {
+                flex: 1 1 auto !important;
+                max-height: none !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                padding-bottom: 16px !important;
+            }
+
+            #modal-catalog-picker .catalog-item-card {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                padding: 12px 14px !important;
+                border-radius: var(--radius-md) !important;
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-color) !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+                cursor: pointer !important;
+                -webkit-tap-highlight-color: transparent !important;
+            }
+
+            #modal-catalog-picker .catalog-item-card:active {
+                border-color: var(--color-blue) !important;
+                background: rgba(0, 191, 255, 0.12) !important;
+                transform: scale(0.985) !important;
+            }
+
+            #modal-catalog-picker .catalog-item-header-row {
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+
+            #modal-catalog-picker .catalog-item-code {
+                font-size: 0.8rem !important;
+                background: rgba(0, 191, 255, 0.12) !important;
+                padding: 2px 6px !important;
+                border-radius: 4px !important;
+            }
+
+            #modal-catalog-picker .catalog-item-name {
+                font-size: 0.9rem !important;
+                line-height: 1.35 !important;
+            }
+
+            #modal-catalog-picker .catalog-item-actions {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+                padding-top: 8px !important;
+                margin-top: 2px !important;
+            }
+
+            #modal-catalog-picker .catalog-item-price {
+                font-size: 1.15rem !important;
+                font-weight: 800 !important;
+            }
+
+            #modal-catalog-picker .catalog-item-btn-add {
+                padding: 8px 16px !important;
+                font-size: 0.85rem !important;
+                border-radius: var(--radius-sm) !important;
+            }
+
+            #modal-catalog-picker .modal-footer {
+                flex-shrink: 0 !important;
+                padding: 10px 14px !important;
+                background: var(--bg-card) !important;
+                border-top: 1px solid var(--border-color) !important;
+            }
+
+            #modal-catalog-picker .modal-footer .btn {
+                width: 100% !important;
+                padding: 12px !important;
+                font-size: 0.95rem !important;
+                font-weight: 700 !important;
+            }
+
+            .issuer-tabs {
                 gap: 6px;
             }
 
-            .catalog-tab, .issuer-tab {
+            .issuer-tab {
                 flex: 1;
                 text-align: center;
                 padding: 7px 8px;
                 font-size: 0.78rem;
-            }
-
-            .catalog-item-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .catalog-item-card > div:last-child {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
             }
         }
 
@@ -2043,7 +2257,7 @@
                 </div>
             </div>
 
-            <div class="modal-body" style="padding: 16px 20px;">
+            <div class="modal-body">
                 <div class="catalog-tabs">
                     <button class="catalog-tab active" id="tab-picker-mat" onclick="switchCatalogTab('mat')">
                         📦 Materiales (<span id="count-picker-mat">0</span>)
@@ -2053,7 +2267,7 @@
                     </button>
                 </div>
 
-                <div class="search-box" style="margin-bottom: 12px;">
+                <div class="search-box">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="catalog-search-input" placeholder="Buscar por código, descripción, marca o rubro..." oninput="filterCatalogPicker()">
                 </div>
@@ -2397,6 +2611,25 @@
             return iss.name || 'ELECTROFRIO';
         }
 
+        function getLoggedInUserName() {
+            const name = localStorage.getItem('electrofrio_name');
+            if (name && name.trim()) return name.trim();
+
+            const user = localStorage.getItem('electrofrio_user');
+            if (user && user.trim()) return user.trim();
+
+            if (typeof auth !== 'undefined' && auth.currentUser) {
+                if (auth.currentUser.displayName && auth.currentUser.displayName.trim()) {
+                    return auth.currentUser.displayName.trim();
+                }
+                if (auth.currentUser.email) {
+                    return auth.currentUser.email.split('@')[0];
+                }
+            }
+
+            return '';
+        }
+
         // Estado del editor activo
         let currentEditingBudgetId = null;
         let currentBudgetItems = [];
@@ -2493,7 +2726,31 @@
             loadLocalStorageCache();
             initFirestoreSubscriptions();
             setupClickOutsideHandlers();
+            initAuthUserListener();
         });
+
+        function initAuthUserListener() {
+            if (typeof auth !== 'undefined') {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user && !localStorage.getItem('electrofrio_name')) {
+                        try {
+                            const doc = await db.collection('usuarios').doc(user.uid).get();
+                            if (doc.exists) {
+                                const uData = doc.data();
+                                if (uData.name) localStorage.setItem('electrofrio_name', uData.name);
+                                if (uData.username) localStorage.setItem('electrofrio_user', uData.username);
+                                const sellerInput = document.getElementById('form-budget-seller');
+                                if (sellerInput && !sellerInput.value) {
+                                    sellerInput.value = uData.name || uData.username || '';
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Error obteniendo usuario en presupuestos:", e);
+                        }
+                    }
+                });
+            }
+        }
 
         function loadLocalStorageCache() {
             try {
@@ -2878,11 +3135,7 @@
         }
 
         function onBudgetIssuerChange() {
-            const issId = document.getElementById('form-budget-issuer').value;
-            const issuer = getIssuerById(issId);
-            if (issuer && issuer.owner) {
-                document.getElementById('form-budget-seller').value = issuer.owner;
-            }
+            // El vendedor / responsable no se vincula al emisor; corresponde al usuario de la cuenta logueada
         }
 
         function openNewBudgetModal() {
@@ -2898,7 +3151,7 @@
             document.getElementById('form-budget-num').value = generateNextBudgetNumber();
             document.getElementById('form-budget-date').value = getTodayIsoDate();
             document.getElementById('form-budget-expire').value = getFutureIsoDate(7);
-            document.getElementById('form-budget-seller').value = defaultIssuer.owner || 'PAEZ JOSE RAMIRO';
+            document.getElementById('form-budget-seller').value = getLoggedInUserName() || '';
 
             // Limpiar datos del cliente
             document.getElementById('form-client-name').value = '';
@@ -2935,7 +3188,7 @@
             document.getElementById('form-budget-num').value = b.number || '';
             document.getElementById('form-budget-date').value = b.date || getTodayIsoDate();
             document.getElementById('form-budget-expire').value = b.expireDate || getFutureIsoDate(7);
-            document.getElementById('form-budget-seller').value = b.seller || b.issuer?.owner || 'PAEZ JOSE RAMIRO';
+            document.getElementById('form-budget-seller').value = b.seller || getLoggedInUserName() || '';
 
             // Cliente
             const cli = b.client || {};
@@ -3193,26 +3446,46 @@
             document.getElementById('tab-picker-mdo').classList.toggle('active', tab === 'mdo');
             document.getElementById('catalog-search-input').value = '';
             document.getElementById('catalog-picker-title').textContent = tab === 'mat' ? 'Catálogo de Materiales' : 'Catálogo de Mano de Obra';
+            document.getElementById('modal-catalog-picker').classList.add('active');
 
-            if ((!materialesData || materialesData.length === 0) && (!manoObraData || manoObraData.length === 0)) {
+            const currentData = tab === 'mat' ? materialesData : manoObraData;
+            if (!currentData || currentData.length === 0) {
+                document.getElementById('catalog-picker-list').innerHTML = `
+                    <div style="text-align: center; color: var(--color-blue); padding: 40px; font-weight: 600;">
+                        🔄 Cargando catálogo de ${tab === 'mat' ? 'materiales' : 'mano de obra'}...
+                    </div>
+                `;
                 await syncCatalogosBajoDemanda(false);
             }
 
             filterCatalogPicker();
-            document.getElementById('modal-catalog-picker').classList.add('active');
         }
 
         function closeCatalogModal() {
             document.getElementById('modal-catalog-picker').classList.remove('active');
         }
 
-        function switchCatalogTab(tab) {
+        async function switchCatalogTab(tab) {
             activeCatalogTab = tab;
             document.getElementById('tab-picker-mat').classList.toggle('active', tab === 'mat');
             document.getElementById('tab-picker-mdo').classList.toggle('active', tab === 'mdo');
             document.getElementById('catalog-picker-title').textContent = tab === 'mat' ? 'Catálogo de Materiales' : 'Catálogo de Mano de Obra';
+            document.getElementById('catalog-search-input').value = '';
+
+            const currentData = tab === 'mat' ? materialesData : manoObraData;
+            if (!currentData || currentData.length === 0) {
+                document.getElementById('catalog-picker-list').innerHTML = `
+                    <div style="text-align: center; color: var(--color-blue); padding: 40px; font-weight: 600;">
+                        🔄 Cargando catálogo de ${tab === 'mat' ? 'materiales' : 'mano de obra'}...
+                    </div>
+                `;
+                await syncCatalogosBajoDemanda(false);
+            }
+
             filterCatalogPicker();
         }
+
+        let currentCatalogFilteredItems = [];
 
         function filterCatalogPicker() {
             const query = (document.getElementById('catalog-search-input').value || '').trim().toLowerCase();
@@ -3228,7 +3501,9 @@
                 return code.includes(query) || desc.includes(query) || rubro.includes(query) || marca.includes(query);
             });
 
-            if (filtered.length === 0) {
+            currentCatalogFilteredItems = filtered.slice(0, 100);
+
+            if (currentCatalogFilteredItems.length === 0) {
                 listEl.innerHTML = `
                     <div style="text-align: center; color: var(--text-muted); padding: 30px;">
                         No se encontraron ítems que coincidan con la búsqueda.
@@ -3238,34 +3513,43 @@
             }
 
             let html = '';
-            filtered.slice(0, 100).forEach(item => {
+            currentCatalogFilteredItems.forEach((item, idx) => {
                 const code = item.codigo || item.id || '';
                 const desc = item.descripcion || item.producto || item.nombre || 'Sin descripción';
                 const rubro = item.rubro || item.categoria || '';
+                const marca = item.marca || '';
                 const price = parseFloat(item.costo || item.precio || item.tarifa || item.precio_unitario || 0);
 
                 html += `
-                    <div class="catalog-item-card">
-                        <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                ${code ? `<span style="font-family: monospace; font-weight: 700; color: var(--color-blue); font-size: 0.85rem;">[${code}]</span>` : ''}
-                                <strong style="font-size: 0.9rem;">${desc}</strong>
+                    <div class="catalog-item-card" onclick="selectCatalogItem(${idx})" role="button" tabindex="0" title="Toca en cualquier parte para agregar al presupuesto">
+                        <div class="catalog-item-info">
+                            <div class="catalog-item-header-row">
+                                ${code ? `<span class="catalog-item-code">[${escapeHtml(code)}]</span>` : ''}
+                                <span class="catalog-item-name">${escapeHtml(desc)}</span>
                             </div>
-                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
-                                ${rubro ? `📁 ${rubro} ` : ''}${item.marca ? `&bull; Marca: ${item.marca}` : ''}
-                            </div>
+                            ${(rubro || marca) ? `
+                            <div class="catalog-item-meta">
+                                ${rubro ? `<span>📁 ${escapeHtml(rubro)}</span>` : ''}
+                                ${marca ? `<span>• Marca: ${escapeHtml(marca)}</span>` : ''}
+                            </div>` : ''}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 14px;">
-                            <span class="price-tag" style="font-size: 1rem;">${formatMoney(price)}</span>
-                            <button type="button" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick='addItemFromCatalog("${activeCatalogTab}", ${JSON.stringify(item)})'>
-                                + Agregar
-                            </button>
+                        <div class="catalog-item-actions">
+                            <span class="catalog-item-price">${formatMoney(price)}</span>
+                            <span class="catalog-item-btn-add">
+                                <span>+</span> Agregar
+                            </span>
                         </div>
                     </div>
                 `;
             });
 
             listEl.innerHTML = html;
+        }
+
+        function selectCatalogItem(idx) {
+            const item = currentCatalogFilteredItems[idx];
+            if (!item) return;
+            addItemFromCatalog(activeCatalogTab, item);
         }
 
         // --- 10. GUARDAR PRESUPUESTO EN FIRESTORE ---
@@ -3276,7 +3560,7 @@
             const number = (document.getElementById('form-budget-num').value || '').trim() || generateNextBudgetNumber();
             const date = document.getElementById('form-budget-date').value || getTodayIsoDate();
             const expireDate = document.getElementById('form-budget-expire').value || getFutureIsoDate(7);
-            const seller = document.getElementById('form-budget-seller').value || currentIssuer.owner || 'PAEZ JOSE RAMIRO';
+            const seller = (document.getElementById('form-budget-seller').value || '').trim() || getLoggedInUserName() || '';
 
             const clientName = (document.getElementById('form-client-name').value || '').trim();
             if (!clientName) {
@@ -3398,7 +3682,7 @@
             document.getElementById('pdf-doc-number').textContent = `Nº ${budgetObj.number || '00000000'}`;
             document.getElementById('pdf-doc-date').textContent = `FECHA: ${formatDateToDisplay(budgetObj.date)}`;
             document.getElementById('pdf-doc-expire').textContent = formatDateToDisplay(budgetObj.expireDate);
-            document.getElementById('pdf-doc-seller').textContent = budgetObj.seller || issuer.owner;
+            document.getElementById('pdf-doc-seller').textContent = budgetObj.seller || getLoggedInUserName() || '';
 
             // Cliente
             const cli = budgetObj.client || {};
@@ -3455,7 +3739,7 @@
                 number: document.getElementById('form-budget-num').value || generateNextBudgetNumber(),
                 date: document.getElementById('form-budget-date').value || getTodayIsoDate(),
                 expireDate: document.getElementById('form-budget-expire').value || getFutureIsoDate(7),
-                seller: document.getElementById('form-budget-seller').value || currentIssuer.owner || 'PAEZ JOSE RAMIRO',
+                seller: (document.getElementById('form-budget-seller').value || '').trim() || getLoggedInUserName() || '',
                 issuerId: selectedIssuerId,
                 issuer: currentIssuer,
                 issuerName: currentIssuer.name,
