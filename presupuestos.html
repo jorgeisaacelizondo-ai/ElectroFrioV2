@@ -792,6 +792,12 @@
         .item-input:focus {
             border-color: var(--border-focus);
         }
+        .item-desc-input {
+            resize: vertical;
+            min-height: 38px;
+            font-family: inherit;
+            line-height: 1.35;
+        }
 
         .item-type-badge {
             font-size: 0.72rem;
@@ -1548,10 +1554,41 @@
                 letter-spacing: 0.3px !important;
             }
 
-            .item-row .col-item-desc,
-            .item-row .col-item-qty,
-            .item-row .col-item-price,
+            .item-row .col-item-desc {
+                grid-area: desc !important;
+                padding: 0 !important;
+                border: none !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                box-sizing: border-box !important;
+            }
+
+            .item-row .col-item-qty {
+                grid-area: qty !important;
+                padding: 0 !important;
+                border: none !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                box-sizing: border-box !important;
+            }
+
+            .item-row .col-item-price {
+                grid-area: price !important;
+                padding: 0 !important;
+                border: none !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                box-sizing: border-box !important;
+            }
+
             .item-row .col-item-disc {
+                grid-area: disc !important;
                 padding: 0 !important;
                 border: none !important;
                 width: 100% !important;
@@ -1568,6 +1605,13 @@
                 font-size: 16px !important;
                 padding: 10px 12px !important;
                 text-align: left !important;
+            }
+
+            .item-row textarea.item-input {
+                min-height: 52px !important;
+                resize: vertical !important;
+                line-height: 1.35 !important;
+                font-family: inherit !important;
             }
 
             .mobile-item-label {
@@ -2854,10 +2898,11 @@
         function initFirestoreSubscriptions() {
             // Presupuestos — OPTIMIZACIÓN: solo escucha el mes actual en tiempo real.
             // El historial anterior se carga bajo demanda con loadPresupuestosHistorial().
-            const inicioMesPres = (() => {
-                const now = new Date();
-                return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            })();
+            const inicioMesDate = new Date();
+            inicioMesDate.setDate(1);
+            inicioMesDate.setHours(0, 0, 0, 0);
+            const inicioMesPres = firebase.firestore.Timestamp.fromDate(inicioMesDate);
+
             db.collection('presupuestos')
                 .where('createdAt', '>=', inicioMesPres)
                 .onSnapshot(snap => {
@@ -2881,7 +2926,11 @@
             const btn = document.getElementById('btnVerHistorialPresupuestos');
             if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
             try {
-                const finMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+                const finMesDate = new Date();
+                finMesDate.setDate(1);
+                finMesDate.setHours(0, 0, 0, 0);
+                const finMes = firebase.firestore.Timestamp.fromDate(finMesDate);
+
                 const snap = await db.collection('presupuestos')
                     .where('createdAt', '<', finMes)
                     .get();
@@ -3309,7 +3358,6 @@
             });
 
             renderEditorItems();
-            closeCatalogModal();
             showToast(`Agregado: ${desc.substring(0, 30)}...`, "success");
         }
 
@@ -3372,7 +3420,7 @@
                             <td class="col-item-type" style="text-align: center;">${badgeType}</td>
                             <td class="col-item-desc">
                                 <span class="mobile-item-label">Descripción / Detalle</span>
-                                <input type="text" class="item-input" value="${escapeHtml(item.description)}" onchange="updateItemField(${idx}, 'description', this.value)">
+                                <textarea class="item-input item-desc-input" rows="2" onchange="updateItemField(${idx}, 'description', this.value)">${escapeHtml(item.description)}</textarea>
                             </td>
                             <td class="col-item-qty">
                                 <span class="mobile-item-label">Cantidad</span>
@@ -3535,7 +3583,7 @@
                         </div>
                         <div class="catalog-item-actions">
                             <span class="catalog-item-price">${formatMoney(price)}</span>
-                            <span class="catalog-item-btn-add">
+                            <span class="catalog-item-btn-add" id="catalog-btn-add-${idx}">
                                 <span>+</span> Agregar
                             </span>
                         </div>
@@ -3550,6 +3598,23 @@
             const item = currentCatalogFilteredItems[idx];
             if (!item) return;
             addItemFromCatalog(activeCatalogTab, item);
+
+            const btn = document.getElementById(`catalog-btn-add-${idx}`);
+            if (btn) {
+                const prevHtml = btn.innerHTML;
+                const prevBg = btn.style.background;
+                const prevColor = btn.style.color;
+                btn.innerHTML = '✓ Agregado';
+                btn.style.background = '#10b981';
+                btn.style.color = '#ffffff';
+                setTimeout(() => {
+                    if (btn) {
+                        btn.innerHTML = prevHtml;
+                        btn.style.background = prevBg;
+                        btn.style.color = prevColor;
+                    }
+                }, 1000);
+            }
         }
 
         // --- 10. GUARDAR PRESUPUESTO EN FIRESTORE ---
@@ -3613,14 +3678,25 @@
             try {
                 if (currentEditingBudgetId) {
                     await db.collection('presupuestos').doc(currentEditingBudgetId).set(budgetData, { merge: true });
+                    const idx = presupuestosData.findIndex(p => p.id === currentEditingBudgetId);
+                    if (idx !== -1) {
+                        presupuestosData[idx] = { ...presupuestosData[idx], ...budgetData };
+                    }
                     showToast("Presupuesto actualizado exitosamente", "success");
                 } else {
                     budgetData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     const newDoc = await db.collection('presupuestos').add(budgetData);
                     currentEditingBudgetId = newDoc.id;
+                    const existingIdx = presupuestosData.findIndex(p => p.id === newDoc.id);
+                    if (existingIdx === -1) {
+                        presupuestosData.unshift({ id: newDoc.id, ...budgetData });
+                    }
                     showToast("Presupuesto creado y guardado con éxito", "success");
                 }
 
+                localStorage.setItem('electrofrio_presupuestos', JSON.stringify(presupuestosData));
+                applyFilters();
+                updateKPIs();
                 closeBudgetEditor();
             } catch (error) {
                 console.error("Error al guardar presupuesto:", error);
