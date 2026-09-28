@@ -12548,18 +12548,53 @@
             const formattedPrice = Math.round(calculatedPrice).toLocaleString('es-AR');
             const formattedHours = hoursWorked % 1 === 0 ? hoursWorked.toFixed(0) : hoursWorked.toFixed(1);
 
-            // Formatear detalles técnicos para impresión: si contiene múltiples áreas (delimitadas por ||), separarlas en bloques visuales independientes (con enter y línea punteada)
+            // Formatear detalles técnicos para impresión: si contiene múltiples áreas (delimitadas por ||), separarlas en bloques visuales independientes (con enter y línea punteada).
+            // Si contiene elementos separados por |, separarlos en nuevas líneas (enter) para facilitar la lectura.
             let formattedTechDetailsHtml = 'Sin detalles técnicos registrados.';
             if (p.techDetails) {
                 const blocks = p.techDetails.split('||').map(b => b.trim()).filter(Boolean);
                 if (blocks.length > 0) {
                     formattedTechDetailsHtml = blocks.map((b, idx) => {
-                        let blockHtml = b;
-                        if (blockHtml.startsWith('Área:') || blockHtml.startsWith('Area:')) {
-                            blockHtml = blockHtml.replace(/^(Área:|Area:)\s*([^|]+)/i, '<strong style="color: #0b192c; font-size: 13.5px;">$1 $2</strong>');
-                        }
-                        return `<div style="${idx > 0 ? 'margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed #bbb;' : ''} line-height: 1.5; white-space: pre-wrap;">${blockHtml}</div>`;
+                        const lines = b.split('|').map(s => s.trim()).filter(Boolean);
+                        const blockContent = lines.map((line, lIdx) => {
+                            let lineHtml = line;
+                            if (/^(Área:|Area:)/i.test(lineHtml)) {
+                                lineHtml = `<strong style="color: #0b192c; font-size: 13.5px;">${lineHtml}</strong>`;
+                            } else if (/^(Trabajos:)/i.test(lineHtml)) {
+                                let trabajosText = lineHtml.replace(/^(Trabajos:)\s*/i, '');
+                                // Mantener la acción y su zona juntas, pero después de cada zona saltar de línea con un enter
+                                trabajosText = trabajosText.replace(/([(\[](?:Zona|Ubicación|Ubicacion|Sector):\s*[^)\]]+[)\]])\s*[,;.]?\s*(?=[^\s])/gi, '$1\n');
+                                lineHtml = `<strong style="color: #0b192c; font-size: 13px;">Trabajos:</strong> ${trabajosText}`;
+                            } else {
+                                lineHtml = lineHtml.replace(/([(\[](?:Zona|Ubicación|Ubicacion|Sector):\s*[^)\]]+[)\]])\s*[,;.]?\s*(?=[^\s])/gi, '$1\n');
+                            }
+                            return `<div style="${lIdx > 0 ? 'margin-top: 5px;' : ''} line-height: 1.5; white-space: pre-wrap;">${lineHtml}</div>`;
+                        }).join('');
+
+                        return `<div style="${idx > 0 ? 'margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed #bbb;' : ''}">${blockContent}</div>`;
                     }).join('');
+                }
+            }
+
+            // Formatear repuestos y materiales para impresión (si están separados por |, hacer un enter)
+            let formattedSparePartsHtml = 'Ninguno';
+            if (p.spareParts && p.spareParts.trim()) {
+                const spParts = p.spareParts.split('|').map(s => s.trim()).filter(Boolean);
+                if (spParts.length > 0) {
+                    formattedSparePartsHtml = spParts.map((sp, sIdx) => 
+                        `<div style="${sIdx > 0 ? 'margin-top: 4px;' : ''} line-height: 1.5; white-space: pre-wrap;">${sp}</div>`
+                    ).join('');
+                }
+            }
+
+            // Formatear observaciones para impresión (si están separadas por |, hacer un enter)
+            let formattedObservationsHtml = 'Sin observaciones adicionales.';
+            if (p.observations && p.observations.trim()) {
+                const obsParts = p.observations.split('|').map(s => s.trim()).filter(Boolean);
+                if (obsParts.length > 0) {
+                    formattedObservationsHtml = obsParts.map((obs, oIdx) => 
+                        `<div style="${oIdx > 0 ? 'margin-top: 4px;' : ''} line-height: 1.5; white-space: pre-wrap;">${obs}</div>`
+                    ).join('');
                 }
             }
 
@@ -12634,12 +12669,12 @@
 
                     <div class="section">
                         <div class="section-title">Repuestos y Materiales Utilizados</div>
-                        <div class="val" style="white-space: pre-wrap; font-weight: normal; font-size: 13px;">${p.spareParts || 'Ninguno'}</div>
+                        <div class="val" style="font-weight: normal; font-size: 13px;">${formattedSparePartsHtml}</div>
                     </div>
 
                     <div class="section">
                         <div class="section-title">Observaciones y Recomendaciones</div>
-                        <div class="val" style="white-space: pre-wrap; font-weight: normal; font-size: 13px;">${p.observations || 'Sin observaciones adicionales.'}</div>
+                        <div class="val" style="font-weight: normal; font-size: 13px;">${formattedObservationsHtml}</div>
                     </div>
 
                 </body>
