@@ -1834,6 +1834,44 @@
             applyFilters();
         }
 
+        // Helper para resolver enlace de Google Maps en CRM
+        function getCrmGoogleMapsUrl(address, clientOrMapsUrl) {
+            if (!address && !clientOrMapsUrl) return '';
+            let directUrl = '';
+            if (typeof clientOrMapsUrl === 'string' && clientOrMapsUrl.trim()) {
+                directUrl = clientOrMapsUrl.trim();
+            } else if (clientOrMapsUrl && typeof clientOrMapsUrl === 'object') {
+                const client = clientOrMapsUrl;
+                if (client.addressMapsLinks && address && client.addressMapsLinks[address]) {
+                    directUrl = client.addressMapsLinks[address];
+                } else if (Array.isArray(client.addresses) && Array.isArray(client.addressesMaps)) {
+                    const idx = client.addresses.indexOf(address);
+                    if (idx !== -1 && client.addressesMaps[idx]) directUrl = client.addressesMaps[idx];
+                }
+                if (!directUrl && client.mapsUrl && (address === client.address || !address)) directUrl = client.mapsUrl;
+            }
+
+            if (directUrl) {
+                if (/^https?:\/\//i.test(directUrl)) return directUrl;
+                if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(directUrl)) {
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(directUrl)}`;
+                }
+                return directUrl;
+            }
+
+            const cleanAddr = (address || '').trim();
+            if (/^https?:\/\//i.test(cleanAddr)) return cleanAddr;
+            if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(cleanAddr)) {
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddr)}`;
+            }
+
+            if (cleanAddr && cleanAddr.toLowerCase() !== 'sin especificar') {
+                const query = cleanAddr.toLowerCase().includes('la rioja') ? cleanAddr : `${cleanAddr}, La Rioja`;
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+            }
+            return '';
+        }
+
         // --- 5. RENDERIZADO DE TABLA ---
         function renderTable() {
             const tbody = document.getElementById('crm-table-body');
@@ -1887,7 +1925,14 @@
 
                 // Domicilio
                 const addrs = (Array.isArray(item.addresses) && item.addresses.length > 0) ? item.addresses : [item.address || 'Sin especificar'];
-                const addrHtml = addrs.slice(0, 2).map(a => `<div style="font-size:0.75rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:200px;">📍 ${a}</div>`).join('');
+                const addrHtml = addrs.slice(0, 2).map(a => {
+                    if (!a || a.toLowerCase() === 'sin especificar') {
+                        return `<div style="font-size:0.75rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:200px;">📍 ${a}</div>`;
+                    }
+                    const mUrl = getCrmGoogleMapsUrl(a, item);
+                    const mBtn = mUrl ? `<a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--color-blue); margin-left:5px; font-weight:700; text-decoration:none; font-size:0.7rem; flex-shrink:0;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️</a>` : '';
+                    return `<div style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; max-width:210px;"><span style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">📍 ${a}</span>${mBtn}</div>`;
+                }).join('');
 
                 // Próxima acción o notas
                 const nextActionText = item.nextAction 
@@ -2221,7 +2266,16 @@
                 document.getElementById('contact-notes').value = item.notes || '';
 
                 const addrs = (Array.isArray(item.addresses) && item.addresses.length > 0) ? item.addresses : [item.address || ''];
-                addrs.forEach(a => addAddressField(a));
+                const mapsLinks = item.addressMapsLinks || {};
+                const mapsArray = Array.isArray(item.addressesMaps) ? item.addressesMaps : [];
+                addrs.forEach((a, idx) => {
+                    if (a === 'Sin especificar' && addrs.length > 1) return;
+                    const mUrl = mapsLinks[a] || mapsArray[idx] || (idx === 0 ? (item.mapsUrl || '') : '');
+                    addAddressField(a, mUrl);
+                });
+                if (addrContainer.children.length === 0) {
+                    addAddressField('', item.mapsUrl || '');
+                }
 
                 // Mostrar historial
                 historySection.classList.remove('hidden');
@@ -2231,7 +2285,7 @@
                 titleEl.textContent = 'Nuevo Cliente / Prospecto';
                 document.getElementById('contact-id').value = '';
                 document.getElementById('contact-code').value = getNextClientCode();
-                addAddressField('');
+                addAddressField('', '');
                 historySection.classList.add('hidden');
                 btnDelete.style.display = 'none';
             }
@@ -2239,16 +2293,42 @@
             openModal('modal-contact');
         }
 
-        function addAddressField(val = '') {
+        function addAddressField(val = '', mapsVal = '') {
             const container = document.getElementById('contact-addresses-container');
             const div = document.createElement('div');
-            div.style.display = 'flex';
-            div.style.gap = '6px';
+            div.className = 'contact-addr-card';
+            div.style.cssText = 'background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px; display: flex; flex-direction: column; gap: 6px;';
             div.innerHTML = `
-                <input type="text" class="form-input contact-addr-input" value="${escapeAttr(val)}" placeholder="Ej: Av. Colón 1234, Córdoba" style="flex: 1;">
-                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="Quitar">✕</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <span style="font-size: 13px; color: var(--color-blue); flex-shrink: 0;">📍</span>
+                    <input type="text" class="form-input contact-addr-input" value="${escapeAttr(val)}" placeholder="Dirección / Calle y Altura (Ej: Av. San Martín 150)" style="flex: 1;">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.contact-addr-card').remove()" title="Quitar" style="padding: 4px 8px;">✕</button>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <span style="font-size: 13px; opacity: 0.85; flex-shrink: 0;" title="Google Maps">🗺️</span>
+                    <input type="text" class="form-input contact-maps-input" value="${escapeAttr(mapsVal)}" placeholder="Link de Google Maps o Coordenadas (https://maps.app.goo.gl/...)" style="flex: 1; font-size: 12px;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openCrmAddressMaps(this)" title="Abrir en Google Maps" style="white-space: nowrap; font-size: 11px; padding: 4px 8px;">🗺️ Maps</button>
+                </div>
             `;
             container.appendChild(div);
+        }
+
+        function openCrmAddressMaps(btn) {
+            const card = btn.closest('.contact-addr-card');
+            if (!card) return;
+            const addrInput = card.querySelector('.contact-addr-input');
+            const mapsInput = card.querySelector('.contact-maps-input');
+            const addrVal = addrInput ? addrInput.value.trim() : '';
+            const mapsVal = mapsInput ? mapsInput.value.trim() : '';
+
+            const url = getCrmGoogleMapsUrl(addrVal, mapsVal);
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            } else {
+                showToast("Ingresa una dirección o link para abrir en Google Maps", "info");
+                if (addrInput && !addrVal) addrInput.focus();
+                else if (mapsInput) mapsInput.focus();
+            }
         }
 
         function formatContactFormPhone() {
@@ -2323,9 +2403,32 @@
             const nextActionDate = document.getElementById('contact-next-date').value;
             const notes = document.getElementById('contact-notes').value.trim();
 
-            const addrInputs = document.querySelectorAll('.contact-addr-input');
-            const addresses = Array.from(addrInputs).map(i => i.value.trim()).filter(Boolean);
+            const addrCards = document.querySelectorAll('#contact-addresses-container .contact-addr-card');
+            const addresses = [];
+            const addressesMaps = [];
+            const addressMapsLinks = {};
+
+            addrCards.forEach(card => {
+                const addrInput = card.querySelector('.contact-addr-input');
+                const mapsInput = card.querySelector('.contact-maps-input');
+                const aVal = addrInput ? addrInput.value.trim() : '';
+                const mVal = mapsInput ? mapsInput.value.trim() : '';
+                if (aVal || mVal) {
+                    const finalAddr = aVal || (mVal ? 'Ubicación GPS' : '');
+                    if (finalAddr) {
+                        addresses.push(finalAddr);
+                        addressesMaps.push(mVal || '');
+                        if (mVal) addressMapsLinks[finalAddr] = mVal;
+                    }
+                }
+            });
+
+            if (!addresses.includes("Sin especificar")) {
+                addresses.push("Sin especificar");
+                addressesMaps.push("");
+            }
             const primaryAddr = addresses[0] || 'Sin especificar';
+            const primaryMapsUrl = addressesMaps[0] || (addressMapsLinks[primaryAddr] || '');
 
             const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
 
@@ -2348,7 +2451,10 @@
                             nextActionDate,
                             notes,
                             address: primaryAddr,
-                            addresses: addresses.length > 0 ? addresses : [primaryAddr]
+                            addresses: addresses.length > 0 ? addresses : [primaryAddr],
+                            addressesMaps: addressesMaps,
+                            addressMapsLinks: addressMapsLinks,
+                            mapsUrl: primaryMapsUrl
                         };
 
                         await db.collection('clientes').doc(editId).set(updated, { merge: true });
@@ -2375,6 +2481,9 @@
                         notes,
                         address: primaryAddr,
                         addresses: addresses.length > 0 ? addresses : [primaryAddr],
+                        addressesMaps: addressesMaps,
+                        addressMapsLinks: addressMapsLinks,
+                        mapsUrl: primaryMapsUrl,
                         interactions: [{
                             date: new Date().toISOString(),
                             type: 'note',

@@ -4834,12 +4834,19 @@
                 </div>
 
                 <!-- SECCIÓN DE DOMICILIOS / LOCACIONES MÚLTIPLES -->
-                <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <label style="font-size: 13px; font-weight: 700; color: var(--color-blue); margin: 0;">📍 Domicilios / Locaciones del Cliente</label>
-                        <button type="button" onclick="addClientAddressRow('')" style="background: var(--color-blue); color: #000; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">+ Agregar Locación</button>
+                <div style="margin-top: 16px; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-size: 13px; font-weight: 700; color: var(--color-blue); margin: 0; display: flex; align-items: center; gap: 6px;">
+                            <span>📍 Domicilios y Enlaces de Google Maps</span>
+                        </label>
+                        <button type="button" onclick="addClientAddressRow('', '')" style="background: var(--color-blue); color: #000; border: none; padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <span>+ Agregar Domicilio</span>
+                        </button>
                     </div>
-                    <div id="clientAddressesContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">
+                        Puedes cargar el domicilio escrito y/o el link de Google Maps compartido por el cliente (WhatsApp). El botón 🗺️ te llevará directo a Maps.
+                    </p>
+                    <div id="clientAddressesContainer" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- Filas de domicilios dinámicas -->
                     </div>
                 </div>
@@ -5006,8 +5013,56 @@
             };
         }
 
+        // Helper global para generar o resolver el enlace de Google Maps a partir de un domicilio o link
+        window.getGoogleMapsUrl = function(address, clientOrMapsUrl) {
+            if (!address && !clientOrMapsUrl) return '';
+
+            let directUrl = '';
+            if (typeof clientOrMapsUrl === 'string' && clientOrMapsUrl.trim()) {
+                directUrl = clientOrMapsUrl.trim();
+            } else if (clientOrMapsUrl && typeof clientOrMapsUrl === 'object') {
+                const client = clientOrMapsUrl;
+                if (client.addressMapsLinks && address && client.addressMapsLinks[address]) {
+                    directUrl = client.addressMapsLinks[address];
+                } else if (Array.isArray(client.addresses) && Array.isArray(client.addressesMaps)) {
+                    const idx = client.addresses.indexOf(address);
+                    if (idx !== -1 && client.addressesMaps[idx]) {
+                        directUrl = client.addressesMaps[idx];
+                    }
+                }
+                if (!directUrl && client.mapsUrl && (address === client.address || !address)) {
+                    directUrl = client.mapsUrl;
+                }
+            }
+
+            if (directUrl) {
+                if (/^https?:\/\//i.test(directUrl)) {
+                    return directUrl;
+                }
+                if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(directUrl)) {
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(directUrl)}`;
+                }
+                return directUrl;
+            }
+
+            const cleanAddr = (address || '').trim();
+            if (/^https?:\/\//i.test(cleanAddr)) {
+                return cleanAddr;
+            }
+            if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(cleanAddr)) {
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddr)}`;
+            }
+
+            if (cleanAddr && cleanAddr.toLowerCase() !== 'sin especificar' && cleanAddr.toLowerCase() !== 'sin domicilio') {
+                const query = cleanAddr.toLowerCase().includes('la rioja') ? cleanAddr : `${cleanAddr}, La Rioja`;
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+            }
+
+            return '';
+        };
+
         // Función auxiliar para agregar nuevos domicilios al cliente
-        async function saveNewAddressToClient(clientId, clientName, address) {
+        async function saveNewAddressToClient(clientId, clientName, address, mapsUrl = '') {
             if (!address || address.trim() === '' || address.trim().toLowerCase() === 'sin especificar') return;
             const formattedAddress = address.trim();
 
@@ -5022,11 +5077,16 @@
                         clientObj.addresses.push(formattedAddress);
                         updated = true;
                     }
+                    if (mapsUrl) {
+                        if (!clientObj.addressMapsLinks) clientObj.addressMapsLinks = {};
+                        clientObj.addressMapsLinks[formattedAddress] = mapsUrl;
+                        updated = true;
+                    }
                     if (updated) {
                         try {
-                            await db.collection('clientes').doc(clientId).update({
-                                addresses: clientObj.addresses
-                            });
+                            const updateData = { addresses: clientObj.addresses };
+                            if (clientObj.addressMapsLinks) updateData.addressMapsLinks = clientObj.addressMapsLinks;
+                            await db.collection('clientes').doc(clientId).update(updateData);
                             localStorage.setItem('electrofrio_clients', JSON.stringify(clientes));
                         } catch(e) {
                             console.error("Error updating client addresses:", e);
@@ -5036,7 +5096,7 @@
             } else if (clientName && clientName.trim() !== '' && clientName.trim().toLowerCase() !== 'cliente particular') {
                 const clientObj = clientes.find(c => c.name.toLowerCase() === clientName.trim().toLowerCase());
                 if (clientObj) {
-                    saveNewAddressToClient(clientObj.id, clientObj.name, formattedAddress);
+                    saveNewAddressToClient(clientObj.id, clientObj.name, formattedAddress, mapsUrl);
                 }
             }
         }
@@ -6188,10 +6248,16 @@
                             const formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadgeDash) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
                             const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
 
+                            const cObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                            const mUrl = window.getGoogleMapsUrl(o.address, cObj);
+                            const addrHtml = (mUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                                : (o.address || 'Sin especificar');
+
                             tr.innerHTML = `
                                 <td data-label="ID">${o.id}</td>
                                 <td data-label="Cliente">${o.client}</td>
-                                <td data-label="Dirección">${o.address}</td>
+                                <td data-label="Dirección">${addrHtml}</td>
                                 <td data-label="Fecha">${formattedDate}</td>
                                 <td data-label="Horario">${formattedTime}</td>
                                 <td data-label="Equipo">${o.type}</td>
@@ -6226,11 +6292,16 @@
                                 const badgeData = getBadgeInfo(o.status);
                                 const formattedDate = o.date ? formatDateWithDayToAR(o.date) : '';
                                 const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '';
+                                const compCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                                const compMUrl = window.getGoogleMapsUrl(o.address, compCObj);
+                                const compAddrHtml = (compMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                    ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${compMUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                                    : (o.address || 'Sin especificar');
 
                                 tr.innerHTML = `
                                     <td data-label="ID">${o.id}</td>
                                     <td data-label="Cliente">${o.client}</td>
-                                    <td data-label="Dirección">${o.address}</td>
+                                    <td data-label="Dirección">${compAddrHtml}</td>
                                     <td data-label="Fecha">${formattedDate}</td>
                                     <td data-label="Horario">${formattedTime}</td>
                                     <td data-label="Equipo">${o.type}</td>
@@ -6280,17 +6351,24 @@
                                     TÉCNICOS TRABAJANDO EN DOMICILIO AHORA (${totalTechsCount})
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                                    ${workingNow.map(o => `
+                                    ${workingNow.map(o => {
+                                        const nowCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                                        const nowMUrl = window.getGoogleMapsUrl(o.address, nowCObj);
+                                        const nowMapsBtn = (nowMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                            ? `<a href="${nowMUrl}" target="_blank" rel="noopener noreferrer" style="margin-left:6px; display:inline-flex; align-items:center; gap:3px; padding:2px 7px; background:rgba(0, 180, 216, 0.2); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; font-weight:700; text-decoration:none;" title="Ver en Google Maps">🗺️ Maps</a>`
+                                            : '';
+                                        return `
                                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px;">
                                             <div>
                                                 <strong style="color: var(--color-blue); font-size: 14px;">${o.id}</strong> - <strong style="color:#fff;">${o.client}</strong> en 📍 <span style="color:var(--color-yellow); font-weight:600;">${o.address}</span>
+                                                ${nowMapsBtn}
                                                 <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px;">(🔧 ${o.type})</span>
                                             </div>
                                             <div style="font-size: 12px; color: #4cd964; font-weight: 700; background: rgba(76, 217, 100, 0.15); padding: 4px 10px; border-radius: 6px;">
                                                 👥 ${Array.isArray(o.assignees) ? o.assignees.join(', ') : o.assignee || 'Sin Asignar'}
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `}).join('')}
                                 </div>
                             </div>
                         `;
@@ -6529,11 +6607,17 @@
                                 </td>
                             `;
 
+                            const cObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                            const mUrl = window.getGoogleMapsUrl(o.address, cObj);
+                            const addrHtml = (mUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                                : (o.address || 'Sin especificar');
+
                             tr.innerHTML = `
                                 <td data-label="FECHA">${formattedDate}</td>
                                 <td data-label="ID" style="font-weight:700;">${o.id}</td>
                                 <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
-                                <td data-label="DIRECCIÓN">${o.address}</td>
+                                <td data-label="DIRECCIÓN">${addrHtml}</td>
                                 <td data-label="HORARIO">${formattedTime}</td>
                                 ${collabTd}
                                 <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
@@ -6593,11 +6677,17 @@
                                     </td>
                                 `;
 
+                                const compAdminCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                                const compAdminMUrl = window.getGoogleMapsUrl(o.address, compAdminCObj);
+                                const compAdminAddrHtml = (compAdminMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                    ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${compAdminMUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                                    : (o.address || 'Sin especificar');
+
                                 tr.innerHTML = `
                                     <td data-label="FECHA">${formattedDate}</td>
                                     <td data-label="ID" style="font-weight:700;">${o.id}</td>
                                     <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
-                                    <td data-label="DIRECCIÓN">${o.address}</td>
+                                    <td data-label="DIRECCIÓN">${compAdminAddrHtml}</td>
                                     <td data-label="HORARIO">${formattedTime}</td>
                                     ${collabTd}
                                     <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
@@ -6626,10 +6716,16 @@
                                 };
                                 const badgeData = getBadgeInfo(o.status);
 
+                                const compCollabCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                                const compCollabMUrl = window.getGoogleMapsUrl(o.address, compCollabCObj);
+                                const compCollabAddrHtml = (compCollabMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                    ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${compCollabMUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                                    : (o.address || 'Sin especificar');
+
                                 tr.innerHTML = `
                                     <td data-label="ID" style="font-weight:700;">${o.id}</td>
                                     <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
-                                    <td data-label="DIRECCIÓN">${o.address}</td>
+                                    <td data-label="DIRECCIÓN">${compCollabAddrHtml}</td>
                                     <td data-label="TAREA">${o.type}</td>
                                     <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
                                     <td data-label="ACCIONES">
@@ -9268,9 +9364,19 @@
                 div.style.gap = '8px';
                 div.style.cursor = 'pointer';
 
+                const mapsUrl = window.getGoogleMapsUrl(addr, clientObj);
+                const mapsBtn = (mapsUrl && addr.toLowerCase() !== 'sin especificar') ? `
+                    <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" 
+                       title="Abrir este domicilio en Google Maps" 
+                       style="display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; background: rgba(0, 180, 216, 0.12); border: 1px solid rgba(0, 180, 216, 0.4); color: var(--color-blue); border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: auto; flex-shrink: 0;"
+                       onclick="event.stopPropagation();">
+                        <span>🗺️ Maps</span>
+                    </a>` : '';
+
                 div.innerHTML = `
                     <input type="radio" name="${typeKey}-address-selection" id="opt-${typeKey}-addr-${idx}" value="${addr}" ${isChecked ? 'checked' : ''} style="cursor:pointer; width:16px; height:16px; flex-shrink:0;">
-                    <label for="opt-${typeKey}-addr-${idx}" style="margin: 0; font-size: 13px; font-weight: normal; cursor: pointer; color: var(--text-primary); text-align: left; line-height: 1.3;">${addr}</label>
+                    <label for="opt-${typeKey}-addr-${idx}" style="margin: 0; font-size: 13px; font-weight: normal; cursor: pointer; color: var(--text-primary); text-align: left; line-height: 1.3; flex: 1;">${addr}</label>
+                    ${mapsBtn}
                 `;
 
                 const radio = div.querySelector('input');
@@ -9296,30 +9402,52 @@
             divCustom.innerHTML = `
                 <div style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="radio" name="${typeKey}-address-selection" id="opt-${typeKey}-addr-custom" value="CUSTOM" ${isCustomSelected ? 'checked' : ''} style="cursor:pointer; width:16px; height:16px; flex-shrink:0;">
-                    <label for="opt-${typeKey}-addr-custom" style="margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--color-blue);">+ Otro Domicilio (escribir nuevo)</label>
+                    <label for="opt-${typeKey}-addr-custom" style="margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--color-blue);">+ Otro Domicilio (escribir nuevo o link)</label>
                 </div>
-                <input type="text" id="${typeKey}-address-custom-input" placeholder="Calle, Número, Localidad" value="${isCustomSelected ? selectedAddress : ''}" style="display: ${isCustomSelected ? 'block' : 'none'}; width: 100%; padding: 6px 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px; outline: none; margin-top: 4px; box-sizing: border-box;">
+                <div style="display: ${isCustomSelected ? 'flex' : 'none'}; gap: 6px; align-items: center; margin-top: 4px;" id="${typeKey}-custom-addr-wrapper">
+                    <input type="text" id="${typeKey}-address-custom-input" placeholder="Calle, Número, o link de Google Maps" value="${isCustomSelected ? selectedAddress : ''}" style="flex: 1; padding: 6px 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px; outline: none; box-sizing: border-box;">
+                    <button type="button" id="${typeKey}-btn-maps-custom" title="Probar en Google Maps" style="background: rgba(0, 180, 216, 0.15); border: 1px solid var(--color-blue); color: var(--color-blue); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Maps</button>
+                </div>
             `;
 
             const radioCustom = divCustom.querySelector('input[type="radio"]');
-            const customTextInput = divCustom.querySelector('input[type="text"]');
+            const customWrapper = divCustom.querySelector(`#${typeKey}-custom-addr-wrapper`);
+            const customTextInput = divCustom.querySelector(`#${typeKey}-address-custom-input`);
+            const btnMapsCustom = divCustom.querySelector(`#${typeKey}-btn-maps-custom`);
 
             radioCustom.addEventListener('change', () => {
-                customTextInput.style.display = 'block';
-                customTextInput.required = true;
-                if (hiddenInput) hiddenInput.value = customTextInput.value.trim() || 'Sin especificar';
+                if (customWrapper) customWrapper.style.display = 'flex';
+                if (customTextInput) {
+                    customTextInput.required = true;
+                    customTextInput.focus();
+                    if (hiddenInput) hiddenInput.value = customTextInput.value.trim() || 'Sin especificar';
+                }
             });
 
-            customTextInput.addEventListener('input', () => {
-                if (hiddenInput) hiddenInput.value = customTextInput.value.trim() || 'Sin especificar';
-            });
+            if (customTextInput) {
+                customTextInput.addEventListener('input', () => {
+                    if (hiddenInput) hiddenInput.value = customTextInput.value.trim() || 'Sin especificar';
+                });
+            }
+
+            if (btnMapsCustom && customTextInput) {
+                btnMapsCustom.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = window.getGoogleMapsUrl(customTextInput.value.trim());
+                    if (url) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                    } else {
+                        showToast("Ingresa un domicilio o link de Maps", "info");
+                    }
+                });
+            }
 
             // Deseleccionar el input de texto libre al marcar cualquier otra opción
             container.querySelectorAll(`input[name="${typeKey}-address-selection"]`).forEach(r => {
                 if (r.id !== `opt-${typeKey}-addr-custom`) {
                     r.addEventListener('change', () => {
-                        customTextInput.style.display = 'none';
-                        customTextInput.required = false;
+                        if (customWrapper) customWrapper.style.display = 'none';
+                        if (customTextInput) customTextInput.required = false;
                     });
                 }
             });
@@ -10385,7 +10513,19 @@
                     document.getElementById('modal-client-notes').value = c.notes || '';
 
                     const addrList = Array.isArray(c.addresses) && c.addresses.length > 0 ? c.addresses : [c.address || ''];
-                    addrList.forEach(a => addClientAddressRow(a));
+                    const mapsLinks = c.addressMapsLinks || {};
+                    const mapsArray = Array.isArray(c.addressesMaps) ? c.addressesMaps : [];
+
+                    let addedCount = 0;
+                    addrList.forEach((a, idx) => {
+                        if (a === 'Sin especificar' && addrList.length > 1) return;
+                        const mUrl = mapsLinks[a] || mapsArray[idx] || (idx === 0 ? (c.mapsUrl || '') : '');
+                        addClientAddressRow(a, mUrl);
+                        addedCount++;
+                    });
+                    if (addedCount === 0) {
+                        addClientAddressRow('', c.mapsUrl || '');
+                    }
                 }
             } else {
                 if (title) title.innerText = "Nuevo Cliente";
@@ -10394,7 +10534,7 @@
                     const nameInput = document.getElementById('modal-client-name');
                     if (nameInput) nameInput.value = defaultName;
                 }
-                addClientAddressRow('');
+                addClientAddressRow('', '');
             }
 
             modal.classList.add('show');
@@ -10436,19 +10576,67 @@
             });
         }
 
-        window.addClientAddressRow = function (val = '') {
+        window.addClientAddressRow = function (val = '', mapsVal = '') {
             const container = document.getElementById('clientAddressesContainer');
             if (!container) return;
 
             const div = document.createElement('div');
-            div.style.display = 'flex';
-            div.style.gap = '8px';
-            div.style.alignItems = 'center';
+            div.className = 'client-address-card';
+            div.style.cssText = 'background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;';
 
             div.innerHTML = `
-                <input type="text" class="modal-client-address-item" value="${val}" placeholder="Ej: Av. San Martín 150 (Sucursal 1)" style="flex: 1; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
-                <button type="button" onclick="this.parentElement.remove()" style="background: #7a1a1a; color: white; border: 1px solid #992020; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer;">✕</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span style="font-size: 14px; color: var(--color-blue); flex-shrink: 0;" title="Dirección física">📍</span>
+                    <input type="text" class="modal-client-address-item" placeholder="Dirección / Calle y Altura (Ej: Av. San Martín 150)" style="flex: 1; padding: 8px 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 13px;">
+                    <button type="button" class="btn-remove-addr-row" title="Eliminar este domicilio" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; flex-shrink: 0;">✕</button>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span style="font-size: 14px; opacity: 0.85; flex-shrink: 0;" title="Link o apartado de Google Maps">🗺️</span>
+                    <input type="text" class="modal-client-maps-item" placeholder="Pegar link de Google Maps (https://maps.app.goo.gl/...) o coordenadas" style="flex: 1; padding: 7px 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 12px;">
+                    <button type="button" class="btn-open-maps-row" title="Abrir en Google Maps" style="background: rgba(0, 180, 216, 0.18); border: 1px solid var(--color-blue); color: var(--color-blue); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;">
+                        <span>🗺️ Abrir Maps</span>
+                    </button>
+                </div>
             `;
+
+            const addrInput = div.querySelector('.modal-client-address-item');
+            const mapsInput = div.querySelector('.modal-client-maps-item');
+            const btnRemove = div.querySelector('.btn-remove-addr-row');
+            const btnMaps = div.querySelector('.btn-open-maps-row');
+
+            if (addrInput) addrInput.value = val || '';
+            if (mapsInput) mapsInput.value = mapsVal || '';
+
+            btnRemove.addEventListener('click', () => {
+                div.remove();
+            });
+
+            btnMaps.addEventListener('click', () => {
+                const addr = addrInput ? addrInput.value.trim() : '';
+                const mapLink = mapsInput ? mapsInput.value.trim() : '';
+                const url = window.getGoogleMapsUrl(addr, mapLink);
+                if (url) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    showToast("Ingresa una dirección o link para abrir en Google Maps", "info");
+                    if (addrInput && !addr) addrInput.focus();
+                    else if (mapsInput) mapsInput.focus();
+                }
+            });
+
+            // Si pega un enlace de Google Maps en el campo de dirección, auto-rellenar el campo de Google Maps
+            if (addrInput && mapsInput) {
+                addrInput.addEventListener('input', () => {
+                    const text = addrInput.value.trim();
+                    if (/^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(text)) {
+                        if (!mapsInput.value.trim()) {
+                            mapsInput.value = text;
+                            showToast("🔗 Link de Google Maps detectado y asignado", "info");
+                        }
+                    }
+                });
+            }
+
             container.appendChild(div);
         };
 
@@ -10461,12 +10649,35 @@
             const phone = document.getElementById('modal-client-phone').value.trim();
             const notes = document.getElementById('modal-client-notes').value.trim();
 
-            const addrInputs = document.querySelectorAll('.modal-client-address-item');
-            const addresses = Array.from(addrInputs).map(i => i.value.trim()).filter(Boolean);
+            const cards = document.querySelectorAll('#clientAddressesContainer .client-address-card');
+            const addresses = [];
+            const addressesMaps = [];
+            const addressMapsLinks = {};
+
+            cards.forEach(card => {
+                const addrInput = card.querySelector('.modal-client-address-item');
+                const mapsInput = card.querySelector('.modal-client-maps-item');
+                const aVal = addrInput ? addrInput.value.trim() : '';
+                const mVal = mapsInput ? mapsInput.value.trim() : '';
+
+                if (aVal || mVal) {
+                    const finalAddr = aVal || (mVal ? 'Ubicación GPS' : '');
+                    if (finalAddr) {
+                        addresses.push(finalAddr);
+                        addressesMaps.push(mVal || '');
+                        if (mVal) {
+                            addressMapsLinks[finalAddr] = mVal;
+                        }
+                    }
+                }
+            });
+
             if (!addresses.includes("Sin especificar")) {
                 addresses.push("Sin especificar");
+                addressesMaps.push("");
             }
             const primaryAddress = addresses[0] || 'Sin especificar';
+            const primaryMapsUrl = addressesMaps[0] || (addressMapsLinks[primaryAddress] || '');
 
             try {
                 let savedClient = null;
@@ -10479,6 +10690,9 @@
                         clientes[idx].notes = notes;
                         clientes[idx].address = primaryAddress;
                         clientes[idx].addresses = addresses.length > 0 ? addresses : [primaryAddress];
+                        clientes[idx].addressesMaps = addressesMaps;
+                        clientes[idx].addressMapsLinks = addressMapsLinks;
+                        clientes[idx].mapsUrl = primaryMapsUrl;
 
                         await db.collection('clientes').doc(editId).set(clientes[idx], { merge: true });
                         savedClient = clientes[idx];
@@ -10494,7 +10708,10 @@
                         phone: phone,
                         notes: notes,
                         address: primaryAddress,
-                        addresses: addresses.length > 0 ? addresses : [primaryAddress]
+                        addresses: addresses.length > 0 ? addresses : [primaryAddress],
+                        addressesMaps: addressesMaps,
+                        addressMapsLinks: addressMapsLinks,
+                        mapsUrl: primaryMapsUrl
                     };
 
                     await docRef.set(newClient);
@@ -10571,7 +10788,24 @@
             filteredClients.forEach((c) => {
                 const clientCode = c.clientCode || (c.id && (c.id.startsWith('CLI-') || c.id.startsWith('cli-')) ? c.id.toUpperCase() : (c.id || 'CLI-0000'));
                 const addrsList = Array.isArray(c.addresses) && c.addresses.length > 0 ? c.addresses : [c.address || 'Sin domicilio'];
-                const addrsHtml = addrsList.map(a => `<div style="font-size:12px; margin-bottom:2px;">📍 ${a}</div>`).join('');
+                const addrsHtml = addrsList.map(a => {
+                    if (!a || a.toLowerCase() === 'sin especificar' || a.toLowerCase() === 'sin domicilio') {
+                        return `<div style="font-size:12px; color:var(--text-muted); margin-bottom:2px;">📍 ${a || 'Sin especificar'}</div>`;
+                    }
+                    const mapsUrl = window.getGoogleMapsUrl(a, c);
+                    const mapsBtn = mapsUrl ? `
+                        <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" 
+                           title="Abrir ubicación en Google Maps" 
+                           style="display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; background: rgba(0, 180, 216, 0.15); border: 1px solid var(--color-blue); color: var(--color-blue); border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 6px; flex-shrink: 0;"
+                           onmouseover="this.style.background='var(--color-blue)'; this.style.color='#000';" 
+                           onmouseout="this.style.background='rgba(0, 180, 216, 0.15)'; this.style.color='var(--color-blue)';">
+                            <span>🗺️ Maps</span>
+                        </a>` : '';
+                    return `<div style="font-size:12px; margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                        <span>📍 ${a}</span>
+                        ${mapsBtn}
+                    </div>`;
+                }).join('');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
