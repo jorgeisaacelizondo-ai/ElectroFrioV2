@@ -14554,7 +14554,7 @@
                 });
             }
 
-            // Función para fusionar órdenes del mes actual, órdenes sin coordinar e historial bajo demanda
+            // Función para fusionar órdenes de tiempo real, órdenes sin coordinar e historial bajo demanda
             function mergeOrdenesTrabajo() {
                 const currentMonth = window._ordenesMesActual || [];
                 const uncoordinated = window._ordenesSinCoordinar || [];
@@ -14565,7 +14565,7 @@
                 historical.forEach(o => map.set(o.id, o));
                 // 2. Órdenes sin coordinar (siempre visibles sin cargar todo el historial)
                 uncoordinated.forEach(o => map.set(o.id, o));
-                // 3. Órdenes del mes actual (tiempo real, máxima prioridad)
+                // 3. Órdenes recientes en tiempo real (máxima prioridad)
                 currentMonth.forEach(o => map.set(o.id, o));
 
                 const merged = Array.from(map.values());
@@ -14574,16 +14574,17 @@
                 localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
                 updateTablesAndViews();
             }
+            window.mergeOrdenesTrabajo = mergeOrdenesTrabajo;
 
             if (!unsubscribeOrdenes) {
-                // OPTIMIZACIÓN: Solo escucha el mes actual en tiempo real.
-                // El historial anterior se carga bajo demanda con loadOrdenesHistorial().
-                const inicioMesOrdenes = (() => {
-                    const now = new Date();
-                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                // OPTIMIZACIÓN: Sincronización en tiempo real de los últimos 20 días (en lugar de solo el mes actual)
+                const inicioOrdenes20Dias = (() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - 20);
+                    return d.toISOString();
                 })();
                 unsubscribeOrdenes = db.collection('ordenes')
-                    .where('timestamp', '>=', inicioMesOrdenes)
+                    .where('timestamp', '>=', inicioOrdenes20Dias)
                     .onSnapshot((querySnapshot) => {
                     const updatedOrders = [];
                     querySnapshot.forEach((doc) => {
@@ -14705,16 +14706,41 @@
         }
 
         // ─── HISTORIAL BAJO DEMANDA ──────────────────────────────────────────────
-        // Carga órdenes anteriores al mes actual como lectura única (getDocs).
+        // Helper global para mergear órdenes si se invoca desde el historial
+        function mergeOrdenesTrabajo() {
+            if (typeof window.mergeOrdenesTrabajo === 'function') {
+                window.mergeOrdenesTrabajo();
+                return;
+            }
+            const currentOrders = window._ordenesMesActual || [];
+            const uncoordinated = window._ordenesSinCoordinar || [];
+            const historical = window._ordenesHistorial || [];
+
+            const map = new Map();
+            historical.forEach(o => map.set(o.id, o));
+            uncoordinated.forEach(o => map.set(o.id, o));
+            currentOrders.forEach(o => map.set(o.id, o));
+
+            const merged = Array.from(map.values());
+            merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            ordenesTrabajo = merged;
+            localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
+            if (typeof updateTablesAndViews === 'function') {
+                updateTablesAndViews();
+            }
+        }
+        window.mergeOrdenesTrabajo = window.mergeOrdenesTrabajo || mergeOrdenesTrabajo;
+
+        // Carga órdenes de los últimos 20 días como lectura única (getDocs).
         // Se cachea en window._ordenesHistorial para no releer Firestore en la sesión.
         window.loadOrdenesHistorial = async function() {
             if (window._ordenesHistorialCargado) return; // ya cargado en esta sesión
             const btn = document.getElementById('btnVerHistorialOrdenes');
             if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
             try {
-                const finMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+                const hace20Dias = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
                 const snap = await db.collection('ordenes')
-                    .where('timestamp', '<', finMes)
+                    .where('timestamp', '>=', hace20Dias)
                     .get();
                 const hist = [];
                 snap.forEach(doc => {
@@ -14724,9 +14750,13 @@
                 });
                 window._ordenesHistorial = hist;
                 window._ordenesHistorialCargado = true;
-                mergeOrdenesTrabajo();
-                if (btn) { btn.textContent = '✅ Historial cargado'; btn.disabled = true; }
-                showToast(`📂 ${hist.length} órdenes históricas cargadas`, 'success');
+                if (typeof window.mergeOrdenesTrabajo === 'function') {
+                    window.mergeOrdenesTrabajo();
+                } else {
+                    mergeOrdenesTrabajo();
+                }
+                if (btn) { btn.textContent = '✅ Historial (20 días)'; btn.disabled = true; }
+                showToast(`📂 ${hist.length} órdenes de los últimos 20 días cargadas`, 'success');
             } catch(e) {
                 console.error('Error cargando historial de órdenes:', e);
                 if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
