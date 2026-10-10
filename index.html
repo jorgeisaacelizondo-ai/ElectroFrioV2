@@ -6453,18 +6453,10 @@
                 if (ordersFullBody) {
                     ordersFullBody.innerHTML = '';
 
-                    // Obtener órdenes a mostrar según rol
-                    let activeOrdersToShow = [];
-                    let completedOrdersToShow = [];
-
-                    if (role === 'Colaborador') {
-                        const myOrders = ordenesTrabajo.filter(o => isOrderAssignedToUser(o, currentName));
-                        activeOrdersToShow = myOrders.filter(o => o.status !== 'Completado');
-                        completedOrdersToShow = myOrders.filter(o => o.status === 'Completado');
-                    } else {
-                        const allWithDate = ordenesTrabajo.filter(o => o.date && o.date !== "");
-                        activeOrdersToShow = allWithDate.filter(o => o.status !== 'Completado');
-                        completedOrdersToShow = allWithDate.filter(o => o.status === 'Completado');
+                    // Sincronizar texto del botón superior si existe
+                    const btnHistorialTop = document.getElementById('btnVerHistorialOrdenes');
+                    if (btnHistorialTop && !btnHistorialTop.disabled) {
+                        btnHistorialTop.textContent = window._mostrarHistorialCompleto ? '📂 Ocultar historial (>7d)' : '📂 Ver historial';
                     }
 
                     // Helper para parsear fecha a timestamp
@@ -6498,213 +6490,247 @@
                         return d.getTime() === todayTimestamp;
                     };
 
-                    // Hoy primero (ordenado por horario), luego el resto por fecha ascendente + horario
-                    const ordenesHoy = activeOrdersToShow.filter(o => isToday(o.date));
-                    const ordenesOtros = activeOrdersToShow.filter(o => !isToday(o.date));
+                    // Límite de 7 días hacia atrás para completadas
+                    const sevenDaysAgoTs = (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - 7);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime();
+                    })();
 
-                    // Ordenar las de hoy por horario ascendente
+                    const isWithinLast7Days = (o) => {
+                        let ts = 0;
+                        if (o.date) ts = parseDateStr(o.date);
+                        if (!ts && o.timestamp) ts = new Date(o.timestamp).getTime();
+                        if (!ts || isNaN(ts)) return true; // Si no tiene fecha registrable, mantener
+                        return ts >= sevenDaysAgoTs;
+                    };
+
+                    // Obtener órdenes a mostrar según rol
+                    let allActiveOrders = [];
+                    let allCompletedOrders = [];
+
+                    if (role === 'Colaborador') {
+                        const myOrders = ordenesTrabajo.filter(o => isOrderAssignedToUser(o, currentName));
+                        allActiveOrders = myOrders.filter(o => o.status !== 'Completado');
+                        allCompletedOrders = myOrders.filter(o => o.status === 'Completado');
+                    } else {
+                        // Admin ve todas las órdenes activas (incluyendo las pendientes de coordinar)
+                        allActiveOrders = ordenesTrabajo.filter(o => o.status !== 'Completado');
+                        allCompletedOrders = ordenesTrabajo.filter(o => o.status === 'Completado');
+                    }
+
+                    // Clasificación de órdenes activas
+                    const ordenesHoy = allActiveOrders.filter(o => o.date && isToday(o.date));
+                    const ordenesOtros = allActiveOrders.filter(o => o.date && !isToday(o.date));
+                    const ordenesSinCoordinar = allActiveOrders.filter(o => !o.date || o.date === "");
+
+                    // Ordenar hoy por horario ascendente
                     ordenesHoy.sort((a, b) => parseTimeStr(a.time) - parseTimeStr(b.time));
 
-                    // Ordenar las demás por fecha ascendente (más cercana primero) y luego por horario
+                    // Ordenar próximas por fecha y luego horario
                     ordenesOtros.sort((a, b) => {
                         const dateDiff = parseDateStr(a.date) - parseDateStr(b.date);
                         if (dateDiff !== 0) return dateDiff;
                         return parseTimeStr(a.time) - parseTimeStr(b.time);
                     });
 
-                    activeOrdersToShow = [...ordenesHoy, ...ordenesOtros];
+                    // Ordenar sin coordinar por timestamp descendente (más nuevas primero)
+                    ordenesSinCoordinar.sort((a, b) => {
+                        const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                        const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                        return tB - tA;
+                    });
+
+                    // Filtro de 7 días para completadas (si _mostrarHistorialCompleto es true, muestra todas)
+                    const completedOrdersToShow = window._mostrarHistorialCompleto
+                        ? allCompletedOrders
+                        : allCompletedOrders.filter(isWithinLast7Days);
+
+                    // Ordenar completadas por fecha descendente
+                    completedOrdersToShow.sort((a, b) => {
+                        const tB = parseDateStr(b.date) || (b.timestamp ? new Date(b.timestamp).getTime() : 0);
+                        const tA = parseDateStr(a.date) || (a.timestamp ? new Date(a.timestamp).getTime() : 0);
+                        return tB - tA;
+                    });
 
                     const titleEl = document.getElementById('ordersListTitle');
                     if (titleEl) {
                         titleEl.textContent = role === 'Colaborador' ? 'Mis Órdenes Activas' : 'Órdenes Pendientes / Coordinadas';
                     }
 
-                    if (activeOrdersToShow.length === 0) {
-                        ordersFullBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes activas.</td></tr>`;
-                    } else {
-                        const totalCols = role === 'Administrador' ? 8 : 7;
-                        let insertedHoyHeader = false;
-                        let insertedOtrosHeader = false;
+                    const totalCols = role === 'Administrador' ? 8 : 7;
 
-                        // Contar órdenes de hoy
-                        const countHoy = activeOrdersToShow.filter(o => isToday(o.date)).length;
+                    // Función auxiliar para renderizar fila de orden
+                    const renderRow = (o, rowType) => {
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
 
-                        activeOrdersToShow.forEach((o, idx) => {
-                            const isTodayOrder = isToday(o.date);
+                        if (rowType === 'hoy') {
+                            tr.style.borderLeft = '3px solid #00e676';
+                        } else if (rowType === 'sinCoordinar') {
+                            tr.style.borderLeft = '3px solid #f59e0b';
+                        } else if (rowType === 'completado') {
+                            tr.style.opacity = '0.75';
+                        }
 
-                            // Insertar header de sección "Hoy"
-                            if (isTodayOrder && !insertedHoyHeader) {
-                                insertedHoyHeader = true;
-                                const headerTr = document.createElement('tr');
-                                headerTr.innerHTML = `
-                                    <td colspan="${totalCols}" style="padding: 0; border: none;">
-                                        <div style="display:flex; align-items:center; gap:10px; padding: 14px 12px 10px 12px;">
-                                            <div style="display:flex; align-items:center; gap:8px;">
-                                                <span style="font-size:18px;">📋</span>
-                                                <span style="font-weight:700; font-size:15px; color:#00e676; text-transform:uppercase; letter-spacing:0.5px;">Hoy</span>
-                                                <span style="background:rgba(0,230,118,0.15); color:#00e676; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(0,230,118,0.3);">${countHoy} ${countHoy === 1 ? 'orden' : 'órdenes'}</span>
-                                            </div>
-                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(0,230,118,0.4), transparent);"></div>
-                                        </div>
-                                    </td>
-                                `;
-                                ordersFullBody.appendChild(headerTr);
+                        tr.onclick = (e) => {
+                            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+                                openOrderDetailsModal(o.id);
                             }
+                        };
 
-                            // Insertar header de sección "Próximos días"
-                            if (!isTodayOrder && !insertedOtrosHeader) {
-                                insertedOtrosHeader = true;
-                                const headerTr = document.createElement('tr');
-                                headerTr.innerHTML = `
-                                    <td colspan="${totalCols}" style="padding: 0; border: none;">
-                                        <div style="display:flex; align-items:center; gap:10px; padding: ${insertedHoyHeader ? '18px' : '14px'} 12px 10px 12px;">
-                                            <div style="display:flex; align-items:center; gap:8px;">
-                                                <span style="font-size:16px;">📅</span>
-                                                <span style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Próximos días</span>
-                                            </div>
-                                            <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
-                                        </div>
-                                    </td>
-                                `;
-                                ordersFullBody.appendChild(headerTr);
-                            }
+                        const badgeData = getBadgeInfo(o.status);
+                        const collaboratorsNames = o.assignees ? o.assignees.join(', ') : (o.assignee || 'Sin Asignar');
+                        const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
 
-                            const tr = document.createElement('tr');
-                            tr.style.cursor = 'pointer';
-                            if (isTodayOrder) {
-                                tr.style.borderLeft = '3px solid #00e676';
-                            }
-                            tr.onclick = (e) => {
-                                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-                                    openOrderDetailsModal(o.id);
-                                }
-                            };
+                        // Formatear Fecha y Horario
+                        let formattedDate = '';
+                        if (rowType === 'sinCoordinar') {
+                            formattedDate = '<span style="color:#f59e0b; font-weight:600; font-size:12px;">⏳ Pendiente coord.</span>';
+                        } else {
+                            const hoyBadge = rowType === 'hoy' ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
+                            formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                        }
 
-                            const badgeData = getBadgeInfo(o.status);
-                            const collaboratorsNames = o.assignees ? o.assignees.join(', ') : (o.assignee || 'Sin Asignar');
-                            const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
-
-                            // Formatear Fecha y Horario con fallback si falta coordinación
-                            const hoyBadge = isTodayOrder ? ' <span style="background: linear-gradient(135deg, #00c853, #00e676); color: #000; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; text-transform: uppercase;">Hoy</span>' : '';
-                            const formattedDate = o.date ? (formatDateWithDayToAR(o.date) + hoyBadge) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
-                            
+                        let formattedTime = '';
+                        if (rowType === 'sinCoordinar') {
+                            formattedTime = '<span style="color:var(--text-muted); font-style:italic; font-size:12px;">Sin horario</span>';
+                        } else {
                             let orderTimeStr = o.timeEnd ? `${o.time}HS-${o.timeEnd}HS` : (o.time ? `${o.time} hs` : '');
-                            let formattedTime = orderTimeStr || '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
+                            formattedTime = orderTimeStr || '<span style="color:var(--text-muted); font-style:italic;">Pendiente</span>';
+                        }
 
-                            const actionTd = role === 'Administrador' ? `
-                                <td data-label="ACCIONES">
-                                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
-                                        <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver</button>
-                                        <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #24364e; color: #ffffff; border: 1px solid var(--border-color);" onclick="openOrderDetailsModal('${o.id}')">Editar</button>
-                                        <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #7a1a1a; color: #ffffff; border: 1px solid #992020;" onclick="handleDeleteOrder('${o.id}')">Eliminar</button>
-                                    </div>
-                                </td>
-                            ` : `
-                                <td data-label="ACCIONES">
-                                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
-                                        <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver / Estado</button>
+                        const actionTd = role === 'Administrador' ? `
+                            <td data-label="ACCIONES">
+                                <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
+                                    <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver</button>
+                                    <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #24364e; color: #ffffff; border: 1px solid var(--border-color);" onclick="openOrderDetailsModal('${o.id}')">Editar</button>
+                                    <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #7a1a1a; color: #ffffff; border: 1px solid #992020;" onclick="handleDeleteOrder('${o.id}')">Eliminar</button>
+                                </div>
+                            </td>
+                        ` : `
+                            <td data-label="ACCIONES">
+                                <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
+                                    <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">${rowType === 'completado' ? 'Ver' : 'Ver / Estado'}</button>
+                                </div>
+                            </td>
+                        `;
+
+                        const cObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                        const mUrl = window.getGoogleMapsUrl(o.address, cObj);
+                        const addrHtml = (mUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                            ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
+                            : (o.address || 'Sin especificar');
+
+                        tr.innerHTML = `
+                            <td data-label="FECHA">${formattedDate}</td>
+                            <td data-label="ID" style="font-weight:700;">${o.id}</td>
+                            <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
+                            <td data-label="DIRECCIÓN">${addrHtml}</td>
+                            <td data-label="HORARIO">${formattedTime}</td>
+                            ${collabTd}
+                            <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
+                            ${actionTd}
+                        `;
+                        return tr;
+                    };
+
+                    const totalActiveOrders = ordenesHoy.length + ordenesOtros.length + ordenesSinCoordinar.length;
+
+                    if (totalActiveOrders === 0) {
+                        ordersFullBody.innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes activas.</td></tr>`;
+                    } else {
+                        // 1. Sección Hoy
+                        if (ordenesHoy.length > 0) {
+                            const headerTr = document.createElement('tr');
+                            headerTr.innerHTML = `
+                                <td colspan="${totalCols}" style="padding: 0; border: none;">
+                                    <div style="display:flex; align-items:center; gap:10px; padding: 14px 12px 10px 12px;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span style="font-size:18px;">📋</span>
+                                            <span style="font-weight:700; font-size:15px; color:#00e676; text-transform:uppercase; letter-spacing:0.5px;">Hoy</span>
+                                            <span style="background:rgba(0,230,118,0.15); color:#00e676; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(0,230,118,0.3);">${ordenesHoy.length} ${ordenesHoy.length === 1 ? 'orden' : 'órdenes'}</span>
+                                        </div>
+                                        <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(0,230,118,0.4), transparent);"></div>
                                     </div>
                                 </td>
                             `;
+                            ordersFullBody.appendChild(headerTr);
+                            ordenesHoy.forEach(o => ordersFullBody.appendChild(renderRow(o, 'hoy')));
+                        }
 
-                            const cObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
-                            const mUrl = window.getGoogleMapsUrl(o.address, cObj);
-                            const addrHtml = (mUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
-                                ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
-                                : (o.address || 'Sin especificar');
-
-                            tr.innerHTML = `
-                                <td data-label="FECHA">${formattedDate}</td>
-                                <td data-label="ID" style="font-weight:700;">${o.id}</td>
-                                <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
-                                <td data-label="DIRECCIÓN">${addrHtml}</td>
-                                <td data-label="HORARIO">${formattedTime}</td>
-                                ${collabTd}
-                                <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
-                                ${actionTd}
+                        // 2. Sección Próximos días
+                        if (ordenesOtros.length > 0) {
+                            const headerTr = document.createElement('tr');
+                            headerTr.innerHTML = `
+                                <td colspan="${totalCols}" style="padding: 0; border: none;">
+                                    <div style="display:flex; align-items:center; gap:10px; padding: ${ordenesHoy.length > 0 ? '18px' : '14px'} 12px 10px 12px;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span style="font-size:16px;">📅</span>
+                                            <span style="font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Próximos días</span>
+                                            <span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(255,255,255,0.15);">${ordenesOtros.length}</span>
+                                        </div>
+                                        <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+                                    </div>
+                                </td>
                             `;
-                            ordersFullBody.appendChild(tr);
-                        });
-                        // Insertar header de sección "Completados" en la tabla principal
-                        if (completedOrdersToShow.length > 0) {
-                            const completedHeaderTr = document.createElement('tr');
-                            completedHeaderTr.innerHTML = `
+                            ordersFullBody.appendChild(headerTr);
+                            ordenesOtros.forEach(o => ordersFullBody.appendChild(renderRow(o, 'otros')));
+                        }
+
+                        // 3. Sección Sin Coordinar (Visible directamente en la tabla)
+                        if (ordenesSinCoordinar.length > 0) {
+                            const headerTr = document.createElement('tr');
+                            headerTr.innerHTML = `
                                 <td colspan="${totalCols}" style="padding: 0; border: none;">
                                     <div style="display:flex; align-items:center; gap:10px; padding: 18px 12px 10px 12px;">
                                         <div style="display:flex; align-items:center; gap:8px;">
-                                            <span style="font-size:16px;">✅</span>
-                                            <span style="font-weight:600; font-size:13px; color:#5ac8fa; text-transform:uppercase; letter-spacing:0.5px;">Completados</span>
-                                            <span style="background:rgba(90,200,250,0.15); color:#5ac8fa; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(90,200,250,0.3);">${completedOrdersToShow.length} ${completedOrdersToShow.length === 1 ? 'orden' : 'órdenes'}</span>
+                                            <span style="font-size:16px;">⏳</span>
+                                            <span style="font-weight:700; font-size:13px; color:#f59e0b; text-transform:uppercase; letter-spacing:0.5px;">Sin Coordinar</span>
+                                            <span style="background:rgba(245,158,11,0.15); color:#f59e0b; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(245,158,11,0.3);">${ordenesSinCoordinar.length} ${ordenesSinCoordinar.length === 1 ? 'orden' : 'órdenes'}</span>
                                         </div>
-                                        <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(90,200,250,0.3), transparent);"></div>
+                                        <div style="flex:1; height:1px; background: linear-gradient(90deg, rgba(245,158,11,0.4), transparent);"></div>
                                     </div>
                                 </td>
                             `;
-                            ordersFullBody.appendChild(completedHeaderTr);
-
-                            // Ordenar completadas por fecha descendente
-                            completedOrdersToShow.sort((a, b) => parseDateStr(b.date) - parseDateStr(a.date));
-
-                            completedOrdersToShow.forEach(o => {
-                                const tr = document.createElement('tr');
-                                tr.style.cursor = 'pointer';
-                                tr.style.opacity = '0.7';
-                                tr.onclick = (e) => {
-                                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-                                        openOrderDetailsModal(o.id);
-                                    }
-                                };
-
-                                const badgeData = getBadgeInfo(o.status);
-                                const collaboratorsNames = o.assignees ? o.assignees.join(', ') : (o.assignee || 'Sin Asignar');
-                                const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
-                                const formattedDate = o.date ? formatDateWithDayToAR(o.date) : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
-                                const formattedTime = (o.time && o.time !== "") ? `${o.time} hs` : '<span style="color:var(--text-muted); font-style:italic;">Pendiente de coordinación</span>';
-
-                                const actionTd = role === 'Administrador' ? `
-                                    <td data-label="ACCIONES">
-                                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
-                                            <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver</button>
-                                            <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #24364e; color: #ffffff; border: 1px solid var(--border-color);" onclick="openOrderDetailsModal('${o.id}')">Editar</button>
-                                            <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #7a1a1a; color: #ffffff; border: 1px solid #992020;" onclick="handleDeleteOrder('${o.id}')">Eliminar</button>
-                                        </div>
-                                    </td>
-                                ` : `
-                                    <td data-label="ACCIONES">
-                                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap;">
-                                            <button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: var(--color-blue); color: #000; font-weight:700;" onclick="openOrderDetailsModal('${o.id}')">Ver / Estado</button>
-                                        </div>
-                                    </td>
-                                `;
-
-                                const compAdminCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
-                                const compAdminMUrl = window.getGoogleMapsUrl(o.address, compAdminCObj);
-                                const compAdminAddrHtml = (compAdminMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
-                                    ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${compAdminMUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
-                                    : (o.address || 'Sin especificar');
-
-                                tr.innerHTML = `
-                                    <td data-label="FECHA">${formattedDate}</td>
-                                    <td data-label="ID" style="font-weight:700;">${o.id}</td>
-                                    <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
-                                    <td data-label="DIRECCIÓN">${compAdminAddrHtml}</td>
-                                    <td data-label="HORARIO">${formattedTime}</td>
-                                    ${collabTd}
-                                    <td data-label="ESTADO"><span class="badge ${badgeData.class}">${badgeData.text}</span></td>
-                                    ${actionTd}
-                                `;
-                                ordersFullBody.appendChild(tr);
-                            });
+                            ordersFullBody.appendChild(headerTr);
+                            ordenesSinCoordinar.forEach(o => ordersFullBody.appendChild(renderRow(o, 'sinCoordinar')));
                         }
                     }
 
-                    // Renderizar Historial de Completadas para Colaborador
+                    // 4. Sección Completados (con filtro de últimos 7 días e historial bajo demanda)
+                    if (completedOrdersToShow.length > 0) {
+                        const isFull = !!window._mostrarHistorialCompleto;
+                        const compHeaderTr = document.createElement('tr');
+                        compHeaderTr.innerHTML = `
+                            <td colspan="${totalCols}" style="padding: 0; border: none;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding: 20px 12px 10px 12px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:16px;">✅</span>
+                                        <span style="font-weight:600; font-size:13px; color:#5ac8fa; text-transform:uppercase; letter-spacing:0.5px;">${isFull ? 'Completados (Historial Completo)' : 'Completados (Últimos 7 días)'}</span>
+                                        <span style="background:rgba(90,200,250,0.15); color:#5ac8fa; font-weight:700; font-size:12px; padding:2px 10px; border-radius:12px; border:1px solid rgba(90,200,250,0.3);">${completedOrdersToShow.length} ${completedOrdersToShow.length === 1 ? 'orden' : 'órdenes'}</span>
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <button type="button" onclick="loadOrdenesHistorial()" style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.5); color:#a78bfa; font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer;">
+                                            ${isFull ? 'Ocultar historial (>7d)' : '📂 Ver historial completo'}
+                                        </button>
+                                        <div style="width:60px; height:1px; background: linear-gradient(90deg, rgba(90,200,250,0.3), transparent);"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        `;
+                        ordersFullBody.appendChild(compHeaderTr);
+                        completedOrdersToShow.forEach(o => ordersFullBody.appendChild(renderRow(o, 'completado')));
+                    }
+
+                    // Renderizar Historial de Completadas para Colaborador (últimos 7 días o completo)
                     if (role === 'Colaborador' && collabCompletedBody) {
                         collabCompletedBody.innerHTML = '';
                         if (collabCompletedBadge) collabCompletedBadge.textContent = completedOrdersToShow.length;
 
                         if (completedOrdersToShow.length === 0) {
-                            collabCompletedBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes completadas en tu historial.</td></tr>`;
+                            collabCompletedBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No hay órdenes completadas recientes.</td></tr>`;
                         } else {
                             completedOrdersToShow.forEach(o => {
                                 const tr = document.createElement('tr');
@@ -14968,33 +14994,42 @@
         // Carga órdenes de los últimos 20 días como lectura única (getDocs).
         // Se cachea en window._ordenesHistorial para no releer Firestore en la sesión.
         window.loadOrdenesHistorial = async function() {
-            if (window._ordenesHistorialCargado) return; // ya cargado en esta sesión
             const btn = document.getElementById('btnVerHistorialOrdenes');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
-            try {
-                const hace20Dias = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
-                const snap = await db.collection('ordenes')
-                    .where('timestamp', '>=', hace20Dias)
-                    .get();
-                const hist = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    data.id = doc.id;
-                    hist.push(data);
-                });
-                window._ordenesHistorial = hist;
-                window._ordenesHistorialCargado = true;
-                if (typeof window.mergeOrdenesTrabajo === 'function') {
-                    window.mergeOrdenesTrabajo();
-                } else {
-                    mergeOrdenesTrabajo();
+            if (!window._ordenesHistorialCargado) {
+                if (btn) { btn.disabled = true; btn.textContent = '⏳ Cargando...'; }
+                try {
+                    const hace20Dias = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
+                    const snap = await db.collection('ordenes')
+                        .where('timestamp', '<', hace20Dias)
+                        .get();
+                    const hist = [];
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        data.id = doc.id;
+                        hist.push(data);
+                    });
+                    window._ordenesHistorial = hist;
+                    window._ordenesHistorialCargado = true;
+                    window._mostrarHistorialCompleto = true;
+                    if (typeof window.mergeOrdenesTrabajo === 'function') {
+                        window.mergeOrdenesTrabajo();
+                    } else {
+                        mergeOrdenesTrabajo();
+                    }
+                    if (btn) { btn.disabled = false; btn.textContent = '📂 Ocultar historial (>7d)'; }
+                    showToast(`📂 Historial completo cargado (${hist.length} órdenes históricas)`, 'success');
+                } catch(e) {
+                    console.error('Error cargando historial de órdenes:', e);
+                    if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
+                    showToast('Error al cargar historial de órdenes', 'error');
                 }
-                if (btn) { btn.textContent = '✅ Historial (20 días)'; btn.disabled = true; }
-                showToast(`📂 ${hist.length} órdenes de los últimos 20 días cargadas`, 'success');
-            } catch(e) {
-                console.error('Error cargando historial de órdenes:', e);
-                if (btn) { btn.disabled = false; btn.textContent = '📂 Ver historial'; }
-                showToast('Error al cargar historial de órdenes', 'error');
+            } else {
+                // Ya descargado: alternar vista entre historial completo y últimos 7 días
+                window._mostrarHistorialCompleto = !window._mostrarHistorialCompleto;
+                if (btn) {
+                    btn.textContent = window._mostrarHistorialCompleto ? '📂 Ocultar historial (>7d)' : '📂 Ver historial';
+                }
+                updateTablesAndViews();
             }
         };
 
