@@ -8,7 +8,7 @@ echo.
 echo Ejecutando respaldo de datos Firestore...
 echo.
 
-node backup_firestore.js
+node "%~dp0backup_firestore.js"
 
 echo.
 echo Presione cualquier tecla para cerrar esta ventana...

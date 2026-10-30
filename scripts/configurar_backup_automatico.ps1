@@ -3,7 +3,7 @@
 
 $taskName = "ElectroFrio_Backup_Semanal"
 $scriptPath = Join-Path $PSScriptRoot "hacer_backup.bat"
-$workingDir = $PSScriptRoot
+$workingDir = Split-Path $PSScriptRoot -Parent
 
 Write-Host "=================================================" -ForegroundColor Cyan
 Write-Host " CONFIGURACIÓN DE BACKUP AUTOMÁTICO SEMANAL     " -ForegroundColor Cyan

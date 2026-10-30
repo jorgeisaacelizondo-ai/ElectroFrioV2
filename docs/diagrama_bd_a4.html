@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroFrío - Diagrama de Base de Datos Firestore (A4)</title>
+    <style>
+        /* =========================================================
+           RESET & ESTILOS BASE
+           ========================================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        /* Barra de herramientas en pantalla */
+        .toolbar {
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .toolbar h1 {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* =========================================================
+           HOJA A4 (Contenedor de impresión)
+           ========================================================= */
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .a4-page {
+            background: #ffffff;
+            width: 297mm;
+            min-height: 210mm;
+            height: 210mm; /* A4 Landscape exacto para 1 sola carilla */
+            padding: 10mm 12mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Estilo vertical si se conmuta */
+        .a4-page.portrait {
+            width: 210mm;
+            min-height: 297mm;
+            height: 297mm;
+        }
+
+        /* Encabezado */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo-badge {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .header h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .header p {
+            font-size: 9.5px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 9px;
+            color: #475569;
+        }
+
+        .header-meta strong {
+            color: #0f172a;
+        }
+
+        /* =========================================================
+           GRID DE MÓDULOS / DOMINIOS
+           ========================================================= */
+        .domains-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex: 1;
+            margin-bottom: 8px;
+        }
+
+        .domain-col {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .domain-header {
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Colores por Dominio */
+        .dom-operaciones { background: #e0f2fe; color: #0369a1; border-left: 3px solid #0284c7; }
+        .dom-comercial   { background: #dcfce7; color: #15803d; border-left: 3px solid #16a34a; }
+        .dom-inventario  { background: #fef3c7; color: #b45309; border-left: 3px solid #d97706; }
+        .dom-rrhh        { background: #f3e8ff; color: #7e22ce; border-left: 3px solid #9333ea; }
+
+        /* Tarjeta de Colección */
+        .table-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            padding: 4px 6px;
+            font-weight: 700;
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .th-operaciones { background: #f0f9ff; color: #0369a1; }
+        .th-comercial   { background: #f0fdf4; color: #166534; }
+        .th-inventario  { background: #fffbeb; color: #92400e; }
+        .th-rrhh        { background: #faf5ff; color: #6b21a8; }
+
+        .tag-doc-id {
+            font-size: 7.5px;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: rgba(0,0,0,0.06);
+            color: #334155;
+            font-family: ui-monospace, monospace;
+        }
+
+        .table-body {
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 8.5px;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1px 0;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+
+        .field-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .field-type {
+            font-family: ui-monospace, monospace;
+            font-size: 7.5px;
+            color: #64748b;
+        }
+
+        .pk-icon {
+            font-size: 8px;
+            color: #eab308;
+            font-weight: bold;
+        }
+
+        .fk-icon {
+            font-size: 8px;
+            color: #0284c7;
+            font-weight: bold;
+        }
+
+        .rel-badge {
+            font-size: 7px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 0 3px;
+            border-radius: 2px;
+            border: 1px solid #bfdbfe;
+            margin-left: 2px;
+            white-space: nowrap;
+        }
+
+        /* =========================================================
+           PIE DE PÁGINA: TABLA DE RELACIONES & ARQUITECTURA
+           ========================================================= */
+        .footer-summary {
+            border-top: 1px solid #cbd5e1;
+            padding-top: 6px;
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 12px;
+            background: #fafafa;
+            border-radius: 4px;
+            padding: 6px 8px;
+        }
+
+        .rel-matrix h4, .arch-notes h4 {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+        }
+
+        .rel-table th {
+            background: #e2e8f0;
+            color: #334155;
+            text-align: left;
+            padding: 2px 4px;
+            font-weight: 600;
+        }
+
+        .rel-table td {
+            padding: 2px 4px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .rel-cardinality {
+            font-weight: 700;
+            color: #0284c7;
+            font-family: monospace;
+        }
+
+        .arch-notes ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 8px;
+            color: #475569;
+        }
+
+        .arch-notes li::before {
+            content: "✓ ";
+            color: #059669;
+            font-weight: bold;
+        }
+
+        /* =========================================================
+           MEDIA QUERY PARA IMPRESIÓN (A4 EXACTO)
+           ========================================================= */
+        @page {
+            size: A4 landscape;
+            margin: 6mm 8mm;
+        }
+
+        @media print {
+            body {
+                background: none !important;
+                padding: 0 !important;
+            }
+
+            .toolbar {
+                display: none !important;
+            }
+
+            .page-wrapper {
+                padding: 0 !important;
+            }
+
+            .a4-page {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                padding: 0 !important;
+                min-height: auto !important;
+            }
+
+            .table-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA DE ACCIÓN PARA EL USUARIO (Oculta al imprimir) -->
+    <div class="toolbar">
+        <h1>
+            <span>❄️</span> ElectroFrío V2 — Modelo de Base de Datos Firestore
+        </h1>
+        <div class="actions">
+            <button class="btn" onclick="window.print()">
+                <span>🖨️</span> Imprimir en A4 / Guardar PDF
+            </button>
+            <button class="btn btn-secondary" onclick="toggleOrientation()">
+                <span>↔️</span> Cambiar Orientación
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DE LA PÁGINA A4 -->
+    <div class="page-wrapper">
+        <div class="a4-page" id="printablePage">
+
+            <!-- CABECERA -->
+            <header class="header">
+                <div class="brand-title">
+                    <div class="brand-logo-badge">EF</div>
+                    <div>
+                        <h2>ELECTROFRÍO REFRIGERACIÓN</h2>
+                        <p>Diagrama de Entidades, Colecciones y Relaciones NoSQL (Google Cloud Firestore)</p>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div><strong>Motor:</strong> Cloud Firestore v9.22 (NoSQL)</div>
+                    <div><strong>Diseño:</strong> Formato A4 Ejecutivo para Impresión</div>
+                    <div><strong>Versión:</strong> 2.0 • Sincronización Tiempo Real</div>
+                </div>
+            </header>
+
+            <!-- CUADRICULA DE LOS 4 DOMINIOS PRINCIPALES -->
+            <main class="domains-grid">
+
+                <!-- COLUMNA 1: OPERACIONES Y SERVICIO -->
+                <div class="domain-col">
+                    <div class="domain-header dom-operaciones">
+                        <span>🔧</span> 1. Operaciones & Campo
+                    </div>
+
+                    <!-- ORDENES -->
+                    <div class="table-card">
+                        <div class="table-header th-operaciones">
+                            <span>📦 ordenes</span>
+                            <span class="tag-doc-id">id: OT-XXXX</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> clientId</span>
+                                <span class="field-type">➔ clientes <span class="rel-badge">N:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">client, address</span>
+                                <span class="field-type">string (cache)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> assignees</span>
+                                <span class="field-type">array ➔ usuarios</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">date, time, timeRange</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">type, status</span>
+                                <span class="field-type">enum (Pend/Comp)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">observations, timestamp</span>
+                                <span class="field-type">text / ISO</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PLANILLAS (PDT) -->
+                    <div class="table-card">
+                        <div class="table-header th-operaciones">
+                            <span>📋 planillas (PDT)</span>
+                            <span class="tag-doc-id">id: docId / PDT-XXX</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id / pdtCode</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> orderId</span>
+                                <span class="field-type">➔ ordenes <span class="rel-badge">1:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> clientId</span>
+                                <span class="field-type">➔ clientes <span class="rel-badge">N:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">horaEntrada, horaSalida</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">technicians, completedBy</span>
+                                <span class="field-type">array / text</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> spareParts / mat</span>
+                                <span class="field-type">➔ materiales</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> manoObra</span>
+                                <span class="field-type">➔ mano_obra</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">status, estadoPDT, impreso</span>
+                                <span class="field-type">string / boolean</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA 2: GESTIÓN COMERCIAL & FINANZAS -->
+                <div class="domain-col">
+                    <div class="domain-header dom-comercial">
+                        <span>💼</span> 2. Comercial & Finanzas
+                    </div>
+
+                    <!-- CLIENTES -->
+                    <div class="table-card">
+                        <div class="table-header th-comercial">
+                            <span>👥 clientes</span>
+                            <span class="tag-doc-id">id: autoId</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">name, clientCode</span>
+                                <span class="field-type">string (index)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">phone, email, city</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">address, addresses</span>
+                                <span class="field-type">str / array</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">balance (saldo cta cte)</span>
+                                <span class="field-type">number (ARS)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">pipelineStage, notes</span>
+                                <span class="field-type">string / text</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRESUPUESTOS -->
+                    <div class="table-card">
+                        <div class="table-header th-comercial">
+                            <span>🧾 presupuestos</span>
+                            <span class="tag-doc-id">id: autoId / num</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id, number</span>
+                                <span class="field-type">string / int</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> client.id</span>
+                                <span class="field-type">➔ clientes <span class="rel-badge">N:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">date, expireDate</span>
+                                <span class="field-type">string (YYYY-MM-DD)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> items[]</span>
+                                <span class="field-type">➔ mat & mo</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">subtotal, discount, total</span>
+                                <span class="field-type">number (ARS)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">status (Aprob/Pend)</span>
+                                <span class="field-type">enum</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COBROS & MOVIMIENTOS -->
+                    <div class="table-card">
+                        <div class="table-header th-comercial">
+                            <span>💰 cobros_movimientos</span>
+                            <span class="tag-doc-id">id: autoId</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> clientId</span>
+                                <span class="field-type">➔ clientes <span class="rel-badge">N:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">type</span>
+                                <span class="field-type">'cargo' | 'abono'</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">amount, paymentMethod</span>
+                                <span class="field-type">number / string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">date, concept, receiptNo</span>
+                                <span class="field-type">string / text</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA 3: CATÁLOGO, MATERIALES Y MANO DE OBRA -->
+                <div class="domain-col">
+                    <div class="domain-header dom-inventario">
+                        <span>📦</span> 3. Almacén & Tarifas
+                    </div>
+
+                    <!-- MATERIALES -->
+                    <div class="table-card">
+                        <div class="table-header th-inventario">
+                            <span>🔩 materiales</span>
+                            <span class="tag-doc-id">id: codigoNormalizado</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id / codigo</span>
+                                <span class="field-type">string (sanitizado)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">description / nombre</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">categoria, unidad</span>
+                                <span class="field-type">string (kg/un/m)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">stock, stockMinimo</span>
+                                <span class="field-type">number (control)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">costo, precioVenta</span>
+                                <span class="field-type">number (ARS)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">cod_barra, cod_externo</span>
+                                <span class="field-type">string</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MANO DE OBRA -->
+                    <div class="table-card">
+                        <div class="table-header th-inventario">
+                            <span>🛠️ mano_obra</span>
+                            <span class="tag-doc-id">id: autoId / codigo</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id / codigo</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">descripcion / labor</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">categoria</span>
+                                <span class="field-type">string (Servicio)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">precio / tarifa</span>
+                                <span class="field-type">number (ARS)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">tiempoEstimado</span>
+                                <span class="field-type">number (minutos)</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">activo</span>
+                                <span class="field-type">boolean</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTA DE INTEGRACIÓN -->
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 4px 6px; font-size: 8px; color: #92400e; margin-top: auto;">
+                        💡 <strong>Catálogo Central:</strong> <code>materiales</code> y <code>mano_obra</code> alimentan el autocompletado en Presupuestos y el cómputo final de Planillas PDT.
+                    </div>
+                </div>
+
+                <!-- COLUMNA 4: RECURSOS HUMANOS & CONFIGURACIÓN -->
+                <div class="domain-col">
+                    <div class="domain-header dom-rrhh">
+                        <span>👥</span> 4. RRHH & Configuración
+                    </div>
+
+                    <!-- USUARIOS / COLABORADORES -->
+                    <div class="table-card">
+                        <div class="table-header th-rrhh">
+                            <span>👤 usuarios</span>
+                            <span class="tag-doc-id">id: auth.uid</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> uid</span>
+                                <span class="field-type">Firebase UID</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">name, username</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">role</span>
+                                <span class="field-type">'Admin' | 'Colaborador'</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">email, phone</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">status</span>
+                                <span class="field-type">'online' | 'offline'</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">color</span>
+                                <span class="field-type">hex (calendario)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FICHAJES -->
+                    <div class="table-card">
+                        <div class="table-header th-rrhh">
+                            <span>⏱️ fichajes</span>
+                            <span class="tag-doc-id">id: fichaje-timestamp</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> id</span>
+                                <span class="field-type">string</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> username / name</span>
+                                <span class="field-type">➔ usuarios <span class="rel-badge">N:1</span></span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">date, time, timestamp</span>
+                                <span class="field-type">string / ISO</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">type</span>
+                                <span class="field-type">'Entrada' | 'Salida'</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">gps: { lat, lng, verified }</span>
+                                <span class="field-type">map (geolocalización)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAREAS & CONFIG -->
+                    <div class="table-card">
+                        <div class="table-header th-rrhh">
+                            <span>📌 tareas & configuracion</span>
+                            <span class="tag-doc-id">id: id / docKey</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="field-row">
+                                <span class="field-name"><span class="pk-icon">🔑</span> tareas.id</span>
+                                <span class="field-type">title, priority, items</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name"><span class="fk-icon">🔗</span> tareas.assignedTo</span>
+                                <span class="field-type">➔ usuarios</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">config / 'general'</span>
+                                <span class="field-type">empresa, CUIT, logo</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">config / 'pdt_pricing'</span>
+                                <span class="field-type">márgenes y tarifas</span>
+                            </div>
+                            <div class="field-row">
+                                <span class="field-name">config / 'backup_meta'</span>
+                                <span class="field-type">auditoría de copias</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- PIE DE HOJA: MATRIZ DE RELACIONES Y ARQUITECTURA -->
+            <footer class="footer-summary">
+                <div class="rel-matrix">
+                    <h4>🔗 Matriz de Relaciones & Integridad Referencial</h4>
+                    <table class="rel-table">
+                        <thead>
+                            <tr>
+                                <th>Colección Origen</th>
+                                <th>Campo Enlace</th>
+                                <th>Colección Destino</th>
+                                <th>Relación</th>
+                                <th>Propósito Funcional</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>ordenes</strong></td>
+                                <td><code>clientId</code></td>
+                                <td><strong>clientes</strong></td>
+                                <td class="rel-cardinality">N : 1</td>
+                                <td>Asigna visita y dirección del cliente a la OT.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>planillas</strong></td>
+                                <td><code>orderId</code></td>
+                                <td><strong>ordenes</strong></td>
+                                <td class="rel-cardinality">1 : 1</td>
+                                <td>Cierre técnico de campo y cambio de estado a "Completado".</td>
+                            </tr>
+                            <tr>
+                                <td><strong>cobros_movimientos</strong></td>
+                                <td><code>clientId</code></td>
+                                <td><strong>clientes</strong></td>
+                                <td class="rel-cardinality">N : 1</td>
+                                <td>Impacta saldo de cuenta corriente (abono/cargo).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>presupuestos</strong></td>
+                                <td><code>client.id</code></td>
+                                <td><strong>clientes</strong></td>
+                                <td class="rel-cardinality">N : 1</td>
+                                <td>Emisión comercial antes de generar una orden formal.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>fichajes</strong></td>
+                                <td><code>username</code></td>
+                                <td><strong>usuarios</strong></td>
+                                <td class="rel-cardinality">N : 1</td>
+                                <td>Control horario y presencia física por GPS.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="arch-notes">
+                    <h4>📐 Patrones de Diseño NoSQL</h4>
+                    <ul>
+                        <li><strong>Desnormalización Estratégica:</strong> Nombres y direcciones de clientes se duplican como caché en <code>ordenes</code> para consultas ultra rápidas.</li>
+                        <li><strong>Compatibilidad Retroactiva:</strong> Soporte de alias <code>ordenesTrabajo</code> y <code>planillasDigitales</code> para migraciones sin fricción.</li>
+                        <li><strong>Respaldo Transaccional:</strong> Sistema de snapshot total exportable en JSON estructurado vía módulo de Configuración.</li>
+                        <li><strong>Subscripción en Vivo:</strong> Manejo reactivo de estado con <code>onSnapshot()</code> en toda la aplicación.</li>
+                    </ul>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleOrientation() {
+            const page = document.getElementById('printablePage');
+            const style = document.querySelector('style');
+            if (page.classList.contains('portrait')) {
+                page.classList.remove('portrait');
+                // Ajustar @page a landscape
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*portrait/g, 'size: A4 landscape');
+            } else {
+                page.classList.add('portrait');
+                // Ajustar @page a portrait
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*landscape/g, 'size: A4 portrait');
+            }
+        }
+    </script>
+</body>
+</html>

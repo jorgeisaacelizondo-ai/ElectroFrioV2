@@ -2,7 +2,8 @@
 # Genera una copia con fecha y hora de todos los archivos del proyecto y base de datos
 
 $fecha = Get-Date -Format "yyyyMMdd_HHmmss"
-$directorioRespaldos = Join-Path $PSScriptRoot "backups"
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$directorioRespaldos = Join-Path $projectRoot "backups"
 $respaldoActual = Join-Path $directorioRespaldos "backup_$fecha"
 
 # Crear la carpeta principal de backups si no existe
@@ -18,7 +19,7 @@ $archivos = @("index.html", "crm.html", "cobros.html", "materiales.html", "manod
 
 $copiados = 0
 foreach ($archivo in $archivos) {
-    $rutaArchivo = Join-Path $PSScriptRoot $archivo
+    $rutaArchivo = Join-Path $projectRoot $archivo
     if (Test-Path $rutaArchivo) {
         Copy-Item -Path $rutaArchivo -Destination $respaldoActual -Force
         $copiados++

@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Asistencia y Fichajes - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos del sistema -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 24px 30px;
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Header Card */
+        .fichaje-header-card {
+            background-color: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 18px 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .fichaje-header-title {
+            margin: 0;
+            font-size: 22px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-nuevo-fichaje-head {
+            background-color: var(--color-blue, #00bfff);
+            color: #000000;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 9px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.25);
+        }
+        .btn-nuevo-fichaje-head:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .btn-historial-head {
+            background-color: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #c4b5fd;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 9px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-historial-head:hover {
+            background-color: rgba(139, 92, 246, 0.25);
+            color: #fff;
+        }
+
+        /* Simulador Colaborador */
+        .fichaje-collab-container {
+            margin-bottom: 25px;
+        }
+
+        .fichaje-panel {
+            background: linear-gradient(145deg, #16243d 0%, #101c30 100%);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fichaje-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00b4d8, #48cae4, #00b4d8);
+        }
+
+        .clock-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 52px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 25px rgba(0, 180, 216, 0.45);
+            margin: 10px 0 4px 0;
+        }
+
+        .fichaje-date-label {
+            font-size: 13px;
+            color: var(--text-secondary, #94a3b8);
+            font-weight: 500;
+            margin-bottom: 20px;
+            text-transform: capitalize;
+        }
+
+        .shift-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .fichaje-btn-main {
+            width: 100%;
+            max-width: 380px;
+            min-height: 58px;
+            padding: 14px 28px;
+            font-size: 18px;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fichaje-btn-main.in {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+        .fichaje-btn-main.in:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.55);
+        }
+
+        .fichaje-btn-main.out {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+        .fichaje-btn-main.out:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.55);
+        }
+
+        .fichaje-btn-main:disabled,
+        .fichaje-btn-main.disabled {
+            background: #23354d !important;
+            color: #64748b !important;
+            box-shadow: none !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        /* Contenedores y Tarjetas */
+        .content-card {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Filtros */
+        .fichajes-filters-grid {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary, #94a3b8);
+        }
+        .filter-input {
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 8px;
+            background-color: var(--bg-input, #0a111c);
+            border: 1px solid var(--border-color, #1e3656);
+            color: var(--text-primary, #ffffff);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .filter-input:focus {
+            border-color: var(--color-blue, #00bfff);
+        }
+
+        .btn-buscar-fichajes {
+            background-color: var(--color-blue, #00bfff);
+            color: #000;
+            font-weight: 700;
+            font-size: 13px;
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-buscar-fichajes:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Checkbox Collabs List */
+        .collab-chips-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 90px;
+            overflow-y: auto;
+            padding: 6px 8px;
+            background: var(--bg-input, #0a111c);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 8px;
+            min-width: 220px;
+        }
+        .collab-chip-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .collab-chip-label input {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* Badges de Tabla */
+        .badge-entrada {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.35);
+            padding: 4px 9px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-salida {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 4px 9px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-gps-verified {
+            background: rgba(0, 180, 216, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(0, 180, 216, 0.35);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .badge-gps-verified:hover {
+            background: rgba(0, 180, 216, 0.25);
+            color: #fff;
+        }
+
+        .badge-gps-manual {
+            background: rgba(148, 163, 184, 0.12);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Botones de acción */
+        .btn-table-action {
+            background: #24364e;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-table-action:hover {
+            filter: brightness(1.2);
+            border-color: var(--color-blue);
+        }
+        .btn-table-action.delete:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            padding: 16px;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: #16243d;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            animation: modalPop 0.2s ease-out;
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 18px;
+            font-family: 'Outfit', sans-serif;
+            color: var(--color-blue, #00bfff);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 26px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        /* Selector de Tipo Entrada / Salida */
+        .fichaje-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .fichaje-type-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .fichaje-type-btn.btn-type-entrada.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #10b981;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        }
+        .fichaje-type-btn.btn-type-salida.active {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #1e293b;
+            color: #ffffff;
+            border-left: 4px solid var(--color-blue, #00bfff);
+            border-radius: 6px;
+            padding: 12px 18px;
+            font-size: 13px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s ease-out;
+            pointer-events: auto;
+            max-width: 340px;
+        }
+        .toast.success { border-color: #10b981; }
+        .toast.error { border-color: #ef4444; }
+        .toast.warning { border-color: #f59e0b; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==============================================================
+           RESPONSIVE MÓVIL PROFESIONAL (<= 768px)
+           ============================================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 10px !important;
+            }
+
+            .fichaje-header-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 14px;
+            }
+            .fichaje-header-title {
+                text-align: center;
+                justify-content: center;
+                font-size: 19px;
+            }
+            .header-actions {
+                justify-content: center;
+            }
+            .btn-nuevo-fichaje-head, .btn-historial-head {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .clock-display {
+                font-size: 44px;
+            }
+            .fichaje-btn-main {
+                max-width: 100%;
+                font-size: 16px;
+                min-height: 52px;
+            }
+
+            /* Responsive Daily Date Controls */
+            .daily-date-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .daily-date-controls input[type="date"] {
+                width: 100%;
+            }
+
+            /* Scroll horizontal táctil para KPI chips y Pills */
+            .today-kpi-chips, .today-attendance-filters {
+                overflow-x: auto;
+                flex-wrap: nowrap !important;
+                padding-bottom: 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .today-kpi-chip, .today-filter-pill {
+                flex-shrink: 0;
+            }
+
+            /* Convertir tablas en tarjetas táctiles en celular */
+            .custom-table thead {
+                display: none !important;
+            }
+            .custom-table, 
+            .custom-table tbody, 
+            .custom-table tr, 
+            .custom-table td {
+                display: block !important;
+                width: 100% !important;
+            }
+            .custom-table tr {
+                background: rgba(10, 17, 28, 0.45) !important;
+                margin-bottom: 12px !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 12px !important;
+                padding: 12px 14px !important;
+            }
+            .custom-table td {
+                border: none !important;
+                padding: 6px 0 !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                text-align: right !important;
+            }
+            .custom-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                font-size: 11px;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                text-align: left;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+            .custom-table td:empty {
+                display: none !important;
+            }
+
+            .fichajes-filters-grid {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-item, .filter-input, .btn-buscar-fichajes, .collab-chips-selector {
+                width: 100% !important;
+            }
+
+            .modal-content {
+                max-height: 94vh;
+                overflow-y: auto;
+                padding: 18px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HEADER CARD -->
+    <div class="fichaje-header-card">
+        <div>
+            <h1 class="fichaje-header-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bfff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Control de Asistencia y Fichajes
+            </h1>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">
+                Registro de ingresos, salidas, presencia diaria y geolocalización satelital
+            </p>
+        </div>
+
+        <div class="header-actions">
+            <!-- Indicador de Rol -->
+            <span id="badgeCurrentRole" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #38bdf8;">
+                Modo: <strong id="lblCurrentRole">Cargando...</strong>
+            </span>
+
+            <!-- Botones Admin -->
+            <div id="adminHeaderActions" style="display: none; gap: 8px;">
+                <button type="button" class="btn-historial-head" id="btnVerHistorialFichajes" onclick="loadFichajesHistorial()">
+                    📂 Ver Historial Anterior
+                </button>
+                <button type="button" class="btn-nuevo-fichaje-head" onclick="openModalNuevoFichajeManual()">
+                    + Nuevo Fichaje
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. VISTA DEL COLABORADOR: PANEL PRINCIPAL DE FICHAJE -->
+    <div class="fichaje-collab-container" id="sectionCollabFichaje">
+        <div class="fichaje-panel">
+            <h2 style="margin: 0; font-size: 20px; font-family: 'Outfit', sans-serif;">Registrar Mi Asistencia</h2>
+            <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 16px 0;">
+                Presiona el botón para marcar tu entrada o salida con geolocalización
+            </p>
+
+            <!-- Reloj Digital en Vivo -->
+            <div class="clock-display" id="fichajeClock">00:00:00</div>
+            <div class="fichaje-date-label" id="fichajeDate">Cargando fecha...</div>
+
+            <!-- Estado de Turno Actual -->
+            <div style="display: flex; justify-content: center; margin-bottom: 22px;">
+                <div class="shift-status-pill">
+                    <span id="shiftStatusDot" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                    <span id="shiftStatusText" style="color: var(--text-primary);">Fuera de Turno</span>
+                    <span style="color: var(--text-muted); font-size: 12px;">•</span>
+                    <span id="shiftStatusSubtext" style="color: var(--text-secondary); font-size: 12px;">No has iniciado jornada hoy</span>
+                </div>
+            </div>
+
+            <!-- Botón de Fichaje Único -->
+            <div style="display: flex; justify-content: center;">
+                <button id="btnFicharUnico" class="fichaje-btn-main in">
+                    Cargando estado...
+                </button>
+            </div>
+            <div id="gpsStatusNotice" style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">
+                📍 Geolocalización activa: radio satelital de 30 metros autorizado
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. VISTA DEL ADMINISTRADOR: CONTROL DIARIO DE ASISTENCIA -->
+    <div id="sectionAdminControl" style="display: none;">
+        
+        <!-- Tarjeta de Control Diario de Asistencia (Colapsable) -->
+        <div class="today-attendance-card is-collapsed" id="todayAttendanceCard">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin: 0 0 4px 0; font-size: 18px; font-family: 'Outfit', sans-serif;" id="todayAttendanceTitle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b4d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Control Diario de Asistencia
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 13px; margin: 0;" id="todayAttendanceDateLabel">
+                        Cargando fecha...
+                    </p>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div class="today-kpi-chips" id="todayAttendanceKpiChips">
+                        <!-- Chips dinámicos -->
+                    </div>
+                    <button type="button" class="btn-toggle-attendance" id="btnToggleTodayAttendance" onclick="toggleTodayAttendanceCard()" title="Ocultar o mostrar la tabla">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span id="labelToggleTodayAttendance">Mostrar Tabla</span>
+                        <svg id="iconToggleTodayAttendance" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cuerpo de la Tarjeta (Colapsable) -->
+            <div id="todayAttendanceCardBody" class="today-card-body">
+                <!-- Barra de Selección y Navegación de Fecha -->
+                <div class="daily-date-controls">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                        📅 Fecha a Consultar:
+                    </span>
+                    <input type="date" id="inputDailyAttendanceDate" onchange="changeDailyAttendanceDate(this.value)">
+                    <button type="button" class="btn-date-nav" onclick="navDailyAttendanceDate(-1)" title="Día Anterior">
+                        ◀ Día Anterior
+                    </button>
+                    <button type="button" class="btn-date-nav btn-date-today" onclick="navDailyAttendanceDate(0)" title="Volver a Hoy">
+                        📅 Hoy
+                    </button>
+                    <button type="button" class="btn-date-nav" onclick="navDailyAttendanceDate(1)" title="Día Siguiente">
+                        Día Siguiente ▶
+                    </button>
+                </div>
+
+                <!-- Botones Filtro Rápidos tipo Pill -->
+                <div class="today-attendance-filters" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0;">
+                    <button type="button" class="today-filter-pill active" id="pillTodayAll" onclick="filterTodayAttendance('all')">
+                        Todos (<span id="countTodayAll">0</span>)
+                    </button>
+                    <button type="button" class="today-filter-pill" id="pillTodayDidFichar" onclick="filterTodayAttendance('did_fichar')">
+                        🟢 Sí Ficharon (<span id="countTodayDidFichar">0</span>)
+                    </button>
+                    <button type="button" class="today-filter-pill" id="pillTodayDidNotFichar" onclick="filterTodayAttendance('did_not_fichar')">
+                        🔴 NO Ficharon (<span id="countTodayDidNotFichar">0</span>)
+                    </button>
+                    <button type="button" class="today-filter-pill" id="pillTodayMissingIn" onclick="filterTodayAttendance('missing_in')">
+                        ⚠️ Falta Entrada (<span id="countTodayMissingIn">0</span>)
+                    </button>
+                    <button type="button" class="today-filter-pill" id="pillTodayMissingOut" onclick="filterTodayAttendance('missing_out')">
+                        ⏳ Falta Salida (<span id="countTodayMissingOut">0</span>)
+                    </button>
+                    <button type="button" class="today-filter-pill" id="pillTodayComplete" onclick="filterTodayAttendance('complete')">
+                        ✅ Jornada Completa (<span id="countTodayComplete">0</span>)
+                    </button>
+                </div>
+
+                <!-- Tabla de Asistencia del Día -->
+                <div class="table-responsive">
+                    <table class="custom-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Entrada</th>
+                                <th>Salida</th>
+                                <th>Estado del Día</th>
+                                <th style="text-align: right;">Acción Rápida</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todayAttendanceTableBody">
+                            <!-- Renderizado dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. FILTROS PARA EL HISTORIAL GENERAL -->
+        <div class="content-card">
+            <h3 style="margin: 0 0 14px 0; font-size: 16px; font-family: 'Outfit', sans-serif; color: var(--color-blue);">
+                Filtros de Búsqueda
+            </h3>
+            <div class="fichajes-filters-grid">
+                <div class="filter-item">
+                    <label>Colaboradores</label>
+                    <div class="collab-chips-selector" id="fichajesCollabFilterList">
+                        <!-- Checkboxes dinámicos -->
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Desde</label>
+                    <input type="date" id="filterFichajesDesde" class="filter-input">
+                </div>
+                <div class="filter-item">
+                    <label>Hasta</label>
+                    <input type="date" id="filterFichajesHasta" class="filter-input">
+                </div>
+                <div class="filter-item">
+                    <label>Buscar Texto</label>
+                    <input type="text" id="filterFichajesSearch" class="filter-input" placeholder="Nombre o usuario...">
+                </div>
+                <button type="button" id="btnBuscarFichajes" class="btn-buscar-fichajes" onclick="handleBuscarFichajes()">
+                    🔍 Filtrar
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. TABLA GENERAL / HISTORIAL DE FICHAJES -->
+    <div class="content-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h3 class="card-title" id="fichajesTitle" style="margin: 0; font-size: 18px; font-family: 'Outfit', sans-serif;">
+                Registros de Asistencia
+            </h3>
+            <span id="fichajesCountBadge" style="font-size: 12px; color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                0 registros
+            </span>
+        </div>
+
+        <!-- Banner Modo Ahorro Firebase (Últimos 5 días) -->
+        <div id="bannerAhorroFirebase" style="background: rgba(0, 180, 216, 0.1); border: 1px dashed rgba(0, 180, 216, 0.4); border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">⚡</span>
+                <span style="font-size: 13px; color: #38bdf8;">
+                    <strong>Modo Ahorro Firebase Activo:</strong> Mostrando únicamente los últimos 5 días de fichajes.
+                </span>
+            </div>
+            <button type="button" id="btnBannerHistorial" class="btn-historial-head" onclick="loadFichajesHistorial()" style="padding: 6px 14px; font-size: 12px;">
+                📂 Cargar Historial Anterior
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Colaborador</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Tipo</th>
+                        <th>GPS / Ubicación</th>
+                        <th class="role-admin-only" style="text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="fichajesTableBody">
+                    <!-- Registros dinámicos -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO / EDITAR FICHAJE MANUAL -->
+    <div id="modalFichaje" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalFichajeTitle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span id="modalFichajeHeaderText">Registrar Fichaje Manual</span>
+                </h3>
+                <button type="button" class="modal-close" onclick="closeModalFichaje()">&times;</button>
+            </div>
+            
+            <form id="formFichaje" onsubmit="handleFormFichajeSubmit(event)">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    
+                    <!-- Colaborador -->
+                    <div id="fichajeCollabGroup">
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">Colaborador</label>
+                        <select id="fichaje-collab" required style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-size: 13px; outline: none;">
+                            <!-- Opciones dinámicas -->
+                        </select>
+                    </div>
+                    <div id="fichajeCollabNameGroup" style="display: none;">
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">Colaborador</label>
+                        <input type="text" id="fichaje-collab-name-read" disabled style="width: 100%; padding: 9px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; font-size: 13px;">
+                    </div>
+
+                    <!-- Fecha y Hora -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">Fecha</label>
+                            <input type="date" id="fichaje-date" required style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-size: 13px; outline: none;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">Hora</label>
+                            <input type="time" id="fichaje-time" required style="width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-size: 13px; outline: none;">
+                        </div>
+                    </div>
+
+                    <!-- Tipo Entrada / Salida -->
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">
+                            Tipo de Registro <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="hidden" id="fichaje-type" value="">
+                        <div class="fichaje-type-selector" id="fichajeTypeSelector">
+                            <button type="button" class="fichaje-type-btn btn-type-entrada" id="btnTypeEntrada" onclick="setFichajeType('Entrada')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                    <polyline points="10 17 15 12 10 7"></polyline>
+                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                </svg>
+                                <span>Entrada</span>
+                            </button>
+                            <button type="button" class="fichaje-type-btn btn-type-salida" id="btnTypeSalida" onclick="setFichajeType('Salida')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span>Salida</span>
+                            </button>
+                        </div>
+                        <div id="fichajeTypeError" style="color: #ef4444; font-size: 12px; margin-top: 6px; display: none; font-weight: 500;">
+                            ⚠ Debes seleccionar si es Entrada o Salida.
+                        </div>
+                    </div>
+
+                    <!-- GPS Status -->
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px;">Ubicación</label>
+                        <input type="text" value="📌 Manual (Sin GPS)" disabled style="width: 100%; padding: 8px 12px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; font-size: 13px;">
+                        <small style="display: block; color: var(--text-muted); font-size: 11px; margin-top: 4px;">
+                            ℹ Los fichajes manuales se identifican como ingresados administrativamente.
+                        </small>
+                    </div>
+
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 22px;">
+                    <button type="button" onclick="closeModalFichaje()" style="flex: 1; padding: 11px; background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnSubmitFichajeModal" style="flex: 2; padding: 11px; background: var(--color-blue); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: filter 0.2s;">
+                        Guardar Fichaje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL DETALLE DE FICHAJE (OJO) -->
+    <div id="modalDetalleFichajeIndividual" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Detalle del Fichaje</span>
+                </h3>
+                <button type="button" class="modal-close" onclick="closeModalVerDetalleFichaje()">&times;</button>
+            </div>
+            <div id="modalDetalleFichajeBody" style="padding: 16px 0;">
+                <!-- Dinámico -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <button type="button" onclick="closeModalVerDetalleFichaje()" style="padding: 9px 20px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-weight: 600; cursor: pointer;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de Notificaciones Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==============================================================
+         LÓGICA JAVASCRIPT DEL MÓDULO FICHAJES
+         ============================================================== -->
+    <script>
+        // CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ESTADO GLOBAL
+        let fichajes = [];
+        let colaboradores = [];
+        let currentRole = localStorage.getItem('electrofrio_role') || 'Administrador';
+        let currentName = localStorage.getItem('electrofrio_name') || '';
+        let currentUser = localStorage.getItem('electrofrio_user') || '';
+
+        let editFichajeId = null;
+        let filterFichajesCollabs = [];
+        let filterFichajesDesdeVal = '';
+        let filterFichajesHastaVal = '';
+        let filterFichajesSearchVal = '';
+        let todayAttendanceFilter = 'all';
+        let dailyAttendanceSelectedDate = '';
+        let isPunchingInProgress = false;
+        let timeOffset = 0;
+        let unsubscribeFichajes = null;
+        let historialCompletoCargado = false;
+
+        function getCincoDiasAtrasISO() {
+            const now = getSyncedDate();
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 4, 0, 0, 0, 0);
+            return d.toISOString();
+        }
+
+        function getCincoDiasAtrasDateStr() {
+            const now = getSyncedDate();
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 4, 0, 0, 0, 0);
+            return getLocalISODate(d);
+        }
+
+        // TOASTS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // SINCRONIZACIÓN HORARIA CON SERVIDOR
+        async function syncTimeWithServer() {
+            try {
+                const start = Date.now();
+                const response = await fetch(window.location.href, { method: 'HEAD', cache: 'no-cache' });
+                const serverDateHeader = response.headers.get('date');
+                if (serverDateHeader) {
+                    const serverTime = new Date(serverDateHeader).getTime();
+                    const end = Date.now();
+                    const latency = (end - start) / 2;
+                    timeOffset = (serverTime + latency) - end;
+                }
+            } catch (e) {
+                timeOffset = 0;
+            }
+        }
+        syncTimeWithServer();
+
+        function getSyncedDate() {
+            return new Date(Date.now() + timeOffset);
+        }
+
+        function getLocalISODate(dateObj) {
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function getTodayString() {
+            const now = getSyncedDate();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
+        function formatDateToAR(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('/')) return dateStr;
+            const parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return dateStr;
+        }
+
+        function formatDateToShort(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('/')) {
+                const p = dateStr.split('/');
+                return `${parseInt(p[0], 10)}/${parseInt(p[1], 10)}/${p[2]}`;
+            }
+            if (dateStr.includes('-')) {
+                const p = dateStr.split('-');
+                return `${parseInt(p[2], 10)}/${parseInt(p[1], 10)}/${p[0]}`;
+            }
+            return dateStr;
+        }
+
+        function formatTime12h(date) {
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        function formatTime24hTo12h(time24) {
+            if (!time24 || !time24.includes(':')) return time24;
+            const [hStr, mStr] = time24.split(':');
+            let hours = parseInt(hStr, 10);
+            const minutes = mStr;
+            const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        function formatTime12hTo24h(time12) {
+            if (!time12 || !time12.includes(':')) return time12;
+            const [timePart, ampmPart] = time12.split(' ');
+            if (!timePart) return time12;
+            const [hStr, mStr] = timePart.split(':');
+            let hours = parseInt(hStr, 10);
+            const isPM = ampmPart && ampmPart.toLowerCase().includes('p');
+            if (isPM && hours < 12) hours += 12;
+            if (!isPM && hours === 12) hours = 0;
+            return `${String(hours).padStart(2, '0')}:${String(mStr).padStart(2, '0')}`;
+        }
+
+        function isFichajeToday(fDate, fTimestamp) {
+            const todayISO = getLocalISODate(getSyncedDate());
+            const todayAR = getTodayString();
+            if (fDate === 'Hoy' || fDate === todayISO || fDate === todayAR) return true;
+            if (fTimestamp) {
+                try {
+                    const t = new Date(fTimestamp);
+                    if (!isNaN(t.getTime()) && getLocalISODate(t) === todayISO) return true;
+                } catch(e) {}
+            }
+            return false;
+        }
+
+        // GEOLOCALIZACIÓN (FÓRMULA DE HAVERSINE)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Radio de la Tierra en metros
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function verifyGeolocationAndExecute(callback, onRejected) {
+            if (!navigator.onLine) {
+                showToast("No tienes conexión a internet activa.", "error");
+                if (onRejected) onRejected();
+                return;
+            }
+
+            const name = currentName || "";
+            const collab = colaboradores.find(c => c.name && c.name.trim().toLowerCase() === name.trim().toLowerCase());
+
+            const DEFAULT_LAT = -29.418139; // Base Taller ElectroFrío
+            const DEFAULT_LNG = -66.857306;
+            const DEFAULT_RADIUS = 30; // 30 metros
+
+            let allowedLat = DEFAULT_LAT;
+            let allowedLng = DEFAULT_LNG;
+            let allowedRadius = DEFAULT_RADIUS;
+
+            if (collab && collab.gps && collab.gps.lat && collab.gps.lng) {
+                const pLat = parseFloat(collab.gps.lat);
+                const pLng = parseFloat(collab.gps.lng);
+                if (!isNaN(pLat) && pLat !== 0) allowedLat = pLat;
+                if (!isNaN(pLng) && pLng !== 0) allowedLng = pLng;
+                const cRad = parseFloat(collab.gps.radius);
+                if (!isNaN(cRad) && cRad > 0 && cRad !== 700) allowedRadius = cRad;
+            }
+
+            if (!navigator.geolocation) {
+                if (onRejected) onRejected();
+                alert("Tu navegador o dispositivo no soporta geolocalización satelital.");
+                return;
+            }
+
+            function requestLocation(options, isRetry = false) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        const distance = calculateDistance(userLat, userLng, allowedLat, allowedLng);
+
+                        if (distance <= allowedRadius) {
+                            callback(collab, userLat, userLng);
+                        } else if (!isRetry) {
+                            console.warn(`Distancia inicial (${Math.round(distance)}m) > ${allowedRadius}m. Reintentando con GPS satelital...`);
+                            requestLocation({ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }, true);
+                        } else {
+                            if (onRejected) onRejected();
+                            const msg = `No estás en el lugar autorizado para tomar el fichaje (distancia: ${Math.round(distance)}m). El rango permitido es de ${allowedRadius} metros a la redonda.`;
+                            showToast(msg, "error");
+                            alert(msg);
+                        }
+                    },
+                    (error) => {
+                        if (!isRetry && (error.code === 2 || error.code === 3)) {
+                            requestLocation({ enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }, true);
+                            return;
+                        }
+                        if (onRejected) onRejected();
+                        let msg = "No se obtuvo tu ubicación GPS. Por favor activa la localización satelital.";
+                        if (error.code === 1) msg = "Debes permitir el acceso a tu ubicación en tu navegador para poder fichar.";
+                        else if (error.code === 3) msg = "Tiempo de espera agotado para obtener GPS. Intenta al aire libre.";
+                        showToast(msg, "error");
+                        alert(msg);
+                    },
+                    options
+                );
+            }
+
+            requestLocation({ enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 });
+        }
+
+        // RELOJ DIGITAL EN VIVO
+        function updateFichajeClock() {
+            const clockEl = document.getElementById('fichajeClock');
+            const dateEl = document.getElementById('fichajeDate');
+            if (!clockEl) return;
+
+            const now = getSyncedDate();
+            clockEl.textContent = now.toLocaleTimeString('es-AR');
+
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('es-AR', options);
+            }
+
+            // Actualizar cuenta regresiva de cooldown si está activa
+            const btn = document.getElementById('btnFicharUnico');
+            if (btn && btn.dataset.cooldownTarget) {
+                const targetTime = parseInt(btn.dataset.cooldownTarget, 10);
+                const diffMs = targetTime - now.getTime();
+                if (diffMs > 0) {
+                    const sec = Math.ceil(diffMs / 1000);
+                    const m = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    const text = m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+                    btn.textContent = `Espera ${text} para ${btn.dataset.nextType || 'Fichar'}`;
+                    btn.disabled = true;
+                } else {
+                    delete btn.dataset.cooldownTarget;
+                    updateCollabFichajeUI();
+                }
+            }
+        }
+        setInterval(updateFichajeClock, 1000);
+
+        // ACTUALIZAR ESTADO DEL BOTÓN Y TURNO DEL COLABORADOR
+        function updateCollabFichajeUI() {
+            const btnUnico = document.getElementById('btnFicharUnico');
+            const shiftStatusDot = document.getElementById('shiftStatusDot');
+            const shiftStatusText = document.getElementById('shiftStatusText');
+            const shiftStatusSubtext = document.getElementById('shiftStatusSubtext');
+            if (!btnUnico) return;
+
+            const name = currentName || "";
+            const myFichajesToday = fichajes.filter(f => {
+                const matchName = f.name && name && f.name.trim().toLowerCase() === name.trim().toLowerCase();
+                const matchUser = f.username && currentUser && f.username.trim().toLowerCase() === currentUser.trim().toLowerCase();
+                return (matchName || matchUser) && isFichajeToday(f.date, f.timestamp);
+            });
+            myFichajesToday.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const latest = myFichajesToday[0];
+            const entradasToday = myFichajesToday.filter(f => f.type === 'Entrada').length;
+            const salidasToday = myFichajesToday.filter(f => f.type === 'Salida').length;
+
+            const now = getSyncedDate();
+            let isCooldown = false;
+            let cooldownSec = 0;
+            if (latest && latest.timestamp) {
+                const lastMs = new Date(latest.timestamp).getTime();
+                const diff = now.getTime() - lastMs;
+                if (diff >= 0 && diff < 300000) {
+                    isCooldown = true;
+                    cooldownSec = Math.ceil((300000 - diff) / 1000);
+                }
+            }
+
+            const formatCd = (sec) => {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+            };
+
+            if (latest && latest.type === 'Entrada') {
+                if (shiftStatusDot) shiftStatusDot.style.background = '#10b981';
+                if (shiftStatusText) shiftStatusText.textContent = 'En Servicio';
+                if (shiftStatusSubtext) shiftStatusSubtext.textContent = `Entrada registrada a las ${latest.time}`;
+
+                if (salidasToday >= 2) {
+                    btnUnico.textContent = 'Límite de Salidas Alcanzado (2/2)';
+                    btnUnico.className = 'fichaje-btn-main out disabled';
+                    btnUnico.disabled = true;
+                    delete btnUnico.dataset.cooldownTarget;
+                } else if (isCooldown) {
+                    btnUnico.textContent = `Espera ${formatCd(cooldownSec)} para Salida`;
+                    btnUnico.className = 'fichaje-btn-main out disabled';
+                    btnUnico.disabled = true;
+                    btnUnico.dataset.cooldownTarget = String(new Date(latest.timestamp).getTime() + 300000);
+                    btnUnico.dataset.nextType = 'Salida';
+                } else {
+                    delete btnUnico.dataset.cooldownTarget;
+                    btnUnico.textContent = 'Marcar Salida';
+                    btnUnico.className = 'fichaje-btn-main out';
+                    btnUnico.disabled = false;
+                }
+            } else {
+                if (shiftStatusDot) shiftStatusDot.style.background = '#ef4444';
+                if (shiftStatusText) shiftStatusText.textContent = 'Fuera de Turno';
+                if (shiftStatusSubtext) {
+                    shiftStatusSubtext.textContent = latest 
+                        ? `Salida registrada hoy a las ${latest.time}`
+                        : 'No has iniciado jornada hoy';
+                }
+
+                if (entradasToday >= 2) {
+                    btnUnico.textContent = 'Límite de Entradas Alcanzado (2/2)';
+                    btnUnico.className = 'fichaje-btn-main in disabled';
+                    btnUnico.disabled = true;
+                    delete btnUnico.dataset.cooldownTarget;
+                } else if (isCooldown) {
+                    btnUnico.textContent = `Espera ${formatCd(cooldownSec)} para Entrada`;
+                    btnUnico.className = 'fichaje-btn-main in disabled';
+                    btnUnico.disabled = true;
+                    btnUnico.dataset.cooldownTarget = String(new Date(latest.timestamp).getTime() + 300000);
+                    btnUnico.dataset.nextType = 'Entrada';
+                } else {
+                    delete btnUnico.dataset.cooldownTarget;
+                    btnUnico.textContent = 'Marcar Entrada';
+                    btnUnico.className = 'fichaje-btn-main in';
+                    btnUnico.disabled = false;
+                }
+            }
+        }
+
+        // EVENT LISTENER CLIC EN BOTÓN DE FICHAJE ÚNICO
+        document.getElementById('btnFicharUnico')?.addEventListener('click', async () => {
+            if (isPunchingInProgress) return;
+            isPunchingInProgress = true;
+
+            const btnUnico = document.getElementById('btnFicharUnico');
+            const originalText = btnUnico.textContent;
+            btnUnico.textContent = 'Validando GPS...';
+            btnUnico.disabled = true;
+
+            try {
+                const now = getSyncedDate();
+                const todayISO = getLocalISODate(now);
+
+                // Validar contra registros locales
+                const myToday = fichajes.filter(f => {
+                    const matchName = f.name && currentName && f.name.trim().toLowerCase() === currentName.trim().toLowerCase();
+                    const matchUser = f.username && currentUser && f.username.trim().toLowerCase() === currentUser.trim().toLowerCase();
+                    return (matchName || matchUser) && isFichajeToday(f.date, f.timestamp);
+                });
+                myToday.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                if (myToday.length > 0) {
+                    const lastPunch = myToday[0];
+                    const diff = now.getTime() - new Date(lastPunch.timestamp).getTime();
+                    if (diff >= 0 && diff < 300000) {
+                        const sec = Math.ceil((300000 - diff) / 1000);
+                        const msg = `Debes esperar 5 minutos entre fichajes para evitar rebotes. Restan ${sec} segundos.`;
+                        showToast(msg, "warning");
+                        alert(msg);
+                        isPunchingInProgress = false;
+                        updateCollabFichajeUI();
+                        return;
+                    }
+                }
+
+                const lastType = myToday.length > 0 ? myToday[0].type : 'Salida';
+                const intendedType = lastType === 'Salida' ? 'Entrada' : 'Salida';
+
+                const resetBtn = () => {
+                    isPunchingInProgress = false;
+                    updateCollabFichajeUI();
+                };
+
+                verifyGeolocationAndExecute(async (collab, userLat, userLng) => {
+                    try {
+                        btnUnico.textContent = 'Registrando...';
+                        const punchNow = getSyncedDate();
+                        const dateVal = getLocalISODate(punchNow);
+                        const timeVal = formatTime12h(punchNow);
+                        const timestampStr = punchNow.toISOString();
+                        const isVerified = userLat !== null && userLng !== null;
+
+                        const nuevoFichaje = {
+                            id: `fichaje-${Date.now()}`,
+                            name: currentName,
+                            username: currentUser,
+                            date: dateVal,
+                            time: timeVal,
+                            timestamp: timestampStr,
+                            type: intendedType,
+                            gps: {
+                                lat: userLat || 0,
+                                lng: userLng || 0,
+                                verified: isVerified,
+                                manual: !isVerified
+                            }
+                        };
+
+                        // 1. Guardar localmente
+                        fichajes.unshift(nuevoFichaje);
+                        localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                        renderAll();
+                        updateCollabFichajeUI();
+
+                        // 2. Guardar en Firestore con safe-mode check
+                        const docRef = await db.collection('fichajes').add(nuevoFichaje);
+                        nuevoFichaje.id = docRef.id;
+
+                        if (collab && collab.uid) {
+                            await db.collection('usuarios').doc(collab.uid).update({
+                                status: intendedType === 'Entrada' ? 'online' : 'offline'
+                            }).catch(() => {});
+                        }
+
+                        localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                        renderAll();
+                        updateCollabFichajeUI();
+
+                        showToast(`¡${intendedType} registrada con éxito!`, 'success');
+                        
+                        // Notificar al index si estamos dentro de un iframe
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: 'FICHAJE_UPDATED' }, '*');
+                        }
+                    } catch (err) {
+                        console.error("Error al guardar fichaje:", err);
+                        showToast("Fichaje guardado en modo local.", "warning");
+                    } finally {
+                        isPunchingInProgress = false;
+                        updateCollabFichajeUI();
+                    }
+                }, resetBtn);
+
+            } catch (err) {
+                console.error(err);
+                showToast("Error validando el fichaje.", "error");
+                isPunchingInProgress = false;
+                updateCollabFichajeUI();
+            }
+        });
+
+        // ==============================================================
+        // CONTROL DIARIO DE ASISTENCIA (ADMIN)
+        // ==============================================================
+        window.toggleTodayAttendanceCard = function() {
+            const card = document.getElementById('todayAttendanceCard');
+            const label = document.getElementById('labelToggleTodayAttendance');
+            if (!card) return;
+            const isCollapsed = card.classList.toggle('is-collapsed');
+            if (label) label.textContent = isCollapsed ? 'Mostrar Tabla' : 'Ocultar Tabla';
+            localStorage.setItem('electrofrio_daily_attendance_collapsed', isCollapsed ? 'true' : 'false');
+        };
+
+        window.changeDailyAttendanceDate = function(newDateVal) {
+            dailyAttendanceSelectedDate = newDateVal || getLocalISODate(getSyncedDate());
+            renderTodayAttendanceControl();
+        };
+
+        window.navDailyAttendanceDate = function(delta) {
+            const now = getSyncedDate();
+            const nowISO = getLocalISODate(now);
+
+            if (delta === 0) {
+                dailyAttendanceSelectedDate = nowISO;
+            } else {
+                const baseDateStr = dailyAttendanceSelectedDate || nowISO;
+                const [y, m, d] = baseDateStr.split('-').map(Number);
+                const dateObj = new Date(y, m - 1, d, 12, 0, 0);
+                dateObj.setDate(dateObj.getDate() + delta);
+                dailyAttendanceSelectedDate = getLocalISODate(dateObj);
+            }
+
+            const inputDate = document.getElementById('inputDailyAttendanceDate');
+            if (inputDate) inputDate.value = dailyAttendanceSelectedDate;
+
+            renderTodayAttendanceControl();
+        };
+
+        window.filterTodayAttendance = function(filterKey) {
+            todayAttendanceFilter = filterKey;
+            document.querySelectorAll('.today-filter-pill').forEach(p => p.classList.remove('active'));
+
+            if (filterKey === 'all') document.getElementById('pillTodayAll')?.classList.add('active');
+            if (filterKey === 'did_fichar') document.getElementById('pillTodayDidFichar')?.classList.add('active');
+            if (filterKey === 'did_not_fichar') document.getElementById('pillTodayDidNotFichar')?.classList.add('active');
+            if (filterKey === 'missing_in') document.getElementById('pillTodayMissingIn')?.classList.add('active');
+            if (filterKey === 'missing_out') document.getElementById('pillTodayMissingOut')?.classList.add('active');
+            if (filterKey === 'complete') document.getElementById('pillTodayComplete')?.classList.add('active');
+
+            renderTodayAttendanceControl();
+        };
+
+        function renderTodayAttendanceControl() {
+            const tableBody = document.getElementById('todayAttendanceTableBody');
+            const dateLabel = document.getElementById('todayAttendanceDateLabel');
+            const kpiChips = document.getElementById('todayAttendanceKpiChips');
+            const inputDate = document.getElementById('inputDailyAttendanceDate');
+            if (!tableBody) return;
+
+            const now = getSyncedDate();
+            const nowISO = getLocalISODate(now);
+
+            if (!dailyAttendanceSelectedDate) dailyAttendanceSelectedDate = nowISO;
+            const selectedISO = dailyAttendanceSelectedDate;
+            if (inputDate && inputDate.value !== selectedISO) inputDate.value = selectedISO;
+
+            const [sY, sM, sD] = selectedISO.split('-');
+            const isToday = selectedISO === nowISO;
+
+            if (dateLabel) {
+                try {
+                    const parsed = new Date(parseInt(sY, 10), parseInt(sM, 10) - 1, parseInt(sD, 10), 12, 0, 0);
+                    const formatted = parsed.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const capDate = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+                    dateLabel.textContent = isToday ? `Hoy - ${capDate}` : `${capDate} (Histórico Diario)`;
+                } catch(e) {
+                    dateLabel.textContent = `${sD}/${sM}/${sY}`;
+                }
+            }
+
+            const isFichajeDateSelected = (fDate, fTimestamp) => {
+                if (!fDate && !fTimestamp) return false;
+                if (isToday && fDate === 'Hoy') return true;
+                if (fDate === selectedISO || fDate === `${sD}/${sM}/${sY}`) return true;
+                if (fTimestamp) {
+                    try {
+                        const t = new Date(fTimestamp);
+                        if (!isNaN(t.getTime()) && getLocalISODate(t) === selectedISO) return true;
+                    } catch(e) {}
+                }
+                return false;
+            };
+
+            let targetCollabs = colaboradores.filter(c => c.role === 'Colaborador');
+            if (targetCollabs.length === 0) targetCollabs = colaboradores;
+
+            let countDidFichar = 0;
+            let countDidNotFichar = 0;
+            let countMissingIn = 0;
+            let countMissingOut = 0;
+            let countComplete = 0;
+
+            const analyzedList = targetCollabs.map(collab => {
+                const myFichajes = fichajes.filter(f => {
+                    const matchName = (f.name && collab.name && f.name.trim().toLowerCase() === collab.name.trim().toLowerCase()) ||
+                                      (f.username && collab.username && f.username.trim().toLowerCase() === collab.username.trim().toLowerCase());
+                    return matchName && isFichajeDateSelected(f.date, f.timestamp);
+                });
+
+                myFichajes.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                const entradas = myFichajes.filter(f => f.type === 'Entrada');
+                const salidas = myFichajes.filter(f => f.type === 'Salida');
+                const didFichar = myFichajes.length > 0;
+                const hasEntrada = entradas.length > 0;
+                const hasSalida = salidas.length > 0;
+                const firstEntrada = hasEntrada ? entradas[0] : null;
+                const lastSalida = hasSalida ? salidas[salidas.length - 1] : null;
+                const latest = didFichar ? myFichajes[myFichajes.length - 1] : null;
+
+                let category = '';
+                let statusBadge = '';
+                let quickActionHtml = '';
+                const safeName = (collab.name || '').replace(/'/g, "\\'");
+
+                if (!didFichar) {
+                    category = 'did_not_fichar';
+                    countDidNotFichar++;
+                    countMissingIn++;
+                    statusBadge = `<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🔴 NO Fichó (Ausente)</span>`;
+                    quickActionHtml = `<button type="button" class="btn-nuevo-fichaje-head" style="font-size: 11px; padding: 5px 10px;" onclick="openModalFichajeForCollab('${safeName}', 'Entrada', '${selectedISO}')">+ Entrada</button>`;
+                } else {
+                    countDidFichar++;
+                    if (hasEntrada && !hasSalida) {
+                        category = 'missing_out';
+                        countMissingOut++;
+                        statusBadge = `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🟡 En Turno (Falta Salida)</span>`;
+                        quickActionHtml = `<button type="button" class="btn-nuevo-fichaje-head" style="background:#ef4444; color:#fff; font-size: 11px; padding: 5px 10px;" onclick="openModalFichajeForCollab('${safeName}', 'Salida', '${selectedISO}')">+ Salida</button>`;
+                    } else if (!hasEntrada && hasSalida) {
+                        category = 'missing_in';
+                        countMissingIn++;
+                        statusBadge = `<span style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🟠 Falta Entrada</span>`;
+                        quickActionHtml = `<button type="button" class="btn-nuevo-fichaje-head" style="font-size: 11px; padding: 5px 10px;" onclick="openModalFichajeForCollab('${safeName}', 'Entrada', '${selectedISO}')">+ Entrada</button>`;
+                    } else {
+                        if (latest && latest.type === 'Entrada') {
+                            category = 'missing_out';
+                            countMissingOut++;
+                            statusBadge = `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🟡 Reingresó (Falta Salida)</span>`;
+                            quickActionHtml = `<button type="button" class="btn-nuevo-fichaje-head" style="background:#ef4444; color:#fff; font-size: 11px; padding: 5px 10px;" onclick="openModalFichajeForCollab('${safeName}', 'Salida', '${selectedISO}')">+ Salida</button>`;
+                        } else {
+                            category = 'complete';
+                            countComplete++;
+                            statusBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🟢 Jornada Completa</span>`;
+                            quickActionHtml = `<button type="button" class="btn-table-action" onclick="openModalFichajeForCollab('${safeName}', 'Entrada', '${selectedISO}')" title="Agregar Fichaje">+</button>`;
+                        }
+                    }
+                }
+
+                return { collab, didFichar, hasEntrada, hasSalida, firstEntrada, lastSalida, category, statusBadge, quickActionHtml };
+            });
+
+            // Actualizar contadores
+            document.getElementById('countTodayAll').textContent = targetCollabs.length;
+            document.getElementById('countTodayDidFichar').textContent = countDidFichar;
+            document.getElementById('countTodayDidNotFichar').textContent = countDidNotFichar;
+            document.getElementById('countTodayMissingIn').textContent = countMissingIn;
+            document.getElementById('countTodayMissingOut').textContent = countMissingOut;
+            document.getElementById('countTodayComplete').textContent = countComplete;
+
+            if (kpiChips) {
+                kpiChips.innerHTML = `
+                    <div class="today-kpi-chip" style="background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid var(--border-color);">
+                        <span>👥 Total:</span> <strong>${targetCollabs.length}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-complete">
+                        <span>🟢 Ficharon:</span> <strong>${countDidFichar}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-missing-in">
+                        <span>🔴 Sin Fichar:</span> <strong>${countDidNotFichar}</strong>
+                    </div>
+                    <div class="today-kpi-chip chip-missing-out">
+                        <span>🟡 Falta Salida:</span> <strong>${countMissingOut}</strong>
+                    </div>
+                `;
+            }
+
+            // Filtrar
+            let filtered = analyzedList;
+            if (todayAttendanceFilter === 'did_fichar') filtered = analyzedList.filter(i => i.didFichar);
+            else if (todayAttendanceFilter === 'did_not_fichar') filtered = analyzedList.filter(i => !i.didFichar);
+            else if (todayAttendanceFilter === 'missing_in') filtered = analyzedList.filter(i => !i.hasEntrada);
+            else if (todayAttendanceFilter === 'missing_out') filtered = analyzedList.filter(i => i.hasEntrada && !i.hasSalida);
+            else if (todayAttendanceFilter === 'complete') filtered = analyzedList.filter(i => i.category === 'complete');
+
+            tableBody.innerHTML = '';
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No hay registros para este filtro en la fecha seleccionada.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                const initials = (item.collab.name || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                let entText = `<span style="color: #ef4444; font-size: 12px;">⚠️ Falta Entrada</span>`;
+                if (item.firstEntrada) {
+                    const isGps = item.firstEntrada.gps && item.firstEntrada.gps.verified;
+                    entText = `<span style="color: #10b981; font-weight: 600;">${isGps ? '📍' : '📌'} ${item.firstEntrada.time}</span>`;
+                }
+
+                let salText = `<span style="color: var(--text-muted); font-size: 12px;">❌ Sin Fichar</span>`;
+                if (item.lastSalida) {
+                    const isGps = item.lastSalida.gps && item.lastSalida.gps.verified;
+                    salText = `<span style="color: #f87171; font-weight: 600;">${isGps ? '📍' : '📌'} ${item.lastSalida.time}</span>`;
+                } else if (item.hasEntrada) {
+                    salText = `<span style="color: #fbbf24; font-size: 12px;">⏳ Falta Salida</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td data-label="Colaborador">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #00b4d8; color: #000; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                                ${initials}
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 13px;">${item.collab.name}</strong>
+                                ${item.collab.username ? `<div style="color: var(--text-muted); font-size: 11px;">@${item.collab.username}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Entrada">${entText}</td>
+                    <td data-label="Salida">${salText}</td>
+                    <td data-label="Estado del Día">${item.statusBadge}</td>
+                    <td data-label="Acción Rápida" style="text-align: right;">${item.quickActionHtml}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // ==============================================================
+        // TABLA GENERAL DE FICHAJES
+        // ==============================================================
+        function renderFichajesTable() {
+            const tableBody = document.getElementById('fichajesTableBody');
+            const titleEl = document.getElementById('fichajesTitle');
+            const countBadge = document.getElementById('fichajesCountBadge');
+            if (!tableBody) return;
+
+            let list = [];
+            if (currentRole === 'Colaborador') {
+                const name = currentName || "";
+                list = fichajes.filter(f => {
+                    const matchName = f.name && name && f.name.trim().toLowerCase() === name.trim().toLowerCase();
+                    const matchUser = f.username && currentUser && f.username.trim().toLowerCase() === currentUser.trim().toLowerCase();
+                    return (matchName || matchUser) && isFichajeToday(f.date, f.timestamp);
+                });
+                if (titleEl) titleEl.textContent = "Mis Fichajes del Día";
+            } else {
+                if (titleEl) titleEl.textContent = "Historial General de Fichajes";
+                list = fichajes.filter(f => {
+                    if (filterFichajesCollabs.length > 0) {
+                        const match = filterFichajesCollabs.some(c => c.trim().toLowerCase() === (f.name || '').trim().toLowerCase());
+                        if (!match) return false;
+                    }
+
+                    // Si no se cargó el historial completo y no especificó fecha "Desde", limitar estrictamente a 5 días atrás
+                    if (!historialCompletoCargado && !filterFichajesDesdeVal) {
+                        const cincoAtras = getCincoDiasAtrasDateStr();
+                        if (f.date < cincoAtras) return false;
+                    }
+
+                    if (filterFichajesDesdeVal && f.date < filterFichajesDesdeVal) return false;
+                    if (filterFichajesHastaVal && f.date > filterFichajesHastaVal) return false;
+                    if (filterFichajesSearchVal) {
+                        const s = filterFichajesSearchVal.toLowerCase();
+                        const matchName = (f.name || '').toLowerCase().includes(s);
+                        const matchUser = (f.username || '').toLowerCase().includes(s);
+                        if (!matchName && !matchUser) return false;
+                    }
+                    return true;
+                });
+            }
+
+            if (countBadge) countBadge.textContent = `${list.length} registros`;
+            tableBody.innerHTML = '';
+
+            if (list.length === 0) {
+                const msg = currentRole === 'Colaborador'
+                    ? "No has registrado fichajes el día de hoy."
+                    : "No se encontraron fichajes con los filtros seleccionados.";
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">${msg}</td></tr>`;
+                return;
+            }
+
+            list.forEach(f => {
+                const tr = document.createElement('tr');
+
+                const typeBadge = f.type === 'Entrada'
+                    ? `<span class="badge-entrada"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg> Entrada</span>`
+                    : `<span class="badge-salida"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="14 17 9 12 14 7"></polyline><line x1="9" y1="12" x2="21" y2="12"></line></svg> Salida</span>`;
+
+                let gpsBadge = `<span class="badge-gps-manual">📌 Manual</span>`;
+                if (f.gps && f.gps.verified && f.gps.lat && f.gps.lng) {
+                    const mapsUrl = `https://www.google.com/maps?q=${f.gps.lat},${f.gps.lng}`;
+                    gpsBadge = `<a href="${mapsUrl}" target="_blank" class="badge-gps-verified" title="Ver en Google Maps (${f.gps.lat.toFixed(5)}, ${f.gps.lng.toFixed(5)})">📍 GPS Verificado ↗</a>`;
+                }
+
+                const actionsHtml = currentRole === 'Administrador' ? `
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button type="button" class="btn-table-action" onclick="openModalVerDetalleFichaje('${f.id}')" title="Ver Detalle del Fichaje">👁️</button>
+                        <button type="button" class="btn-table-action" onclick="openModalEditarFichaje('${f.id}')" title="Editar Fichaje">✏️</button>
+                        <button type="button" class="btn-table-action delete" onclick="eliminarFichaje('${f.id}')" title="Eliminar Fichaje">🗑️</button>
+                    </div>
+                ` : `
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button type="button" class="btn-table-action" onclick="openModalVerDetalleFichaje('${f.id}')" title="Ver Detalle del Fichaje">👁️</button>
+                    </div>
+                `;
+
+                tr.innerHTML = `
+                    <td data-label="Colaborador">
+                        <strong style="color: var(--text-primary); font-size: 13px;">${f.name || 'Sin Nombre'}</strong>
+                        ${f.username ? `<span style="color: var(--text-muted); font-size: 11px; margin-left: 4px;">(@${f.username})</span>` : ''}
+                    </td>
+                    <td data-label="Fecha">${formatDateToAR(f.date)}</td>
+                    <td data-label="Hora" style="font-weight: 600;">${f.time || '--:--'}</td>
+                    <td data-label="Tipo">${typeBadge}</td>
+                    <td data-label="GPS / Ubicación">${gpsBadge}</td>
+                    <td data-label="Acciones" class="role-admin-only" style="text-align: center;">${actionsHtml}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // ==============================================================
+        // FILTROS AVANZADOS
+        // ==============================================================
+        function populateCollabFiltersList() {
+            const container = document.getElementById('fichajesCollabFilterList');
+            if (!container) return;
+            container.innerHTML = `
+                <label class="collab-chip-label" style="font-weight: 700; color: var(--color-blue);">
+                    <input type="checkbox" id="fichajesCollabAll" checked onchange="handleSelectAllCollabs(this.checked)">
+                    Todos
+                </label>
+            `;
+
+            colaboradores.forEach(c => {
+                if (c.role === 'Colaborador' || !c.role) {
+                    const lbl = document.createElement('label');
+                    lbl.className = 'collab-chip-label';
+                    lbl.innerHTML = `<input type="checkbox" class="fichajes-collab-check" value="${c.name}"> ${c.name}`;
+                    container.appendChild(lbl);
+                }
+            });
+        }
+
+        function handleSelectAllCollabs(checked) {
+            document.querySelectorAll('.fichajes-collab-check').forEach(cb => cb.checked = false);
+            filterFichajesCollabs = [];
+        }
+
+        function handleBuscarFichajes() {
+            const checkAll = document.getElementById('fichajesCollabAll');
+            if (checkAll && checkAll.checked) {
+                filterFichajesCollabs = [];
+            } else {
+                const checks = document.querySelectorAll('.fichajes-collab-check:checked');
+                filterFichajesCollabs = Array.from(checks).map(c => c.value);
+            }
+
+            filterFichajesDesdeVal = document.getElementById('filterFichajesDesde').value;
+            filterFichajesHastaVal = document.getElementById('filterFichajesHasta').value;
+            filterFichajesSearchVal = document.getElementById('filterFichajesSearch').value.trim();
+
+            renderFichajesTable();
+        }
+
+        // ==============================================================
+        // MODAL NUEVO / EDITAR FICHAJE MANUAL
+        // ==============================================================
+        function populateModalCollabsSelect() {
+            const selectEl = document.getElementById('fichaje-collab');
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+            colaboradores.forEach(c => {
+                if (c.role === 'Colaborador' || !c.role) {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    selectEl.appendChild(opt);
+                }
+            });
+        }
+
+        window.setFichajeType = function(type) {
+            const input = document.getElementById('fichaje-type');
+            const btnEntrada = document.getElementById('btnTypeEntrada');
+            const btnSalida = document.getElementById('btnTypeSalida');
+            const errorEl = document.getElementById('fichajeTypeError');
+
+            if (input) input.value = type || '';
+            if (btnEntrada) btnEntrada.classList.toggle('active', type === 'Entrada');
+            if (btnSalida) btnSalida.classList.toggle('active', type === 'Salida');
+            if (type && errorEl) errorEl.style.display = 'none';
+        };
+
+
+        // MODAL VER DETALLE DEL FICHAJE (OJO)
+        window.openModalVerDetalleFichaje = function(id) {
+            const f = fichajes.find(item => item.id === id);
+            if (!f) return;
+
+            const modal = document.getElementById('modalDetalleFichajeIndividual');
+            const body = document.getElementById('modalDetalleFichajeBody');
+            if (!modal || !body) return;
+
+            const isGps = f.gps && f.gps.verified && f.gps.lat && f.gps.lng;
+            const mapsUrl = isGps ? `https://www.google.com/maps?q=${f.gps.lat},${f.gps.lng}` : '';
+
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Colaborador:</span>
+                        <strong style="color: var(--text-primary);">${f.name || 'Sin Nombre'} ${f.username ? `<span style="color: var(--text-muted); font-size: 12px;">(@${f.username})</span>` : ''}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Fecha:</span>
+                        <strong style="color: var(--text-primary);">${formatDateToAR(f.date)}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Hora del Registro:</span>
+                        <strong style="color: var(--color-blue); font-size: 15px;">${f.time || '--:--'}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Tipo de Marcación:</span>
+                        <span>${f.type === 'Entrada' ? '<span style="color: #2ecc71; font-weight: 700;">🟢 ENTRADA</span>' : '<span style="color: #e74c3c; font-weight: 700;">🔴 SALIDA</span>'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); align-items: center;">
+                        <span style="color: var(--text-secondary);">Método de Registro:</span>
+                        <span>${isGps ? '<span style="color: #10b981; font-weight: 700;">📍 Verificado por Satélite (GPS)</span>' : '<span style="color: #f59e0b; font-weight: 600;">📌 Registro Manual</span>'}</span>
+                    </div>
+                    ${isGps ? `
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-top: 4px;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">COORDENADAS SATELITALES</div>
+                        <div style="font-family: monospace; font-size: 13px; color: var(--color-blue); margin-bottom: 10px;">
+                            Lat: ${f.gps.lat.toFixed(6)} | Lng: ${f.gps.lng.toFixed(6)}
+                        </div>
+                        <a href="${mapsUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 229, 255, 0.15); border: 1px solid rgba(0, 229, 255, 0.4); color: var(--color-blue); padding: 7px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 12px;">
+                            🗺️ Abrir Ubicación en Google Maps ↗
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            modal.classList.add('show');
+        };
+
+        window.closeModalVerDetalleFichaje = function() {
+            const modal = document.getElementById('modalDetalleFichajeIndividual');
+            if (modal) modal.classList.remove('show');
+        };
+
+        window.openModalNuevoFichajeManual = function() {
+            editFichajeId = null;
+            document.getElementById('modalFichajeHeaderText').textContent = "Registrar Fichaje Manual";
+            document.getElementById('btnSubmitFichajeModal').textContent = "Registrar Fichaje";
+
+            document.getElementById('fichajeCollabGroup').style.display = 'block';
+            document.getElementById('fichajeCollabNameGroup').style.display = 'none';
+            document.getElementById('fichaje-collab').required = true;
+            populateModalCollabsSelect();
+
+            const now = getSyncedDate();
+            document.getElementById('fichaje-date').value = getLocalISODate(now);
+
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('fichaje-time').value = `${hh}:${mm}`;
+
+            setFichajeType('');
+            document.getElementById('modalFichaje').classList.add('show');
+        };
+
+        window.openModalFichajeForCollab = function(collabName, defaultType = 'Entrada', targetDate = null) {
+            openModalNuevoFichajeManual();
+            const select = document.getElementById('fichaje-collab');
+            if (select && collabName) select.value = collabName;
+            if (targetDate) document.getElementById('fichaje-date').value = targetDate;
+            setFichajeType(defaultType);
+        };
+
+        window.openModalEditarFichaje = function(id) {
+            const f = fichajes.find(item => item.id === id);
+            if (!f) return;
+
+            editFichajeId = id;
+            document.getElementById('modalFichajeHeaderText').textContent = "Editar Fichaje";
+            document.getElementById('btnSubmitFichajeModal').textContent = "Guardar Cambios";
+
+            document.getElementById('fichajeCollabGroup').style.display = 'none';
+            document.getElementById('fichajeCollabNameGroup').style.display = 'block';
+            document.getElementById('fichaje-collab-name-read').value = f.name;
+            document.getElementById('fichaje-collab').required = false;
+
+            document.getElementById('fichaje-date').value = f.date;
+            document.getElementById('fichaje-time').value = formatTime12hTo24h(f.time);
+            setFichajeType(f.type || 'Entrada');
+
+            document.getElementById('modalFichaje').classList.add('show');
+        };
+
+        window.closeModalFichaje = function() {
+            document.getElementById('modalFichaje').classList.remove('show');
+            document.getElementById('formFichaje').reset();
+            setFichajeType('');
+            editFichajeId = null;
+        };
+
+        window.handleFormFichajeSubmit = async function(e) {
+            e.preventDefault();
+            const dateVal = document.getElementById('fichaje-date').value;
+            const timeVal = document.getElementById('fichaje-time').value;
+            const typeVal = document.getElementById('fichaje-type').value;
+
+            if (!typeVal) {
+                document.getElementById('fichajeTypeError').style.display = 'block';
+                return;
+            }
+
+            const formattedTime = formatTime24hTo12h(timeVal);
+            let timestampStr = "";
+            try {
+                const [yr, mo, dy] = dateVal.split('-').map(Number);
+                const [hr, mn] = timeVal.split(':').map(Number);
+                timestampStr = new Date(yr, mo - 1, dy, hr, mn, 0).toISOString();
+            } catch(e) {
+                timestampStr = new Date().toISOString();
+            }
+
+            const gpsObj = { manual: true, verified: false };
+            const submitBtn = document.getElementById('btnSubmitFichajeModal');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Guardando...';
+
+            try {
+                const collabName = editFichajeId
+                    ? document.getElementById('fichaje-collab-name-read').value
+                    : document.getElementById('fichaje-collab').value;
+                const collabObj = colaboradores.find(c => c.name === collabName);
+                const username = collabObj ? collabObj.username || '' : '';
+
+                if (editFichajeId) {
+                    await db.collection('fichajes').doc(editFichajeId).update({
+                        date: dateVal,
+                        time: formattedTime,
+                        timestamp: timestampStr,
+                        type: typeVal,
+                        gps: gpsObj
+                    });
+
+                    const idx = fichajes.findIndex(f => f.id === editFichajeId);
+                    if (idx > -1) {
+                        fichajes[idx] = { ...fichajes[idx], date: dateVal, time: formattedTime, timestamp: timestampStr, type: typeVal, gps: gpsObj };
+                    }
+                    showToast("Fichaje actualizado con éxito", "success");
+                } else {
+                    const nuevo = {
+                        name: collabName,
+                        username: username,
+                        date: dateVal,
+                        time: formattedTime,
+                        timestamp: timestampStr,
+                        type: typeVal,
+                        gps: gpsObj
+                    };
+                    const docRef = await db.collection('fichajes').add(nuevo);
+                    nuevo.id = docRef.id;
+                    fichajes.unshift(nuevo);
+                    showToast("Fichaje manual registrado con éxito", "success");
+                }
+
+                localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                closeModalFichaje();
+                renderAll();
+                updateCollabFichajeUI();
+
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'FICHAJE_UPDATED' }, '*');
+                }
+            } catch(err) {
+                console.error(err);
+                showToast("Error al guardar fichaje: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = editFichajeId ? "Guardar Cambios" : "Registrar Fichaje";
+            }
+        };
+
+        window.eliminarFichaje = async function(id) {
+            if (!confirm("¿Estás seguro de que deseas eliminar este registro de fichaje?")) return;
+            try {
+                await db.collection('fichajes').doc(id).delete();
+                fichajes = fichajes.filter(f => f.id !== id);
+                localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+                showToast("Fichaje eliminado correctamente", "success");
+                renderAll();
+                updateCollabFichajeUI();
+
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'FICHAJE_UPDATED' }, '*');
+                }
+            } catch(err) {
+                console.error(err);
+                showToast("Error al eliminar fichaje", "error");
+            }
+        };
+
+        // HISTORIAL HISTÓRICO BAJO DEMANDA (Carga remota optimizada)
+        window.loadFichajesHistorial = async function() {
+            const btn = document.getElementById('btnVerHistorialFichajes');
+            const btnBanner = document.getElementById('btnBannerHistorial');
+            if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
+            if (btnBanner) { btnBanner.disabled = true; btnBanner.textContent = 'Cargando...'; }
+
+            try {
+                showToast("Cargando historial anterior desde Firebase...", "info");
+                const snap = await db.collection('fichajes').orderBy('timestamp', 'desc').limit(300).get();
+                const hist = [];
+                snap.forEach(doc => hist.push({ id: doc.id, ...doc.data() }));
+
+                const currentIds = new Set(fichajes.map(f => f.id));
+                const merged = [...fichajes, ...hist.filter(f => !currentIds.has(f.id))];
+                merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                fichajes = merged;
+                historialCompletoCargado = true;
+                localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+
+                // Desbloquear rango de fecha para ver todo
+                document.getElementById('filterFichajesDesde').value = '';
+                filterFichajesDesdeVal = '';
+
+                showToast(`📂 ${hist.length} registros cargados con éxito`, 'success');
+
+                const banner = document.getElementById('bannerAhorroFirebase');
+                if (banner) {
+                    banner.innerHTML = `<span style="font-size: 13px; color: #10b981;">✅ <strong>Historial completo cargado:</strong> ${fichajes.length} registros totales disponibles en memoria.</span>`;
+                }
+
+                renderAll();
+            } catch(e) {
+                console.error(e);
+                showToast("Error cargando historial de fichajes: " + e.message, "error");
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '✅ Historial Cargado'; }
+            }
+        };
+
+        // RENDER GENERAL
+        function renderAll() {
+            renderTodayAttendanceControl();
+            renderFichajesTable();
+        }
+
+        // CARGA INICIAL DE DATOS
+        async function initModule() {
+            // 1. Obtener rol y usuario
+            currentRole = localStorage.getItem('electrofrio_role') || 'Administrador';
+            currentName = localStorage.getItem('electrofrio_name') || '';
+            currentUser = localStorage.getItem('electrofrio_user') || '';
+
+            const lblRole = document.getElementById('lblCurrentRole');
+            if (lblRole) lblRole.textContent = currentRole;
+
+            const adminSec = document.getElementById('sectionAdminControl');
+            const adminActions = document.getElementById('adminHeaderActions');
+            const collabSec = document.getElementById('sectionCollabFichaje');
+
+            if (currentRole === 'Colaborador') {
+                if (adminSec) adminSec.style.display = 'none';
+                if (adminActions) adminActions.style.display = 'none';
+                if (collabSec) collabSec.style.display = 'block';
+                document.querySelectorAll('.role-admin-only').forEach(el => el.style.display = 'none');
+            } else {
+                if (adminSec) adminSec.style.display = 'block';
+                if (adminActions) adminActions.style.display = 'flex';
+                if (collabSec) collabSec.style.display = 'block';
+                document.querySelectorAll('.role-admin-only').forEach(el => el.style.display = '');
+            }
+
+            // 2. Colaboradores desde caché o Firestore
+            const cachedCollabs = localStorage.getItem('electrofrio_collaborators') || localStorage.getItem('electrofrio_colaboradores');
+            if (cachedCollabs) {
+                try { colaboradores = JSON.parse(cachedCollabs); } catch(e) {}
+            }
+            if (colaboradores.length === 0) {
+                try {
+                    const snap = await db.collection('usuarios').get();
+                    const list = [];
+                    snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                    if (list.length > 0) {
+                        colaboradores = list;
+                        localStorage.setItem('electrofrio_colaboradores', JSON.stringify(colaboradores));
+                    }
+                } catch(e) {}
+            }
+            populateCollabFiltersList();
+            populateModalCollabsSelect();
+
+            // 3. Fichajes desde caché
+            const cachedFichajes = localStorage.getItem('electrofrio_fichajes');
+            if (cachedFichajes) {
+                try {
+                    fichajes = JSON.parse(cachedFichajes);
+                    fichajes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                } catch(e) {}
+            }
+
+            // 4. Fechas por defecto (ÚLTIMOS 5 DÍAS para optimizar lecturas)
+            const now = getSyncedDate();
+            dailyAttendanceSelectedDate = getLocalISODate(now);
+
+            // Pre-cargar filtros en el rango de los últimos 5 días
+            const cincoDiasAtrasStr = getCincoDiasAtrasDateStr();
+            const hoyISO = getLocalISODate(now);
+
+            const inputDesde = document.getElementById('filterFichajesDesde');
+            const inputHasta = document.getElementById('filterFichajesHasta');
+            if (inputDesde && !inputDesde.value) {
+                inputDesde.value = cincoDiasAtrasStr;
+                filterFichajesDesdeVal = cincoDiasAtrasStr;
+            }
+            if (inputHasta && !inputHasta.value) {
+                inputHasta.value = hoyISO;
+                filterFichajesHastaVal = hoyISO;
+            }
+
+            renderAll();
+            updateCollabFichajeUI();
+
+            // 5. Sincronización en tiempo real desde Firestore (Últimos 5 días para ahorrar lecturas)
+            try {
+                const cincoDiasAtrasISO = getCincoDiasAtrasISO();
+                unsubscribeFichajes = db.collection('fichajes')
+                    .where('timestamp', '>=', cincoDiasAtrasISO)
+                    .onSnapshot((snap) => {
+                        const updated = [];
+                        snap.forEach(doc => updated.push({ id: doc.id, ...doc.data() }));
+                        updated.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                        const currentIds = new Set(updated.map(f => f.id));
+                        const merged = [...updated, ...fichajes.filter(f => !currentIds.has(f.id))];
+                        merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        fichajes = merged;
+                        localStorage.setItem('electrofrio_fichajes', JSON.stringify(fichajes));
+
+                        renderAll();
+                        updateCollabFichajeUI();
+                    }, err => {
+                        console.warn("Aviso al sincronizar fichajes:", err);
+                    });
+            } catch(e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initModule();
+        });
+    </script>
+</body>
+</html>

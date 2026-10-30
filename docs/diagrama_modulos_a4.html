@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroFrío - Conexión entre Módulos y Arquitectura (A4)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .toolbar {
+            background: #0f172a;
+            color: #fff;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .toolbar h1 {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .a4-page {
+            background: #ffffff;
+            width: 297mm;
+            min-height: 210mm;
+            height: 210mm;
+            padding: 8mm 10mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .a4-page.portrait {
+            width: 210mm;
+            min-height: 297mm;
+            height: 297mm;
+        }
+
+        /* Encabezado */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, #0284c7, #075985);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .header h2 {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .header p {
+            font-size: 8.5px;
+            color: #64748b;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 8px;
+            color: #475569;
+        }
+
+        /* 3 Canales de Comunicación */
+        .channels-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .channel-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ch-bus      { border-left: 3px solid #0284c7; }
+        .ch-storage  { border-left: 3px solid #16a34a; }
+        .ch-firebase { border-left: 3px solid #d97706; }
+
+        .channel-card h3 {
+            font-size: 9px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .channel-card p {
+            font-size: 7.5px;
+            color: #64748b;
+        }
+
+        /* Diagrama Central: Shell vs Submódulos */
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 2.9fr;
+            gap: 8px;
+            flex: 1;
+            margin-bottom: 6px;
+        }
+
+        .shell-panel {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .shell-header {
+            background: #0f172a;
+            color: #fff;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: 0.4px;
+        }
+
+        .shell-tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 7.5px;
+        }
+
+        .shell-task-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 3px 5px;
+        }
+
+        .shell-task-item strong {
+            color: #0284c7;
+            display: block;
+        }
+
+        /* Matriz de los 17 Módulos en 4 Grupos */
+        .modules-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .mod-group {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .group-header {
+            padding: 3px 6px;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+
+        .gh-op   { background: #0284c7; }
+        .gh-com  { background: #16a34a; }
+        .gh-cat  { background: #d97706; }
+        .gh-sys  { background: #7c3aed; }
+
+        .group-body {
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+        }
+
+        .module-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 2.5px 4px;
+            font-size: 7.5px;
+        }
+
+        .module-name {
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1px;
+        }
+
+        .module-name span.mod-tag {
+            font-size: 6.5px;
+            background: #e2e8f0;
+            padding: 0 3px;
+            border-radius: 2px;
+            font-family: monospace;
+        }
+
+        .module-conn {
+            font-size: 6.8px;
+            color: #64748b;
+            line-height: 1.15;
+        }
+
+        .module-conn strong {
+            color: #334155;
+        }
+
+        /* Footer: Tabla de Eventos y Enlaces Clave */
+        .footer-flow {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 5px 8px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            font-size: 7.5px;
+        }
+
+        .footer-flow h4 {
+            font-size: 8px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .events-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .events-table th {
+            text-align: left;
+            background: #e2e8f0;
+            padding: 2px 4px;
+            color: #1e293b;
+        }
+
+        .events-table td {
+            padding: 2px 4px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .event-code {
+            font-family: monospace;
+            font-weight: 700;
+            color: #0284c7;
+            background: #eff6ff;
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+
+        .flow-notes ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            color: #475569;
+        }
+
+        .flow-notes li::before {
+            content: "• ";
+            color: #0284c7;
+            font-weight: bold;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 5mm 8mm;
+        }
+
+        @media print {
+            body { background: none !important; padding: 0 !important; }
+            .toolbar { display: none !important; }
+            .page-wrapper { padding: 0 !important; }
+            .a4-page {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                padding: 0 !important;
+                min-height: auto !important;
+            }
+            .mod-group, .channel-card, .shell-panel { break-inside: avoid; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <h1>
+            <span>🌐</span> ElectroFrío V2 — Mapa de Interconexión de Módulos (A4)
+        </h1>
+        <div class="actions">
+            <button class="btn" onclick="window.print()">
+                <span>🖨️</span> Imprimir Mapa en A4 / Guardar PDF
+            </button>
+            <button class="btn btn-secondary" onclick="toggleOrientation()">
+                <span>↔️</span> Cambiar Orientación
+            </button>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        <div class="a4-page" id="printablePage">
+
+            <!-- HEADER -->
+            <header class="header">
+                <div class="brand-title">
+                    <div class="logo-box">MOD</div>
+                    <div>
+                        <h2>ARQUITECTURA DE INTERCONEXIÓN MODULAR (MICRO-FRONTENDS)</h2>
+                        <p>Cómo se comunican el App Shell (index.html) y los 17 módulos independientes vía Event Bus, Cache y Firestore</p>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div><strong>Patrón:</strong> App Shell + 17 Micro-Frontends (iframes)</div>
+                    <div><strong>Comunicación:</strong> postMessage bidireccional + localStorage</div>
+                    <div><strong>Diseño:</strong> Hoja A4 Paisaje (1 sola carilla)</div>
+                </div>
+            </header>
+
+            <!-- 3 CANALES DE CONEXIÓN -->
+            <div class="channels-strip">
+                <div class="channel-card ch-bus">
+                    <h3><span>⚡</span> 1. Event Bus Bidireccional (postMessage)</h3>
+                    <p>Puente reactivo entre el App Shell y los iframes: envía acciones cruzadas, aperturas de modales y retransmisiones (broadcast).</p>
+                </div>
+                <div class="channel-card ch-storage">
+                    <h3><span>💾</span> 2. Almacén Compartido (localStorage)</h3>
+                    <p>Memoria ultrarrápida compartida (mismo origen): sesión activa, roles y cachés de órdenes/clientes para Optimistic UI sin latencia.</p>
+                </div>
+                <div class="channel-card ch-firebase">
+                    <h3><span>🔥</span> 3. Sincronización Nube (Firestore onSnapshot)</h3>
+                    <p>Listeners reactivos en vivo: cualquier cambio guardado en la nube se propaga automáticamente a todos los dispositivos.</p>
+                </div>
+            </div>
+
+            <!-- CUERPO DE ARQUITECTURA -->
+            <main class="architecture-grid">
+
+                <!-- PANEL APP SHELL -->
+                <div class="shell-panel">
+                    <div class="shell-header">
+                        💻 APP SHELL: index.html
+                    </div>
+                    <div class="shell-tasks">
+                        <div class="shell-task-item">
+                            <strong>🔑 Autenticación & Roles</strong>
+                            Firebase Auth + asignación de UI según rol (Admin vs Colaborador).
+                        </div>
+                        <div class="shell-task-item">
+                            <strong>🧭 Enrutador & Lazy Loading</strong>
+                            Contiene los 17 <code>&lt;iframe data-src&gt;</code> que se instancian bajo demanda al hacer clic en el menú.
+                        </div>
+                        <div class="shell-task-item">
+                            <strong>📡 Event Bus Broker</strong>
+                            Recibe eventos de un iframe y los difunde por broadcast a los demás iframes activos.
+                        </div>
+                        <div class="shell-task-item">
+                            <strong>🔔 Notificaciones Centrales</strong>
+                            Renderiza los Toasts visuales flotantes solicitados por los submódulos.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MATRIZ DE MÓDULOS -->
+                <div class="modules-matrix">
+
+                    <!-- GRUPO 1: OPERACIONES Y CAMPO -->
+                    <div class="mod-group">
+                        <div class="group-header gh-op">
+                            1. Operaciones & Campo
+                        </div>
+                        <div class="group-body">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>dashboard.html</span>
+                                    <span class="mod-tag">KPIs</span>
+                                </div>
+                                <div class="module-conn">Lee caché local. Emite <code>NAVIGATE</code> hacia otros módulos.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>ordenes.html</span>
+                                    <span class="mod-tag">OTs</span>
+                                </div>
+                                <div class="module-conn">Crea OTs. Emite <code>OPEN_PLANILLA_FOR_ORDER</code> y <code>ORDER_UPDATED</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>planillas.html</span>
+                                    <span class="mod-tag">PDT</span>
+                                </div>
+                                <div class="module-conn">Cierra la OT. Al guardar emite <code>ORDER_COMPLETED</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>calendario.html</span>
+                                    <span class="mod-tag">Agenda</span>
+                                </div>
+                                <div class="module-conn">Escucha <code>ORDER_UPDATED</code> para mover visitas de técnicos en vivo.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>mapa.html</span>
+                                    <span class="mod-tag">GPS</span>
+                                </div>
+                                <div class="module-conn">Traza ubicaciones de técnicos y OTs geocodificadas.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO 2: CLIENTES & COMERCIAL -->
+                    <div class="mod-group">
+                        <div class="group-header gh-com">
+                            2. Comercial & Clientes
+                        </div>
+                        <div class="group-body">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>clientes.html</span>
+                                    <span class="mod-tag">Directorio</span>
+                                </div>
+                                <div class="module-conn">Alta y edición. Emite <code>CLIENT_UPDATED</code> a todo el sistema.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>crm.html</span>
+                                    <span class="mod-tag">Embudo</span>
+                                </div>
+                                <div class="module-conn">Etapas de prospección sobre la misma colección <code>clientes</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>presupuestos.html</span>
+                                    <span class="mod-tag">Cotización</span>
+                                </div>
+                                <div class="module-conn">Consume <code>materiales</code> y <code>mano_obra</code>. Al aprobar abre OT.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>cobros.html</span>
+                                    <span class="mod-tag">Caja</span>
+                                </div>
+                                <div class="module-conn">Imputa pagos y cargos. Actualiza el saldo en <code>clientes</code>.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO 3: CATÁLOGO Y ALMACÉN -->
+                    <div class="mod-group">
+                        <div class="group-header gh-cat">
+                            3. Catálogo & Precios
+                        </div>
+                        <div class="group-body">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>materiales.html</span>
+                                    <span class="mod-tag">Stock</span>
+                                </div>
+                                <div class="module-conn">Control de insumos y códigos de barra. Nutre a <code>presupuestos</code> y <code>planillas</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>manodeobra.html</span>
+                                    <span class="mod-tag">Tarifario</span>
+                                </div>
+                                <div class="module-conn">Tarifas base de servicios técnicos aplicados en PDTs.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>proveedores.html</span>
+                                    <span class="mod-tag">Compras</span>
+                                </div>
+                                <div class="module-conn">Directorio comercial de compra de repuestos y gases.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO 4: RRHH Y CONFIGURACIÓN -->
+                    <div class="mod-group">
+                        <div class="group-header gh-sys">
+                            4. RRHH & Sistema
+                        </div>
+                        <div class="group-body">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>colaboradores.html</span>
+                                    <span class="mod-tag">Equipo</span>
+                                </div>
+                                <div class="module-conn">Gestiona técnicos. Emite <code>COLLABORATOR_UPDATED</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>fichajes.html</span>
+                                    <span class="mod-tag">Asistencia</span>
+                                </div>
+                                <div class="module-conn">Marcas GPS. Emite <code>FICHAJE_UPDATED</code> hacia el Mapa y Dashboard.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>jornales.html</span>
+                                    <span class="mod-tag">Liquidación</span>
+                                </div>
+                                <div class="module-conn">Calcula horas y salarios a partir de <code>fichajes</code>.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>tareas.html</span>
+                                    <span class="mod-tag">Pendientes</span>
+                                </div>
+                                <div class="module-conn">Asigna checklists internos a los colaboradores.</div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <span>configuracion.html</span>
+                                    <span class="mod-tag">Backups</span>
+                                </div>
+                                <div class="module-conn">Exporta las 13 colecciones y ajusta márgenes PDT.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+
+            <!-- FOOTER: TABLA DE EVENTOS DE INTERCAMBIO -->
+            <footer class="footer-flow">
+                <div>
+                    <h4>⚡ Eventos de Comunicación Inter-Módulos (Broadcast del App Shell)</h4>
+                    <table class="events-table">
+                        <thead>
+                            <tr>
+                                <th>Evento (postMessage)</th>
+                                <th>Emisor</th>
+                                <th>Destinatarios</th>
+                                <th>Efecto Inmediato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="event-code">ORDER_UPDATED</span></td>
+                                <td><code>ordenes.html</code></td>
+                                <td>Dashboard, Calendario, Mapa</td>
+                                <td>Refresca la lista de órdenes y recalcula métricas sin recargar.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="event-code">ORDER_COMPLETED</span></td>
+                                <td><code>planillas.html</code></td>
+                                <td>App Shell, Órdenes, Dashboard</td>
+                                <td>Pasa la OT a "Completado" en caché y base de datos.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="event-code">OPEN_PLANILLA_FOR_ORDER</span></td>
+                                <td><code>ordenes.html</code></td>
+                                <td><code>planillas.html</code> (vía Shell)</td>
+                                <td>Abre automáticamente la planilla PDT con datos pre-cargados.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="event-code">FICHAJE_UPDATED</span></td>
+                                <td><code>fichajes.html</code></td>
+                                <td>Dashboard, Mapa, Colaboradores</td>
+                                <td>Enciende el pin verde de "En Servicio" del técnico en el mapa.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="event-code">NAVIGATE</span></td>
+                                <td>Cualquier módulo</td>
+                                <td>App Shell (<code>index.html</code>)</td>
+                                <td>Cambia la pestaña visible y carga el iframe correspondiente.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flow-notes">
+                    <h4>💡 Ventajas de este Diseño Modular</h4>
+                    <ul>
+                        <li><strong>Cero colisión CSS/JS:</strong> Cada módulo tiene su propio ámbito y no ensucia a los otros.</li>
+                        <li><strong>Carga instantánea:</strong> La Shell pesa sólo 1.300 líneas y los submódulos se cargan únicamente cuando el usuario entra a ellos.</li>
+                        <li><strong>Sincronía total:</strong> Cambiar un dato en un módulo actualiza los demás en tiempo real gracias al Event Bus.</li>
+                    </ul>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleOrientation() {
+            const page = document.getElementById('printablePage');
+            const style = document.querySelector('style');
+            if (page.classList.contains('portrait')) {
+                page.classList.remove('portrait');
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*portrait/g, 'size: A4 landscape');
+            } else {
+                page.classList.add('portrait');
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*landscape/g, 'size: A4 portrait');
+            }
+        }
+    </script>
+</body>
+</html>
