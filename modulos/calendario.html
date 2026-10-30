@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calendario de Órdenes - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos del sistema -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/es.global.min.js"></script>
+
+    <!-- Google Identity Services (GSI) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 24px 30px;
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .cal-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .cal-header-title {
+            margin: 0;
+            font-size: 24px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        /* Barra de referencia de estados (Leyenda) */
+        .cal-legend-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .cal-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .cal-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .calendar-card {
+            background-color: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 650px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            margin-bottom: 24px;
+        }
+
+        #calendar {
+            width: 100%;
+            flex: 1;
+            min-height: 580px;
+        }
+
+        /* Botón de Google Calendar */
+        .btn-google-connect {
+            background-color: #ffffff;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .btn-google-connect:hover {
+            background-color: #f8f9fa;
+            border-color: #c0c4c9;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        /* FullCalendar Custom Theme */
+        .fc-theme-standard th, .fc-theme-standard td {
+            border-color: var(--border-color, #1e3656) !important;
+        }
+
+        .fc-theme-standard .fc-scrollgrid {
+            border-color: var(--border-color, #1e3656) !important;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .fc-toolbar-title {
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            font-family: 'Outfit', sans-serif !important;
+            color: var(--text-primary, #ffffff) !important;
+            text-transform: capitalize !important;
+        }
+
+        .fc .fc-button-primary {
+            background-color: var(--bg-input, #0a111c) !important;
+            border-color: var(--border-color, #1e3656) !important;
+            color: var(--text-primary, #ffffff) !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            padding: 7px 14px !important;
+            font-size: 13px !important;
+            text-transform: capitalize !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+        }
+
+        .fc .fc-button-primary:hover {
+            background-color: var(--border-color, #1e3656) !important;
+            border-color: var(--color-blue, #00bfff) !important;
+        }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active, 
+        .fc .fc-button-primary:not(:disabled):active {
+            background-color: var(--color-blue, #00bfff) !important;
+            border-color: var(--color-blue, #00bfff) !important;
+            color: #0b1320 !important;
+            font-weight: 700 !important;
+        }
+
+        .fc .fc-daygrid-day-number {
+            color: var(--text-secondary, #8ab4f8) !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            padding: 6px !important;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            color: var(--text-muted, #627d98) !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            padding: 8px !important;
+        }
+
+        .fc .fc-day-today {
+            background: rgba(0, 191, 255, 0.08) !important;
+        }
+
+        /* Eventos en FullCalendar */
+        .fc-event {
+            border-radius: 6px !important;
+            padding: 2px 3px !important;
+            margin-bottom: 3px !important;
+            cursor: pointer !important;
+            transition: transform 0.15s ease, filter 0.15s ease !important;
+            background: transparent !important;
+            border: none !important;
+        }
+        .fc-event:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.2);
+        }
+
+        .event-badge {
+            background-color: var(--bg-input, #0a111c);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 5px;
+            padding: 3px 6px;
+            font-weight: 700;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Popover (+X más órdenes en un día) */
+        .fc-popover {
+            background-color: var(--bg-card, #16243d) !important;
+            border: 1px solid var(--border-color, #1e3656) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+            z-index: 9999 !important;
+        }
+        .fc-popover-header {
+            background-color: var(--bg-input, #0a111c) !important;
+            color: var(--text-primary, #ffffff) !important;
+            padding: 8px 12px !important;
+            font-weight: 700 !important;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+        }
+        .fc-popover-body {
+            padding: 8px !important;
+        }
+
+        /* Estilos de Vista de Lista / Agenda (listMonth) */
+        .fc-theme-standard .fc-list {
+            border: 1px solid var(--border-color, #1e3656) !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            background: var(--bg-card, #16243d) !important;
+        }
+        .fc-list-day-cushion {
+            background-color: var(--bg-input, #0a111c) !important;
+            color: var(--color-blue, #00bfff) !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            padding: 10px 14px !important;
+            text-transform: capitalize !important;
+        }
+        .fc-list-event {
+            background: transparent !important;
+            cursor: pointer !important;
+        }
+        .fc-list-event:hover td {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .fc-list-event-dot {
+            border-width: 5px !important;
+        }
+        .fc-list-event-time {
+            color: var(--text-secondary, #8ab4f8) !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .fc-list-event-title {
+            color: var(--text-primary, #ffffff) !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            padding: 12px 14px !important;
+        }
+        .fc-list-empty {
+            background-color: var(--bg-card, #16243d) !important;
+            color: var(--text-muted, #627d98) !important;
+            font-size: 14px !important;
+            padding: 40px 20px !important;
+            text-align: center !important;
+        }
+
+        /* Modal Detalle Orden Rápido */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .cal-modal-card {
+            max-width: 460px;
+            width: 100%;
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.55);
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .cal-modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .cal-modal-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted, #627d98);
+        }
+        .cal-modal-val {
+            font-size: 14px;
+            color: var(--text-primary, #ffffff);
+            font-weight: 500;
+        }
+        .cal-modal-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .maps-link {
+            color: var(--color-blue, #00bfff);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        .maps-link:hover {
+            text-decoration: underline;
+        }
+
+        .cal-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            width: fit-content;
+        }
+
+        /* ==============================================================
+           RESPONSIVE MÓVIL PROFESIONAL (<= 768px)
+           ============================================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 10px !important;
+            }
+
+            .cal-header-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+
+            .cal-header-title {
+                font-size: 19px !important;
+                text-align: center;
+            }
+
+            .btn-google-connect {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 14px;
+                font-size: 13px;
+                min-height: 42px;
+            }
+
+            /* Leyenda en chips con scroll horizontal suave */
+            .cal-legend-bar {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 8px !important;
+                padding: 8px 10px !important;
+                font-size: 11px !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                border-radius: 8px !important;
+                margin-bottom: 12px !important;
+                scrollbar-width: none;
+            }
+            .cal-legend-bar::-webkit-scrollbar {
+                display: none;
+            }
+            .cal-legend-item {
+                flex-shrink: 0;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 4px 8px;
+                border-radius: 6px;
+            }
+
+            .calendar-card {
+                padding: 10px 8px !important;
+                min-height: auto !important;
+                border-radius: 12px !important;
+                margin-bottom: 16px !important;
+            }
+
+            /* Toolbar adaptada a celulares */
+            .fc-header-toolbar {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+                align-items: center !important;
+                margin-bottom: 10px !important;
+            }
+
+            .fc-toolbar-chunk {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 5px !important;
+                width: 100% !important;
+            }
+
+            .fc-toolbar-title {
+                font-size: 16px !important;
+                font-weight: 700 !important;
+                text-align: center !important;
+            }
+
+            .fc .fc-button {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+                min-height: 36px !important;
+                border-radius: 8px !important;
+            }
+
+            .fc-daygrid-day-number {
+                font-size: 11px !important;
+                padding: 2px 4px !important;
+            }
+
+            .fc-col-header-cell-cushion {
+                font-size: 11px !important;
+                padding: 5px 2px !important;
+            }
+
+            #calendar {
+                min-height: 480px;
+            }
+
+            /* Modal Bottom-Sheet en móvil */
+            .modal-overlay {
+                padding: 10px;
+                align-items: flex-end;
+            }
+            .cal-modal-card {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                max-width: 100%;
+                padding: 18px 16px;
+            }
+        }
+
+        /* Pantallas muy compactas (<= 480px) */
+        @media (max-width: 480px) {
+            .fc-col-header-cell-cushion {
+                font-size: 10px !important;
+            }
+            .event-badge {
+                font-size: 10px !important;
+                padding: 2px 4px !important;
+            }
+            .event-badge .time-label {
+                display: none; /* En pantallas muy pequeñas se prioriza el nombre del cliente */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ENCABEZADO DE CALENDARIO -->
+    <div class="cal-header-row">
+        <h2 class="cal-header-title">Calendario de Órdenes de Trabajo</h2>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: auto;">
+            <div id="google-auth-status" style="font-size: 13px; font-weight: 600; color: var(--color-green, #4cd964); display: none;">
+                ✅ Google Calendar Vinculado
+            </div>
+            <button id="btnConnectGoogleCalendar" class="btn-google-connect">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Conectar Google Calendar
+            </button>
+        </div>
+    </div>
+
+    <!-- BARRA DE REFERENCIA DE ESTADOS (LEYENDA DESLIZABLE EN MÓVIL) -->
+    <div class="cal-legend-bar">
+        <span style="font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 11px; flex-shrink: 0;">Estados:</span>
+        <div class="cal-legend-item"><span class="cal-legend-dot" style="background-color: var(--color-red, #ff3b30);"></span> Pendiente</div>
+        <div class="cal-legend-item"><span class="cal-legend-dot" style="background-color: var(--color-green, #4cd964);"></span> En Proceso</div>
+        <div class="cal-legend-item"><span class="cal-legend-dot" style="background-color: var(--color-yellow, #f7d002);"></span> Presupuesto</div>
+        <div class="cal-legend-item"><span class="cal-legend-dot" style="background-color: #a020f0;"></span> Reprogramar</div>
+        <div class="cal-legend-item"><span class="cal-legend-dot" style="background-color: var(--color-blue, #00bfff);"></span> Completado</div>
+    </div>
+
+    <!-- TARJETA DEL CALENDARIO -->
+    <div class="calendar-card">
+        <div id="calendar"></div>
+    </div>
+
+    <!-- MODAL DETALLE RÁPIDO DE ORDEN -->
+    <div id="modalDetalleOrdenCal" class="modal-overlay">
+        <div class="cal-modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 id="calModalTitle" style="margin: 0; font-size: 18px; color: var(--color-blue); font-family: 'Outfit', sans-serif;">Detalle de Orden</h3>
+                <button type="button" onclick="cerrarDetalleCal()" style="background: none; border: none; color: var(--text-muted); font-size: 26px; cursor: pointer; line-height: 1; padding: 4px;">&times;</button>
+            </div>
+            <div id="calModalBody" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Dinámico -->
+            </div>
+            <div style="margin-top: 22px; display: flex; gap: 10px; width: 100%;">
+                <button type="button" onclick="cerrarDetalleCal()" style="flex: 1; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">Cerrar</button>
+                <button type="button" id="btnIrAOrden" style="flex: 1; padding: 12px; background: var(--color-blue); color: #0b1320; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; font-size: 14px;">Ver en Órdenes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LÓGICA JAVASCRIPT ==================== -->
+    <script>
+        // 1. CONFIGURACIÓN FIREBASE COMPAT V9
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:189206a202fc6c8393aa80",
+            measurementId: "G-HDEMWY8T7C"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+
+        // 2. SINCRONIZACIÓN DE TEMA CLARO / OSCURO
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+        const savedTheme = localStorage.getItem('electrofrio_theme') || 'dark';
+        applyTheme(savedTheme);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'electrofrio_theme') applyTheme(e.newValue);
+            if (e.key === 'electrofrio_workorders') {
+                try {
+                    ordenesTrabajo = JSON.parse(e.newValue || '[]');
+                    renderCalendarEvents();
+                } catch (err) {}
+            }
+        });
+
+        // 3. ESTADO GLOBAL
+        let fullCalendarInstance = null;
+        let ordenesTrabajo = [];
+        let googleAccessToken = localStorage.getItem('electrofrio_gcal_token') || null;
+        let googleTokenClient = null;
+        const GOOGLE_CLIENT_ID = "963630611600-j8emvpqoe76u0q9ghpr2amhp8behcb2g.apps.googleusercontent.com";
+
+        // 4. GOOGLE CALENDAR AUTH
+        function updateGoogleAuthUI() {
+            const statusDiv = document.getElementById('google-auth-status');
+            const btn = document.getElementById('btnConnectGoogleCalendar');
+            if (!statusDiv || !btn) return;
+
+            if (googleAccessToken) {
+                statusDiv.style.display = "block";
+                btn.style.display = "none";
+            } else {
+                statusDiv.style.display = "none";
+                btn.style.display = "inline-flex";
+            }
+        }
+
+        function initGoogleOAuth() {
+            if (typeof google !== 'undefined' && google.accounts && !googleTokenClient) {
+                googleTokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/calendar.events',
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            googleAccessToken = tokenResponse.access_token;
+                            localStorage.setItem('electrofrio_gcal_token', googleAccessToken);
+                            updateGoogleAuthUI();
+                            alert("¡Google Calendar vinculado exitosamente!");
+                        }
+                    },
+                });
+            }
+
+            const btnConnect = document.getElementById('btnConnectGoogleCalendar');
+            if (btnConnect) {
+                btnConnect.onclick = () => {
+                    if (googleTokenClient) {
+                        googleTokenClient.requestAccessToken();
+                    } else {
+                        alert("El servicio de Google aún no está listo o el Client ID no está configurado.");
+                    }
+                };
+            }
+            updateGoogleAuthUI();
+        }
+
+        // 5. CARGA Y SINCRONIZACIÓN DE ÓRDENES
+        function cargarOrdenes() {
+            const cached = localStorage.getItem('electrofrio_workorders') || localStorage.getItem('electrofrio_ordenesTrabajo');
+            if (cached) {
+                try {
+                    ordenesTrabajo = JSON.parse(cached);
+                    renderCalendarEvents();
+                } catch (e) {}
+            }
+
+            db.collection('ordenes').onSnapshot((snapshot) => {
+                const list = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    list.push(data);
+                });
+                if (list.length > 0) {
+                    ordenesTrabajo = list;
+                    localStorage.setItem('electrofrio_workorders', JSON.stringify(list));
+                    renderCalendarEvents();
+                }
+            }, err => {
+                console.warn("Aviso Firestore al consultar ordenes:", err);
+            });
+        }
+
+        // 6. RENDERIZADO DE EVENTOS EN FULLCALENDAR
+        window.renderCalendarEvents = function() {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+
+            const isMobile = window.innerWidth <= 768;
+
+            const events = ordenesTrabajo
+                .filter(o => o.date && o.date.trim() !== '')
+                .map(o => {
+                    let statusColor = '#00bfff';
+                    if (o.status === 'Pendiente') statusColor = '#ff3b30';
+                    else if (o.status === 'En Proceso') statusColor = '#4cd964';
+                    else if (o.status === 'Completado') statusColor = '#00bfff';
+                    else if (o.status === 'Reprogramar') statusColor = '#a020f0';
+                    else if (o.status === 'Presupuesto') statusColor = '#f7d002';
+
+                    const hasTime = o.time && o.time.trim() !== '';
+                    const startStr = hasTime ? `${o.date}T${o.time}` : o.date;
+
+                    return {
+                        id: o.id,
+                        title: o.client || o.cliente || 'Sin cliente',
+                        start: startStr,
+                        allDay: !hasTime,
+                        borderColor: statusColor,
+                        textColor: statusColor,
+                        extendedProps: {
+                            orderId: o.id,
+                            client: o.client || o.cliente || 'Sin cliente',
+                            address: o.address || o.domicilio || '',
+                            type: o.type || o.trabajo || '',
+                            status: o.status || 'Pendiente',
+                            date: o.date,
+                            time: hasTime ? o.time : 'Todo el día',
+                            assignees: o.assignees || o.colaboradores || []
+                        }
+                    };
+                });
+
+            if (!fullCalendarInstance) {
+                fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'es',
+                    headerToolbar: isMobile ? {
+                        left: 'prev,next',
+                        center: 'title',
+                        right: 'today dayGridMonth,listMonth'
+                    } : {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listMonth'
+                    },
+                    buttonText: {
+                        today: 'Hoy',
+                        dayGridMonth: 'Mes',
+                        timeGridWeek: 'Semana',
+                        timeGridDay: 'Día',
+                        listMonth: 'Agenda'
+                    },
+                    height: 'auto',
+                    dayMaxEvents: isMobile ? 2 : 4,
+                    moreLinkText: num => `+${num} más`,
+                    events: events,
+                    eventContent: function(arg) {
+                        // En la vista de lista / Agenda dejamos el formateo nativo
+                        if (arg.view.type.startsWith('list')) return;
+
+                        const isSmallMobile = window.innerWidth <= 480;
+                        const time = arg.event.extendedProps.time && arg.event.extendedProps.time !== 'Todo el día' ? arg.event.extendedProps.time : '';
+                        
+                        return {
+                            html: `<div class="event-badge" style="color: ${arg.event.textColor} !important; border-left: 3px solid ${arg.event.borderColor} !important;">
+                                ${time && !isSmallMobile ? `<span class="time-label" style="opacity:0.85;">${time}</span>` : ''}
+                                <span class="title-label">${arg.event.title}</span>
+                            </div>`
+                        };
+                    },
+                    eventClick: function(info) {
+                        mostrarDetalleOrden(info.event.extendedProps);
+                    }
+                });
+                fullCalendarInstance.render();
+            } else {
+                fullCalendarInstance.removeAllEvents();
+                fullCalendarInstance.addEventSource(events);
+            }
+        };
+
+        // 7. MODAL DETALLE DE ORDEN AL HACER CLIC
+        function mostrarDetalleOrden(props) {
+            const modal = document.getElementById('modalDetalleOrdenCal');
+            const title = document.getElementById('calModalTitle');
+            const body = document.getElementById('calModalBody');
+            const btnIr = document.getElementById('btnIrAOrden');
+
+            title.textContent = `Orden #${props.orderId || ''}`;
+            
+            let statusColor = '#00bfff';
+            if (props.status === 'Pendiente') statusColor = '#ff3b30';
+            else if (props.status === 'En Proceso') statusColor = '#4cd964';
+            else if (props.status === 'Presupuesto') statusColor = '#f7d002';
+            else if (props.status === 'Reprogramar') statusColor = '#a020f0';
+
+            const mapsLink = props.address 
+                ? `<a href="https://maps.google.com/?q=${encodeURIComponent(props.address)}" target="_blank" class="maps-link">📍 ${props.address} ↗</a>` 
+                : 'Sin especificar';
+
+            body.innerHTML = `
+                <div class="cal-modal-field">
+                    <span class="cal-modal-label">Cliente</span>
+                    <span class="cal-modal-val" style="font-weight: 700; font-size: 15px;">${props.client || 'Sin especificar'}</span>
+                </div>
+                <div class="cal-modal-field">
+                    <span class="cal-modal-label">Domicilio</span>
+                    <span class="cal-modal-val">${mapsLink}</span>
+                </div>
+                <div class="cal-modal-field">
+                    <span class="cal-modal-label">Trabajo / Equipo</span>
+                    <span class="cal-modal-val">${props.type || 'Sin especificar'}</span>
+                </div>
+                <div class="cal-modal-row">
+                    <div class="cal-modal-field" style="flex: 1;">
+                        <span class="cal-modal-label">Fecha</span>
+                        <span class="cal-modal-val">${props.date || 'Sin fecha'}</span>
+                    </div>
+                    <div class="cal-modal-field" style="flex: 1;">
+                        <span class="cal-modal-label">Horario</span>
+                        <span class="cal-modal-val">${props.time || 'Sin horario'}</span>
+                    </div>
+                </div>
+                <div class="cal-modal-field">
+                    <span class="cal-modal-label">Estado</span>
+                    <span class="cal-badge-pill" style="background-color: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor};">
+                        ${props.status || 'Pendiente'}
+                    </span>
+                </div>
+                <div class="cal-modal-field">
+                    <span class="cal-modal-label">Técnicos Asignados</span>
+                    <span class="cal-modal-val">${Array.isArray(props.assignees) && props.assignees.length > 0 ? props.assignees.join(', ') : 'Sin asignar'}</span>
+                </div>
+            `;
+
+            btnIr.onclick = () => {
+                cerrarDetalleCal();
+                if (window.parent && typeof window.parent.switchTab === 'function') {
+                    window.parent.switchTab('ordenes');
+                    if (typeof window.parent.openOrderDetailsModal === 'function') {
+                        window.parent.openOrderDetailsModal(props.orderId);
+                    }
+                }
+            };
+
+            modal.classList.add('show');
+        }
+
+        function cerrarDetalleCal() {
+            document.getElementById('modalDetalleOrdenCal').classList.remove('show');
+        }
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalDetalleOrdenCal');
+            if (e.target === modal) cerrarDetalleCal();
+        });
+
+        // 8. SINCRONIZACIÓN EXTERNA CON GOOGLE CALENDAR
+        window.syncOrderToGoogleCalendar = async function(ord) {
+            if (!googleAccessToken || !ord.date || !ord.time) return;
+
+            const startDateTime = `${ord.date}T${ord.time}:00-03:00`;
+            const startObj = new Date(startDateTime);
+            const endObj = new Date(startObj.getTime() + 60 * 60 * 1000);
+            const endDateTime = endObj.toISOString();
+
+            const event = {
+                summary: `ElectroFrío: ${ord.id} - ${ord.client}`,
+                location: ord.address,
+                description: `Descripción: ${ord.type}\nEstado: ${ord.status}\nAsignados: ${ord.assignees ? ord.assignees.join(', ') : ''}`,
+                start: { dateTime: startDateTime, timeZone: 'America/Argentina/Buenos_Aires' },
+                end: { dateTime: endDateTime, timeZone: 'America/Argentina/Buenos_Aires' }
+            };
+
+            try {
+                const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${googleAccessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(event)
+                });
+                
+                if (res.status === 401) {
+                    googleAccessToken = null;
+                    localStorage.removeItem('electrofrio_gcal_token');
+                    updateGoogleAuthUI();
+                }
+            } catch (err) {
+                console.error("Error al sincronizar con Google Calendar:", err);
+            }
+        };
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', () => {
+            initGoogleOAuth();
+            cargarOrdenes();
+        });
+
+        window.addEventListener('resize', () => {
+            if (fullCalendarInstance) {
+                fullCalendarInstance.updateSize();
+            }
+        });
+    </script>
+</body>
+</html>

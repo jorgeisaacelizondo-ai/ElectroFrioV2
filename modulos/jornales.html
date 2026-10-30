@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquidación de Jornales - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos del sistema -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- html2pdf.js para exportación de reportes PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 24px 30px;
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Header Card */
+        .jornales-header-card {
+            background-color: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-icon-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            background: rgba(0, 229, 255, 0.12);
+            color: var(--color-blue, #00e5ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-title-container h2 {
+            margin: 0;
+            font-size: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .header-title-container p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        /* Filter Section Card */
+        .filter-panel-card {
+            background-color: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary, #94a3b8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .week-nav-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .week-nav-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color, #1e3656);
+            color: var(--text-primary, #ffffff);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .week-nav-btn:hover {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: var(--color-blue, #00e5ff);
+            color: var(--color-blue, #00e5ff);
+        }
+
+        .custom-week-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color, #1e3656);
+            color: var(--text-primary, #ffffff);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .custom-week-input:focus {
+            border-color: var(--color-blue, #00e5ff);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+        }
+
+        .week-date-badge {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--color-blue, #00e5ff);
+            font-weight: 500;
+        }
+
+        /* Colaboradores Checkbox Dropdown / Box */
+        .collab-selection-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 8px;
+            padding: 8px 12px;
+            max-height: 110px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+        }
+
+        .collab-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .collab-chip:hover {
+            border-color: rgba(0, 229, 255, 0.4);
+        }
+
+        .collab-chip input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--color-blue, #00e5ff);
+        }
+
+        .collab-chip.active {
+            background: rgba(0, 229, 255, 0.12);
+            border-color: rgba(0, 229, 255, 0.5);
+            color: #ffffff;
+        }
+
+        /* Botón Calcular Principal */
+        .btn-calc-main {
+            background: linear-gradient(135deg, #00e5ff 0%, #00a0dc 100%);
+            border: none;
+            color: #0b1320;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 229, 255, 0.3);
+            white-space: nowrap;
+            height: 42px;
+        }
+
+        .btn-calc-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 229, 255, 0.45);
+            filter: brightness(1.08);
+        }
+
+        .btn-calc-main:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--kpi-color, #00e5ff);
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--kpi-color, #00e5ff);
+            flex-shrink: 0;
+        }
+
+        .kpi-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary, #94a3b8);
+        }
+
+        .kpi-value {
+            font-size: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        /* Tabla de Liquidación */
+        .results-card {
+            background-color: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-toolbar-title {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-action-pdf {
+            background-color: var(--color-blue, #00e5ff);
+            color: #0b1320;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-action-pdf:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-action-excel {
+            background-color: #107c41;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-action-excel:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .bonus-input-field {
+            width: 110px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color, #1e3656);
+            color: #ffffff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: right;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .bonus-input-field:focus {
+            border-color: var(--color-blue, #00e5ff);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+        }
+
+        .rate-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-secondary, #94a3b8);
+            font-weight: 600;
+        }
+
+        .hours-badge {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .total-badge {
+            font-weight: 800;
+            color: #10b981;
+            font-size: 15px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-ver-fichadas {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--color-blue, #00e5ff);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-ver-fichadas:hover {
+            background: rgba(0, 229, 255, 0.25);
+            border-color: var(--color-blue, #00e5ff);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 19, 32, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active,
+        .modal-overlay.show {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: all !important;
+        }
+
+        .modal-content-box {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: modalFadeIn 0.25s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header-bar {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color, #1e3656);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header-bar h3 {
+            margin: 0;
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+            color: #ffffff;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary, #94a3b8);
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .modal-close-btn:hover {
+            color: #ffffff;
+        }
+
+        .modal-body-scroll {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-calc-main {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .jornales-header-card {
+                padding: 16px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .toolbar-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn-action-pdf, .btn-action-excel {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HEADER CARD -->
+    <div class="jornales-header-card">
+        <div class="header-title-container">
+            <div class="header-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                    <line x1="6" y1="15" x2="6.01" y2="15"/>
+                    <line x1="10" y1="15" x2="10.01" y2="15"/>
+                </svg>
+            </div>
+            <div>
+                <h2>Liquidación de Jornales y Sueldos</h2>
+                <p>Cálculo semanal automatizado en base a fichajes de entrada y salida, tarifas por hora y bonificaciones.</p>
+            </div>
+        </div>
+        <div id="adminBadgeBox">
+            <span style="background: rgba(0, 229, 255, 0.12); color: var(--color-blue); border: 1px solid rgba(0, 229, 255, 0.3); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-blue);"></span>
+                Módulo Administrativo
+            </span>
+        </div>
+    </div>
+
+    <!-- AVISO DE ACCESO RESTRINGIDO (SI NO ES ADMIN) -->
+    <div id="accessDeniedCard" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 24px;">
+        <h3 style="color: #ef4444; margin-top: 0;">⛔ Acceso Restringido</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 0;">Este módulo de liquidación de jornales está reservado exclusivamente para la administración de ElectroFrío.</p>
+    </div>
+
+    <div id="jornalesMainContainer">
+        <!-- 2. PANEL DE FILTROS Y SELECCIÓN DE PERÍODO -->
+        <div class="filter-panel-card">
+            <div class="filter-grid">
+                <!-- Filtro Semana -->
+                <div class="filter-field">
+                    <label for="jornalesWeekPicker">Semana de Liquidación</label>
+                    <div class="week-nav-container">
+                        <button type="button" class="week-nav-btn" onclick="navigateWeek(-1)" title="Semana Anterior">◀</button>
+                        <button type="button" class="week-nav-btn" onclick="setWeekToCurrent()" title="Semana Actual">📅 Hoy</button>
+                        <button type="button" class="week-nav-btn" onclick="navigateWeek(1)" title="Semana Siguiente">▶</button>
+                        <input type="week" id="jornalesWeekPicker" class="custom-week-input" onchange="onWeekChanged()" required>
+                    </div>
+                    <div id="weekRangeLabel" class="week-date-badge">Cargando rango de semana...</div>
+                </div>
+
+                <!-- Filtro Colaboradores -->
+                <div class="filter-field">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Colaboradores a Liquidar</label>
+                        <span style="font-size: 11px; color: var(--color-blue); cursor: pointer;" onclick="toggleAllCollabs(true)">Todos</span>
+                    </div>
+                    <div class="collab-selection-box" id="collabCheckboxList">
+                        <span style="color: var(--text-muted); font-size: 12px;">Cargando colaboradores...</span>
+                    </div>
+                </div>
+
+                <!-- Botón de Acción -->
+                <div class="filter-field">
+                    <button type="button" id="btnCalcularJornales" class="btn-calc-main" onclick="calculateJornales()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        <span>Calcular Jornales</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. KPI RESUMEN DE LA SEMANA -->
+        <div class="kpi-grid" id="kpiSummaryRow" style="display: none;">
+            <div class="kpi-card" style="--kpi-color: #00e5ff;">
+                <div class="kpi-icon">👥</div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Colaboradores</span>
+                    <span class="kpi-value" id="kpiCollabsCount">0</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color: #3b82f6;">
+                <div class="kpi-icon">⏱️</div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Horas Totales</span>
+                    <span class="kpi-value" id="kpiTotalHours">0.0 hs</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color: #f59e0b;">
+                <div class="kpi-icon">🎁</div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Bonificaciones</span>
+                    <span class="kpi-value" id="kpiTotalBonuses">$0</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" style="--kpi-color: #10b981;">
+                <div class="kpi-icon">💰</div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total a Liquidar</span>
+                    <span class="kpi-value" id="kpiGrandTotal" style="color: #10b981;">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. TABLA DE LIQUIDACIÓN DE JORNALES -->
+        <div class="results-card">
+            <div class="table-toolbar">
+                <h3 class="table-toolbar-title">
+                    <span>Detalle de Liquidación</span>
+                    <span id="calculatedCountBadge" style="background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 10px; font-size: 12px; color: var(--text-secondary); display: none;">0 registros</span>
+                </h3>
+                <div class="toolbar-actions" id="tableActionsRow" style="display: none;">
+                    <button type="button" class="btn-action-excel" onclick="exportJornalesToCSV()" title="Descargar como archivo CSV para Excel">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Exportar Excel
+                    </button>
+                    <button type="button" id="btnGenerarPDF" class="btn-action-pdf" onclick="generateJornalesPDF()" title="Generar e imprimir informe PDF para el período">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        Generar Informe PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">
+                                <input type="checkbox" id="jornalesSelectAll" checked onchange="toggleSelectAllRows(this.checked)" style="cursor: pointer; width: 16px; height: 16px;">
+                            </th>
+                            <th>COLABORADOR</th>
+                            <th>TARIFA / HORA</th>
+                            <th>HORAS ACUM.</th>
+                            <th>SUBTOTAL</th>
+                            <th>BONO PRODUCTIVIDAD</th>
+                            <th>TOTAL PERÍODO</th>
+                            <th style="text-align: center;">FICHADAS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jornalesTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                Selecciona una semana y colaboradores, luego presiona <strong>Calcular Jornales</strong>.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL: DETALLE DE FICHADAS DEL COLABORADOR -->
+    <div id="modalDetalleFichadas" class="modal-overlay">
+        <div class="modal-content-box">
+            <div class="modal-header-bar">
+                <h3 id="modalCollabTitle">Detalle de Fichadas</h3>
+                <button type="button" class="modal-close-btn" onclick="closeModalFichadas()">&times;</button>
+            </div>
+            <div class="modal-body-scroll">
+                <div id="modalPeriodSubtitle" style="font-size: 13px; color: var(--color-blue); margin-bottom: 14px; font-weight: 600;"></div>
+                <div class="table-responsive">
+                    <table class="custom-table" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th style="text-align: center;">ENTRADA</th>
+                                <th style="text-align: center;">SALIDA</th>
+                                <th style="text-align: right;">DURACIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalFichadasTableBody">
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="modalFichadasSummary" style="margin-top: 15px; text-align: right; font-weight: 700; color: #ffffff;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT DEL MÓDULO -->
+    <script>
+        // Estado del módulo
+        let colaboradores = [];
+        let fichajesPeriodo = [];
+        let calculatedJornales = [];
+        let currentWeekRange = { start: null, end: null };
+
+        // 1. INICIALIZACIÓN
+        function initModule() {
+            checkUserRole();
+            initWeekPicker();
+            loadColaboradores();
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initModule);
+        } else {
+            initModule();
+        }
+
+        // 2. VERIFICACIÓN DE ROL
+        function checkUserRole() {
+            const role = localStorage.getItem('electrofrio_role') || 'Colaborador';
+            if (role !== 'Administrador') {
+                const mainContainer = document.getElementById('jornalesMainContainer');
+                const deniedCard = document.getElementById('accessDeniedCard');
+                if (mainContainer) mainContainer.style.display = 'none';
+                if (deniedCard) deniedCard.style.display = 'block';
+            }
+        }
+
+        // 3. SEMANA ISO Y DATE HELPERS
+        function getCurrentISOWeek(date = new Date()) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        function getDatesOfISOWeek(weekStr) {
+            if (!weekStr || !weekStr.includes('-W')) return null;
+            const parts = weekStr.split('-W');
+            const year = parseInt(parts[0], 10);
+            const week = parseInt(parts[1], 10);
+
+            const simple = new Date(year, 0, 1 + (week - 1) * 7);
+            const dow = simple.getDay();
+            const ISOweekStart = new Date(simple);
+            if (dow <= 4) {
+                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            } else {
+                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            }
+
+            const monday = new Date(ISOweekStart);
+            monday.setHours(0, 0, 0, 0);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+
+            return { start: monday, end: sunday };
+        }
+
+        function formatDateShort(date) {
+            if (!date) return '';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatTime24h(isoString) {
+            if (!isoString) return '--:--';
+            const date = new Date(isoString);
+            if (isNaN(date.getTime())) return '--:--';
+            const hours = String(date.getHours()).padStart(2, '0');
+            const mins = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${mins}`;
+        }
+
+        function formatCurrency(amount) {
+            const num = parseFloat(amount) || 0;
+            return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // 4. PICKER DE SEMANA
+        function initWeekPicker() {
+            const picker = document.getElementById('jornalesWeekPicker');
+            if (!picker) return;
+
+            const currentWeek = getCurrentISOWeek();
+            picker.value = currentWeek;
+            onWeekChanged();
+        }
+
+        function onWeekChanged() {
+            const picker = document.getElementById('jornalesWeekPicker');
+            const label = document.getElementById('weekRangeLabel');
+            if (!picker || !picker.value) return;
+
+            const range = getDatesOfISOWeek(picker.value);
+            if (range) {
+                currentWeekRange = range;
+                const weekNum = picker.value.split('-W')[1];
+                if (label) {
+                    label.textContent = `Semana ${weekNum} • Lunes ${formatDateShort(range.start)} al Domingo ${formatDateShort(range.end)}`;
+                }
+            }
+        }
+
+        function navigateWeek(delta) {
+            const picker = document.getElementById('jornalesWeekPicker');
+            if (!picker || !picker.value) return;
+
+            const parts = picker.value.split('-W');
+            let year = parseInt(parts[0], 10);
+            let week = parseInt(parts[1], 10) + delta;
+
+            if (week < 1) {
+                year--;
+                week = 52;
+            } else if (week > 52) {
+                year++;
+                week = 1;
+            }
+
+            picker.value = `${year}-W${String(week).padStart(2, '0')}`;
+            onWeekChanged();
+        }
+
+        function setWeekToCurrent() {
+            const picker = document.getElementById('jornalesWeekPicker');
+            if (picker) {
+                picker.value = getCurrentISOWeek();
+                onWeekChanged();
+            }
+        }
+
+        // 5. CARGA DE COLABORADORES
+        function loadColaboradores() {
+            // Intentar leer de localStorage primero
+            const cached = localStorage.getItem('electrofrio_collaborators');
+            if (cached) {
+                try {
+                    colaboradores = JSON.parse(cached);
+                    renderCollabCheckboxes();
+                } catch (e) {
+                    console.error("Error al parsear electrofrio_collaborators", e);
+                }
+            }
+
+            // Si Firestore está inicializado, sincronizar en vivo
+            if (window.db && typeof db.collection === 'function') {
+                db.collection('usuarios').onSnapshot((snapshot) => {
+                    const list = [];
+                    snapshot.forEach(doc => {
+                        list.push(doc.data());
+                    });
+                    if (list.length > 0) {
+                        colaboradores = list;
+                        localStorage.setItem('electrofrio_collaborators', JSON.stringify(colaboradores));
+                        renderCollabCheckboxes();
+                    }
+                }, err => {
+                    console.warn("Aviso Firestore usuarios:", err.message);
+                });
+            }
+        }
+
+        function renderCollabCheckboxes() {
+            const container = document.getElementById('collabCheckboxList');
+            if (!container) return;
+
+            // Filtrar solo los que tienen rol Colaborador
+            const collabs = colaboradores.filter(c => c.role === 'Colaborador');
+
+            if (collabs.length === 0) {
+                container.innerHTML = '<span style="color:var(--text-muted); font-size:12px;">No se encontraron colaboradores registrados.</span>';
+                return;
+            }
+
+            let html = '';
+            collabs.forEach((c, idx) => {
+                const name = c.name || 'Sin Nombre';
+                const rate = c.hourlyRate ? `$${c.hourlyRate.toLocaleString('es-AR')}/h` : '$2.000/h';
+                html += `
+                    <label class="collab-chip active" id="chip-collab-${idx}">
+                        <input type="checkbox" class="collab-check-item" value="${name}" checked onchange="updateChipActive(this, 'chip-collab-${idx}')">
+                        <span>${name}</span>
+                        <span style="font-size: 10px; opacity: 0.75;">(${rate})</span>
+                    </label>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateChipActive(checkbox, chipId) {
+            const chip = document.getElementById(chipId);
+            if (chip) {
+                if (checkbox.checked) {
+                    chip.classList.add('active');
+                } else {
+                    chip.classList.remove('active');
+                }
+            }
+        }
+
+        function toggleAllCollabs(checked) {
+            const checks = document.querySelectorAll('.collab-check-item');
+            checks.forEach(c => {
+                c.checked = checked;
+                const label = c.closest('.collab-chip');
+                if (label) {
+                    if (checked) label.classList.add('active');
+                    else label.classList.remove('active');
+                }
+            });
+        }
+
+        // 6. CÁLCULO DE JORNALES
+        async function calculateJornales() {
+            const picker = document.getElementById('jornalesWeekPicker');
+            if (!picker || !picker.value) {
+                alert("Por favor selecciona una semana.");
+                return;
+            }
+
+            const range = getDatesOfISOWeek(picker.value);
+            if (!range) return;
+            currentWeekRange = range;
+
+            // Colaboradores seleccionados
+            const checkedBoxes = document.querySelectorAll('.collab-check-item:checked');
+            const selectedNames = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (selectedNames.length === 0) {
+                alert("Por favor selecciona al menos un colaborador a liquidar.");
+                return;
+            }
+
+            const btnCalc = document.getElementById('btnCalcularJornales');
+            if (btnCalc) {
+                btnCalc.disabled = true;
+                btnCalc.innerHTML = '<span>Calculando...</span>';
+            }
+
+            try {
+                // Obtener fichajes del período (vía Firestore si está disponible, o localStorage)
+                fichajesPeriodo = await fetchFichajesForWeek(range.start, range.end);
+
+                // Mapear colaboradores seleccionados
+                const collabsToCalculate = colaboradores.filter(c => c.role === 'Colaborador' && selectedNames.includes(c.name));
+
+                // Preservar bonos existentes si ya se habían ingresado para esta semana
+                const previousBonuses = {};
+                calculatedJornales.forEach(item => {
+                    previousBonuses[item.name] = item.bonus || 0;
+                });
+
+                calculatedJornales = collabsToCalculate.map(c => {
+                    const totalHours = calculateHoursForPeriod(c.name, range.start, range.end, fichajesPeriodo);
+                    const rate = c.hourlyRate || 2000;
+                    const subtotal = totalHours * rate;
+                    const bonus = previousBonuses[c.name] !== undefined ? previousBonuses[c.name] : 0;
+                    const total = subtotal + bonus;
+
+                    return {
+                        id: c.uid || c.id || c.username || c.name,
+                        name: c.name,
+                        rate: rate,
+                        hours: totalHours,
+                        subtotal: subtotal,
+                        bonus: bonus,
+                        total: total
+                    };
+                });
+
+                renderResultsTable();
+                updateKPISummaries();
+
+                // Mostrar barra de acciones (PDF y Excel) y KPIs
+                const actionsRow = document.getElementById('tableActionsRow');
+                const kpiRow = document.getElementById('kpiSummaryRow');
+                const badge = document.getElementById('calculatedCountBadge');
+
+                if (actionsRow) actionsRow.style.display = 'flex';
+                if (kpiRow) kpiRow.style.display = 'grid';
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = `${calculatedJornales.length} colaboradores`;
+                }
+
+            } catch (err) {
+                console.error("Error al calcular jornales:", err);
+                alert("Error al calcular jornales: " + err.message);
+            } finally {
+                if (btnCalc) {
+                    btnCalc.disabled = false;
+                    btnCalc.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        <span>Calcular Jornales</span>
+                    `;
+                }
+            }
+        }
+
+        // Obtener fichajes de la semana (optimizado: lee solo el rango solicitado de Firestore)
+        async function fetchFichajesForWeek(startDate, endDate) {
+            const startISO = startDate.toISOString();
+            const endISO = endDate.toISOString();
+
+            let results = [];
+
+            // 1. Si Firestore está online, consultar solo ese rango de fechas
+            if (window.db && typeof db.collection === 'function') {
+                try {
+                    const snap = await db.collection('fichajes')
+                        .where('timestamp', '>=', startISO)
+                        .where('timestamp', '<=', endISO)
+                        .get();
+
+                    snap.forEach(doc => {
+                        results.push({ id: doc.id, ...doc.data() });
+                    });
+                } catch (e) {
+                    console.warn("No se pudo consultar Firestore por rango, usando caché local:", e.message);
+                }
+            }
+
+            // 2. Si no hubo resultados o falló, recurrir al caché local de fichajes
+            if (results.length === 0) {
+                const cached = localStorage.getItem('electrofrio_fichajes');
+                if (cached) {
+                    try {
+                        const allCached = JSON.parse(cached);
+                        results = allCached.filter(f => {
+                            if (!f.timestamp) return false;
+                            const d = new Date(f.timestamp);
+                            return d >= startDate && d <= endDate;
+                        });
+                    } catch (e) {
+                        console.error("Error al parsear fichajes en caché:", e);
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        // Helper seguro para parsear fecha/hora de cualquier fichaje
+        function parseFichajeDateObj(f) {
+            if (!f) return null;
+            if (f.timestamp) {
+                if (typeof f.timestamp.toDate === 'function') return f.timestamp.toDate();
+                const d = new Date(f.timestamp);
+                if (!isNaN(d.getTime())) return d;
+            }
+            if (f.date && f.time) {
+                // Formato ISO o D/M/Y
+                if (f.date.includes('-')) {
+                    const d = new Date(`${f.date}T${f.time.length === 5 ? f.time + ':00' : f.time}`);
+                    if (!isNaN(d.getTime())) return d;
+                } else if (f.date.includes('/')) {
+                    const parts = f.date.split('/');
+                    if (parts.length === 3) {
+                        const isoD = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        const d = new Date(`${isoD}T${f.time.length === 5 ? f.time + ':00' : f.time}`);
+                        if (!isNaN(d.getTime())) return d;
+                    }
+                }
+            }
+            if (f.date) {
+                const d = new Date(f.date);
+                if (!isNaN(d.getTime())) return d;
+            }
+            return null;
+        }
+
+        // Calcular horas trabajadas
+        function calculateHoursForPeriod(collabName, startDate, endDate, allFichajes) {
+            const collabEvents = (allFichajes || [])
+                .map(f => ({ ...f, _dateObj: parseFichajeDateObj(f) }))
+                .filter(f => {
+                    const fName = (f.name || f.colaborador || '').trim().toLowerCase();
+                    if (fName !== (collabName || '').trim().toLowerCase()) return false;
+                    if (!f._dateObj) return false;
+                    return f._dateObj >= startDate && f._dateObj <= endDate;
+                })
+                .sort((a, b) => a._dateObj - b._dateObj);
+
+            let totalHours = 0;
+            let entryEvent = null;
+
+            collabEvents.forEach(f => {
+                if (f.type === 'Entrada') {
+                    entryEvent = f;
+                } else if (f.type === 'Salida' && entryEvent) {
+                    const diffMs = f._dateObj - entryEvent._dateObj;
+                    const diffHours = diffMs / (1000 * 60 * 60);
+
+                    if (diffHours > 0) {
+                        totalHours += diffHours;
+                    }
+                    entryEvent = null;
+                }
+            });
+
+            return totalHours;
+        }
+
+        // Obtener detalle de jornadas para modal y PDF
+        function getDetailedJornadas(collabName, startDate, endDate, allFichajes) {
+            const collabEvents = (allFichajes || [])
+                .map(f => ({ ...f, _dateObj: parseFichajeDateObj(f) }))
+                .filter(f => {
+                    const fName = (f.name || f.colaborador || '').trim().toLowerCase();
+                    if (fName !== (collabName || '').trim().toLowerCase()) return false;
+                    if (!f._dateObj) return false;
+                    return f._dateObj >= startDate && f._dateObj <= endDate;
+                })
+                .sort((a, b) => a._dateObj - b._dateObj);
+
+            const jornadas = [];
+            let entryEvent = null;
+
+            collabEvents.forEach(f => {
+                if (f.type === 'Entrada') {
+                    if (entryEvent) {
+                        // Entrada previa sin salida registrada
+                        jornadas.push({
+                            fecha: formatDateShort(entryEvent._dateObj),
+                            entrada: f.time || formatTime24h(entryEvent.timestamp),
+                            salida: 'Sin Salida',
+                            horas: 0,
+                            incompleta: true
+                        });
+                    }
+                    entryEvent = f;
+                } else if (f.type === 'Salida') {
+                    if (entryEvent) {
+                        const diffMs = f._dateObj - entryEvent._dateObj;
+                        const diffHours = diffMs / (1000 * 60 * 60);
+
+                        jornadas.push({
+                            fecha: formatDateShort(entryEvent._dateObj),
+                            entrada: entryEvent.time || formatTime24h(entryEvent.timestamp),
+                            salida: f.time || formatTime24h(f.timestamp),
+                            horas: diffHours > 0 ? diffHours : 0,
+                            incompleta: false
+                        });
+                        entryEvent = null;
+                    } else {
+                        // Salida sin entrada
+                        jornadas.push({
+                            fecha: formatDateShort(f._dateObj),
+                            entrada: 'Sin Entrada',
+                            salida: f.time || formatTime24h(f.timestamp),
+                            horas: 0,
+                            incompleta: true
+                        });
+                    }
+                }
+            });
+
+            if (entryEvent) {
+                jornadas.push({
+                    fecha: formatDateShort(entryEvent._dateObj),
+                    entrada: entryEvent.time || formatTime24h(entryEvent.timestamp),
+                    salida: 'Sin Salida',
+                    horas: 0,
+                    incompleta: true
+                });
+            }
+
+            return jornadas;
+        }
+
+        // 7. RENDERIZADO DE TABLA DE RESULTADOS
+        function renderResultsTable() {
+            const tbody = document.getElementById('jornalesTableBody');
+            if (!tbody) return;
+
+            if (calculatedJornales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">No se encontraron registros de fichajes para la semana y colaboradores seleccionados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            calculatedJornales.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="jornales-row-check" data-index="${index}" checked style="cursor: pointer; width: 16px; height: 16px;">
+                    </td>
+                    <td data-label="COLABORADOR">
+                        <div style="font-weight: 700; color: #ffffff;">${item.name}</div>
+                    </td>
+                    <td data-label="TARIFA / HORA">
+                        <span class="rate-badge">$${item.rate.toLocaleString('es-AR')} ARS/h</span>
+                    </td>
+                    <td data-label="HORAS ACUM.">
+                        <span class="hours-badge">${item.hours.toFixed(1)} hs</span>
+                    </td>
+                    <td data-label="SUBTOTAL">
+                        <span id="subtotal-${index}" style="font-weight: 600; color: #ffffff;">$${item.subtotal.toLocaleString('es-AR')} ARS</span>
+                    </td>
+                    <td data-label="BONO PRODUCTIVIDAD">
+                        <input type="number" class="bonus-input-field" data-index="${index}" value="${item.bonus}" min="0" step="500" oninput="handleBonusChange(${index}, this.value)" placeholder="0">
+                    </td>
+                    <td data-label="TOTAL PERÍODO">
+                        <span class="total-badge" id="total-${index}">$${item.total.toLocaleString('es-AR')} ARS</span>
+                    </td>
+                    <td data-label="FICHADAS" style="text-align: center;">
+                        <button type="button" class="btn-ver-fichadas" onclick="openModalFichadas(${index})" title="Ver detalle de jornadas">
+                            👁️ Detalle
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleBonusChange(index, value) {
+            const bonusVal = parseFloat(value) || 0;
+            if (calculatedJornales[index]) {
+                calculatedJornales[index].bonus = bonusVal;
+                calculatedJornales[index].total = calculatedJornales[index].subtotal + bonusVal;
+
+                const totalEl = document.getElementById(`total-${index}`);
+                if (totalEl) {
+                    totalEl.textContent = `$${calculatedJornales[index].total.toLocaleString('es-AR')} ARS`;
+                }
+                updateKPISummaries();
+            }
+        }
+
+        function toggleSelectAllRows(checked) {
+            const checks = document.querySelectorAll('.jornales-row-check');
+            checks.forEach(c => c.checked = checked);
+        }
+
+        // 8. KPIS
+        function updateKPISummaries() {
+            let totalCollabs = calculatedJornales.length;
+            let totalHours = 0;
+            let totalBonuses = 0;
+            let grandTotal = 0;
+
+            calculatedJornales.forEach(item => {
+                totalHours += item.hours || 0;
+                totalBonuses += item.bonus || 0;
+                grandTotal += item.total || 0;
+            });
+
+            const collabsEl = document.getElementById('kpiCollabsCount');
+            const hoursEl = document.getElementById('kpiTotalHours');
+            const bonusEl = document.getElementById('kpiTotalBonuses');
+            const totalEl = document.getElementById('kpiGrandTotal');
+
+            if (collabsEl) collabsEl.textContent = totalCollabs;
+            if (hoursEl) hoursEl.textContent = `${totalHours.toFixed(1)} hs`;
+            if (bonusEl) bonusEl.textContent = `$${totalBonuses.toLocaleString('es-AR')}`;
+            if (totalEl) totalEl.textContent = `$${grandTotal.toLocaleString('es-AR')}`;
+        }
+
+        // 9. MODAL DETALLE DE FICHADAS
+        window.openModalFichadas = function(index) {
+            const item = calculatedJornales[index];
+            if (!item) {
+                console.warn("No se encontró el colaborador en el índice:", index);
+                return;
+            }
+
+            // Asegurar que el rango de la semana esté activo
+            const picker = document.getElementById('jornalesWeekPicker');
+            if ((!currentWeekRange || !currentWeekRange.start) && picker && picker.value) {
+                currentWeekRange = getDatesOfISOWeek(picker.value);
+            }
+
+            const modal = document.getElementById('modalDetalleFichadas');
+            const titleEl = document.getElementById('modalCollabTitle');
+            const subTitleEl = document.getElementById('modalPeriodSubtitle');
+            const tbody = document.getElementById('modalFichadasTableBody');
+            const summaryEl = document.getElementById('modalFichadasSummary');
+
+            if (titleEl) titleEl.textContent = `Detalle de Fichadas: ${item.name}`;
+            if (subTitleEl && currentWeekRange && currentWeekRange.start) {
+                subTitleEl.textContent = `Período: ${formatDateShort(currentWeekRange.start)} al ${formatDateShort(currentWeekRange.end)}`;
+            }
+
+            const startRange = currentWeekRange && currentWeekRange.start ? currentWeekRange.start : new Date(0);
+            const endRange = currentWeekRange && currentWeekRange.end ? currentWeekRange.end : new Date(8640000000000000);
+
+            const jornadas = getDetailedJornadas(item.name, startRange, endRange, fichajesPeriodo);
+
+            if (tbody) {
+                if (jornadas.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 25px;">No se registraron fichadas para este colaborador en esta semana.</td></tr>`;
+                } else {
+                    let html = '';
+                    let sumHs = 0;
+                    jornadas.forEach(j => {
+                        sumHs += j.horas;
+                        const durationStyle = j.incompleta ? 'color: #f59e0b; font-weight: 600;' : 'font-weight: 700; color: #ffffff;';
+                        const durationText = j.incompleta ? '⚠️ Incompleto' : `${j.horas.toFixed(2)} hs`;
+                        html += `
+                            <tr>
+                                <td>${j.fecha}</td>
+                                <td style="text-align: center;">${j.entrada}</td>
+                                <td style="text-align: center;">${j.salida}</td>
+                                <td style="text-align: right; ${durationStyle}">${durationText}</td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+
+                    if (summaryEl) {
+                        summaryEl.innerHTML = `Total acumulado: <span style="color: var(--color-blue); font-size: 15px;">${sumHs.toFixed(2)} hs</span> • Liquidación base: <span style="color: #10b981; font-size: 15px;">${(sumHs * item.rate).toLocaleString('es-AR')} ARS</span>`;
+                    }
+                }
+            }
+
+            if (modal) {
+                modal.classList.add('active');
+                modal.classList.add('show');
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+                modal.style.pointerEvents = 'all';
+            }
+        };
+
+        window.closeModalFichadas = function() {
+            const modal = document.getElementById('modalDetalleFichadas');
+            if (modal) {
+                modal.classList.remove('active');
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.style.opacity = '0';
+                modal.style.pointerEvents = 'none';
+            }
+        };
+
+        // 10. GENERACIÓN DE REPORTE PDF OFICIAL
+        function generateJornalesPDF() {
+            const picker = document.getElementById('jornalesWeekPicker');
+            if (!picker || !picker.value) {
+                alert("Por favor selecciona una semana.");
+                return;
+            }
+
+            const weekVal = picker.value;
+            const rowChecks = document.querySelectorAll('.jornales-row-check:checked');
+            if (rowChecks.length === 0) {
+                alert("Por favor selecciona al menos un colaborador en la tabla para incluir en el PDF.");
+                return;
+            }
+
+            const indices = Array.from(rowChecks).map(c => parseInt(c.getAttribute('data-index'), 10));
+            const selectedJornales = indices.map(idx => calculatedJornales[idx]);
+
+            const range = getDatesOfISOWeek(weekVal);
+            const startFormatted = formatDateShort(range.start);
+            const endFormatted = formatDateShort(range.end);
+            const cleanWeekVal = weekVal.split('-W')[1] || weekVal;
+
+            const now = new Date();
+            const emissionTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const emissionDate = formatDateShort(now);
+
+            // Contenedor temporal para generar el documento PDF
+            const tempDiv = document.createElement('div');
+            tempDiv.style.width = '210mm';
+            tempDiv.style.backgroundColor = '#ffffff';
+            tempDiv.style.boxSizing = 'border-box';
+            tempDiv.style.padding = '15mm 15mm 20mm 15mm';
+            tempDiv.style.fontFamily = 'Arial, sans-serif';
+            tempDiv.style.color = '#333333';
+
+            // Tarjetas por colaborador
+            let collabsHtml = '';
+            selectedJornales.forEach(item => {
+                const jornadas = getDetailedJornadas(item.name, range.start, range.end, fichajesPeriodo);
+                let tableRows = '';
+                let totalHs = 0;
+
+                if (jornadas.length === 0) {
+                    tableRows = `
+                        <tr>
+                            <td colspan="4" style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 12px;">
+                                No se registraron fichadas completas en esta semana.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    jornadas.forEach(j => {
+                        totalHs += j.horas;
+                        tableRows += `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 9px 16px; text-align: left; font-size: 12px;">${j.fecha}</td>
+                                <td style="padding: 9px 16px; text-align: center; font-size: 12px;">${j.entrada}</td>
+                                <td style="padding: 9px 16px; text-align: center; font-size: 12px;">${j.salida}</td>
+                                <td style="padding: 9px 16px; text-align: right; font-size: 12px; font-weight: 600;">${j.horas.toFixed(2)} hs</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                const subtotalLiquidar = totalHs * item.rate;
+                const totalFinal = subtotalLiquidar + (item.bonus || 0);
+
+                collabsHtml += `
+                    <div style="page-break-inside: avoid; margin-bottom: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background-color: #ffffff; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #cbd5e1; background-color: #f8fafc;">
+                            <span style="color: #0f172a; font-size: 15px; font-weight: 700;">Colaborador: ${item.name}</span>
+                            <span style="font-size: 15px; font-weight: 700;">
+                                <span style="color: #0284c7; margin-right: 18px;">${totalHs.toFixed(2)} hs</span>
+                                <span style="color: #10b981;">${formatCurrency(totalFinal)}</span>
+                            </span>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #334155;">
+                            <thead>
+                                <tr style="background-color: #f1f5f9; border-bottom: 1px solid #cbd5e1; color: #475569;">
+                                    <th style="padding: 8px 16px; text-align: left; font-weight: 700; width: 25%;">FECHA</th>
+                                    <th style="padding: 8px 16px; text-align: center; font-weight: 700; width: 25%;">ENTRADA</th>
+                                    <th style="padding: 8px 16px; text-align: center; font-weight: 700; width: 25%;">SALIDA</th>
+                                    <th style="padding: 8px 16px; text-align: right; font-weight: 700; width: 25%;">HORAS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                        <div style="background-color: #f8fafc; border-top: 1px solid #cbd5e1; padding: 10px 18px; text-align: right; font-size: 13px; font-weight: 700; color: #0f172a;">
+                            Tarifa/hora: ${formatCurrency(item.rate)} | Subtotal: ${formatCurrency(subtotalLiquidar)} ${item.bonus > 0 ? `| Bono: ${formatCurrency(item.bonus)}` : ''} | <strong>Total a Liquidar: ${formatCurrency(totalFinal)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tempDiv.innerHTML = `
+                <div>
+                    <!-- Encabezado Institucional -->
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; align-items: center;">
+                        <div>
+                            <h1 style="color: #1e3656; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px;">ELECTROFRÍO</h1>
+                            <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-style: italic;">Servicio Técnico Especializado en Refrigeración y Climatización</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 style="margin: 0; font-size: 20px; color: #0f172a; font-weight: 800; letter-spacing: 0.5px;">REPORTE DE JORNALES</h2>
+                            <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; font-weight: 700;">
+                                Semana: ${cleanWeekVal} (${startFormatted} - ${endFormatted})
+                            </p>
+                            <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b;">
+                                Emisión: ${emissionDate} ${emissionTime}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjetas de Colaboradores -->
+                    <div>
+                        ${collabsHtml}
+                    </div>
+                </div>
+            `;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'absolute';
+            wrapper.style.left = '-9999px';
+            wrapper.style.top = '0';
+            wrapper.appendChild(tempDiv);
+            document.body.appendChild(wrapper);
+
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `ElectroFrio_Liquidacion_Jornales_Semana_${cleanWeekVal}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(tempDiv).set(opt).toPdf().get('pdf').then(function(pdf) {
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(130);
+
+                    // Línea fina pie de página
+                    pdf.setDrawColor(200, 200, 200);
+                    pdf.setLineWidth(0.2);
+                    pdf.line(15, 280, 195, 280);
+
+                    pdf.text(`ElectroFrío • Liquidación de Jornales Semana ${cleanWeekVal}`, 15, 285);
+                    pdf.text(`${emissionDate} ${emissionTime} | Página ${i} de ${totalPages}`, 195, 285, { align: 'right' });
+                }
+            }).save().then(() => {
+                document.body.removeChild(wrapper);
+            }).catch(err => {
+                if (wrapper.parentNode) document.body.removeChild(wrapper);
+                console.error("Error al exportar a PDF:", err);
+                alert("Error al exportar a PDF: " + err.message);
+            });
+        }
+
+        // 11. EXPORTAR A EXCEL (CSV)
+        function exportJornalesToCSV() {
+            if (calculatedJornales.length === 0) {
+                alert("No hay jornales calculados para exportar.");
+                return;
+            }
+
+            const picker = document.getElementById('jornalesWeekPicker');
+            const weekVal = picker ? picker.value : 'Semana';
+            const range = getDatesOfISOWeek(weekVal);
+            const periodStr = range ? `${formatDateShort(range.start)} al ${formatDateShort(range.end)}` : weekVal;
+
+            let csvContent = "\uFEFF"; // BOM para acentos en Excel
+            csvContent += `Liquidación de Jornales - ElectroFrío\n`;
+            csvContent += `Semana:;${weekVal} (${periodStr})\n\n`;
+            csvContent += `Colaborador;Tarifa Hora (ARS);Horas Trabajadas;Subtotal (ARS);Bono Productividad (ARS);Total a Liquidar (ARS)\n`;
+
+            calculatedJornales.forEach(item => {
+                const row = [
+                    `"${item.name}"`,
+                    item.rate,
+                    item.hours.toFixed(2),
+                    item.subtotal.toFixed(2),
+                    item.bonus.toFixed(2),
+                    item.total.toFixed(2)
+                ];
+                csvContent += row.join(';') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ElectroFrio_Jornales_${weekVal}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

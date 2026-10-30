@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroFrío - Diagrama de Flujo de Datos (DFD A4)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-size: 10.5px;
+            line-height: 1.3;
+        }
+
+        /* Barra de herramientas */
+        .toolbar {
+            background: #0f172a;
+            color: #fff;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .toolbar h1 {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* Hoja A4 Paisaje */
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .a4-page {
+            background: #ffffff;
+            width: 297mm;
+            min-height: 210mm;
+            height: 210mm;
+            padding: 8mm 10mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .a4-page.portrait {
+            width: 210mm;
+            min-height: 297mm;
+            height: 297mm;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, #0284c7, #075985);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .header h2 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .header p {
+            font-size: 9px;
+            color: #64748b;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 8.5px;
+            color: #475569;
+        }
+
+        /* Ciclo / Proceso Superior */
+        .cycle-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .cycle-step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 5px 8px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .cycle-step::after {
+            content: "➔";
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .cycle-step:last-child::after {
+            display: none;
+        }
+
+        .cycle-badge {
+            font-size: 7.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        .cycle-step h3 {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .cycle-step p {
+            font-size: 7.5px;
+            color: #64748b;
+        }
+
+        /* DFD Diagram Content */
+        .dfd-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+            margin-bottom: 6px;
+        }
+
+        .dfd-block {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .block-header {
+            padding: 4px 6px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #ffffff;
+        }
+
+        .bg-comercial  { background: #0891b2; }
+        .bg-operativo  { background: #0284c7; }
+        .bg-campo      { background: #059669; }
+        .bg-cierre     { background: #7c3aed; }
+
+        .block-content {
+            padding: 5px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        /* Cajita de Proceso */
+        .process-box {
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 8px;
+        }
+
+        .process-box strong {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #1e293b;
+            font-size: 8.5px;
+            margin-bottom: 2px;
+        }
+
+        .process-box .flow-arrow {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: #475569;
+            font-size: 7.5px;
+            margin-top: 2px;
+        }
+
+        .flow-tag {
+            background: #e2e8f0;
+            color: #1e293b;
+            padding: 0 4px;
+            border-radius: 2px;
+            font-family: monospace;
+            font-size: 7px;
+        }
+
+        /* Tabla de Almacén de Datos (Data Store DFD) */
+        .store-table {
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            font-size: 7.5px;
+            background: #ffffff;
+        }
+
+        .store-title {
+            background: #f1f5f9;
+            padding: 2px 5px;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .store-title span.badge-id {
+            background: #e2e8f0;
+            font-family: monospace;
+            font-size: 6.8px;
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+
+        .store-fields {
+            padding: 3px 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5px;
+        }
+
+        .store-fields div {
+            display: flex;
+            justify-content: space-between;
+            color: #475569;
+        }
+
+        .store-fields strong {
+            color: #0f172a;
+        }
+
+        .fk-link {
+            color: #0284c7;
+            font-weight: 600;
+        }
+
+        /* Footer de Conexión de Datos */
+        .footer-connections {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 5px 8px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            font-size: 7.8px;
+        }
+
+        .footer-connections h4 {
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .conn-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .conn-table th {
+            text-align: left;
+            background: #e2e8f0;
+            padding: 2px 4px;
+            color: #1e293b;
+        }
+
+        .conn-table td {
+            padding: 2px 4px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .legend-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5px;
+            color: #475569;
+        }
+
+        .legend-list li strong {
+            color: #0f172a;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 5mm 8mm;
+        }
+
+        @media print {
+            body { background: none !important; padding: 0 !important; }
+            .toolbar { display: none !important; }
+            .page-wrapper { padding: 0 !important; }
+            .a4-page {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                padding: 0 !important;
+                min-height: auto !important;
+            }
+            .dfd-block, .cycle-step { break-inside: avoid; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA FLOTANTE -->
+    <div class="toolbar">
+        <h1>
+            <span>🔄</span> ElectroFrío V2 — Diagrama de Flujo de Datos (DFD)
+        </h1>
+        <div class="actions">
+            <button class="btn" onclick="window.print()">
+                <span>🖨️</span> Imprimir DFD en A4 / Guardar PDF
+            </button>
+            <button class="btn btn-secondary" onclick="toggleOrientation()">
+                <span>↔️</span> Cambiar Orientación
+            </button>
+        </div>
+    </div>
+
+    <!-- HOJA A4 -->
+    <div class="page-wrapper">
+        <div class="a4-page" id="printablePage">
+
+            <!-- HEADER -->
+            <header class="header">
+                <div class="brand-title">
+                    <div class="logo-box">EF DFD</div>
+                    <div>
+                        <h2>MAPA DE FLUJO Y CONEXIÓN DE DATOS EN TIEMPO REAL</h2>
+                        <p>Traza de extremo a extremo: Desde el contacto del cliente hasta la ejecución en campo y la caja</p>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div><strong>Modelo:</strong> Data Flow Diagram (DFD Nivel 1)</div>
+                    <div><strong>Base de Datos:</strong> Firestore Reactivo (onSnapshot)</div>
+                    <div><strong>Formato:</strong> Hoja A4 Paisaje (1 carilla)</div>
+                </div>
+            </header>
+
+            <!-- PIPELINE DE 4 ETAPAS -->
+            <div class="cycle-bar">
+                <div class="cycle-step" style="border-left: 3px solid #0891b2;">
+                    <span class="cycle-badge" style="color: #0891b2;">Etapa 1 • Comercial</span>
+                    <h3>Contacto y Presupuesto</h3>
+                    <p>Captación de cliente, cotización de repuestos y mano de obra.</p>
+                </div>
+                <div class="cycle-step" style="border-left: 3px solid #0284c7;">
+                    <span class="cycle-badge" style="color: #0284c7;">Etapa 2 • Despacho</span>
+                    <h3>Orden de Trabajo (OT)</h3>
+                    <p>Coordinación de horario, domicilio y asignación de técnicos.</p>
+                </div>
+                <div class="cycle-step" style="border-left: 3px solid #059669;">
+                    <span class="cycle-badge" style="color: #059669;">Etapa 3 • Campo</span>
+                    <h3>Planilla Digital (PDT)</h3>
+                    <p>Geolocalización, reporte técnico y consumo de repuestos.</p>
+                </div>
+                <div class="cycle-step" style="border-left: 3px solid #7c3aed;">
+                    <span class="cycle-badge" style="color: #7c3aed;">Etapa 4 • Tesorería</span>
+                    <h3>Liquidación y Cobro</h3>
+                    <p>Impacto en cuenta corriente, cargos, cobros y saldo cliente.</p>
+                </div>
+            </div>
+
+            <!-- GRID PRINCIPAL DE 4 BLOQUES CON PROCESOS Y ALMACENES -->
+            <main class="dfd-main">
+
+                <!-- BLOQUE 1: COMERCIAL -->
+                <div class="dfd-block">
+                    <div class="block-header bg-comercial">
+                        <span>1. Proceso Comercial</span>
+                        <span>D1 / D4</span>
+                    </div>
+                    <div class="block-content">
+                        <!-- Proceso -->
+                        <div class="process-box">
+                            <strong>⚙️ P1. Cotizar Servicio</strong>
+                            <div>Consulta precios en almacenes de catálogo y formula propuesta.</div>
+                            <div class="flow-arrow">
+                                <span>📥 In:</span> <span class="flow-tag">materiales</span> + <span class="flow-tag">mano_obra</span>
+                            </div>
+                            <div class="flow-arrow">
+                                <span>📤 Out:</span> <span class="flow-tag">presupuestos</span> ➔ PDF / WhatsApp
+                            </div>
+                        </div>
+
+                        <!-- Data Store: clientes -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D1: clientes</span>
+                                <span class="badge-id">PK: id</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Nombre / Razón Social:</span> <strong>name</strong></div>
+                                <div><span>Teléfono y Domicilio:</span> <strong>phone, address</strong></div>
+                                <div><span>Multi-direcciones:</span> <strong>addresses[]</strong></div>
+                                <div><span>Saldo Cuenta Corriente:</span> <strong>balance ($)</strong></div>
+                                <div><span>Fase Embudo:</span> <strong>pipelineStage</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Store: presupuestos -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D4: presupuestos</span>
+                                <span class="badge-id">PK: id</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Cliente Vinculado:</span> <strong class="fk-link">client.id (FK)</strong></div>
+                                <div><span>Número Presupuesto:</span> <strong>number</strong></div>
+                                <div><span>Artículos y Labores:</span> <strong>items[] (mat & mo)</strong></div>
+                                <div><span>Subtotal, Bonif, Total:</span> <strong>total ($)</strong></div>
+                                <div><span>Estado:</span> <strong>status (Aprob/Rech)</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 2: DESPACHO Y LOGÍSTICA -->
+                <div class="dfd-block">
+                    <div class="block-header bg-operativo">
+                        <span>2. Planificación OT</span>
+                        <span>D5 / D8</span>
+                    </div>
+                    <div class="block-content">
+                        <!-- Proceso -->
+                        <div class="process-box">
+                            <strong>⚙️ P2. Programar y Despachar</strong>
+                            <div>Crea la OT a partir del cliente o presupuesto aprobado y asigna al equipo.</div>
+                            <div class="flow-arrow">
+                                <span>📥 In:</span> <span class="flow-tag">clientes.id</span> + <span class="flow-tag">usuarios</span>
+                            </div>
+                            <div class="flow-arrow">
+                                <span>📤 Out:</span> <span class="flow-tag">ordenes</span> ➔ Calendario & Mapa
+                            </div>
+                        </div>
+
+                        <!-- Data Store: ordenes -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D5: ordenes</span>
+                                <span class="badge-id">PK: OT-XXXX</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Cliente Vinculado:</span> <strong class="fk-link">clientId (FK D1)</strong></div>
+                                <div><span>Nombre / Dirección Caché:</span> <strong>client, address</strong></div>
+                                <div><span>Técnicos Asignados:</span> <strong class="fk-link">assignees[] (FK D8)</strong></div>
+                                <div><span>Fecha y Franja:</span> <strong>date, timeRange</strong></div>
+                                <div><span>Estado de Ejecución:</span> <strong>status (Pend/En Curso)</strong></div>
+                                <div><span>Tipo de Trabajo:</span> <strong>type, observations</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Store: usuarios -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D8: usuarios (Colaboradores)</span>
+                                <span class="badge-id">PK: uid</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Nombre y Usuario:</span> <strong>name, username</strong></div>
+                                <div><span>Rol de Acceso:</span> <strong>role (Admin/Colab)</strong></div>
+                                <div><span>Presencia en Vivo:</span> <strong>status (online/off)</strong></div>
+                                <div><span>Color Calendario:</span> <strong>color (#hex)</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 3: EJECUCIÓN EN CAMPO -->
+                <div class="dfd-block">
+                    <div class="block-header bg-campo">
+                        <span>3. Ejecución Técnica</span>
+                        <span>D6 / D9</span>
+                    </div>
+                    <div class="block-content">
+                        <!-- Proceso -->
+                        <div class="process-box">
+                            <strong>⚙️ P3. Registrar Labor y Cierre</strong>
+                            <div>Técnico ficha con GPS, ejecuta el servicio y completa el informe digital PDT.</div>
+                            <div class="flow-arrow">
+                                <span>📥 In:</span> <span class="flow-tag">ordenes.id</span> + GPS + insumos
+                            </div>
+                            <div class="flow-arrow">
+                                <span>📤 Out:</span> <span class="flow-tag">planillas</span> ➔ Cierra OT
+                            </div>
+                        </div>
+
+                        <!-- Data Store: planillas -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D6: planillas (PDT Digital)</span>
+                                <span class="badge-id">PK: id</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Orden Asociada:</span> <strong class="fk-link">orderId (FK 1:1 D5)</strong></div>
+                                <div><span>Código PDT:</span> <strong>pdtCode (PDT-XXXX)</strong></div>
+                                <div><span>Cliente Vinculado:</span> <strong class="fk-link">clientId (FK D1)</strong></div>
+                                <div><span>Horarios de Servicio:</span> <strong>horaEntrada, horaSalida</strong></div>
+                                <div><span>Técnicos Presentes:</span> <strong>technicians[], completedBy</strong></div>
+                                <div><span>Repuestos e Insumos:</span> <strong>spareParts (➔ D2)</strong></div>
+                                <div><span>Mano de Obra Aplicada:</span> <strong>manoObra (➔ D3)</strong></div>
+                                <div><span>Resultado:</span> <strong>estadoPDT (REALIZADO)</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Store: fichajes -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D9: fichajes (Control Horario)</span>
+                                <span class="badge-id">PK: id</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Técnico Responsable:</span> <strong class="fk-link">username (FK D8)</strong></div>
+                                <div><span>Fecha y Hora:</span> <strong>date, time, timestamp</strong></div>
+                                <div><span>Tipo de Marca:</span> <strong>type (Entrada/Salida)</strong></div>
+                                <div><span>Geolocalización:</span> <strong>gps: {lat, lng, verif}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 4: ADMINISTRACIÓN Y COBROS -->
+                <div class="dfd-block">
+                    <div class="block-header bg-cierre">
+                        <span>4. Finanzas y Cobros</span>
+                        <span>D7 / D2-D3</span>
+                    </div>
+                    <div class="block-content">
+                        <!-- Proceso -->
+                        <div class="process-box">
+                            <strong>⚙️ P4. Liquidar y Cobrar</strong>
+                            <div>Carga el débito por el servicio realizado y registra cobros en efectivo o transferencias.</div>
+                            <div class="flow-arrow">
+                                <span>📥 In:</span> <span class="flow-tag">planillas.pdtCode</span> + importe
+                            </div>
+                            <div class="flow-arrow">
+                                <span>📤 Out:</span> <span class="flow-tag">cobros_mov</span> ➔ Actualiza Saldo
+                            </div>
+                        </div>
+
+                        <!-- Data Store: cobros_movimientos -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D7: cobros_movimientos</span>
+                                <span class="badge-id">PK: id</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Cliente Imputado:</span> <strong class="fk-link">clientId (FK D1)</strong></div>
+                                <div><span>Tipo Movimiento:</span> <strong>type ('cargo' | 'abono')</strong></div>
+                                <div><span>Monto Monetario:</span> <strong>amount ($)</strong></div>
+                                <div><span>Medio de Pago:</span> <strong>paymentMethod</strong></div>
+                                <div><span>Concepto / Comprobante:</span> <strong>concept, receiptNumber</strong></div>
+                                <div><span>Fecha Transacción:</span> <strong>date, createdAt</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Store: Catálogos -->
+                        <div class="store-table">
+                            <div class="store-title">
+                                <span>📁 D2-D3: Catálogo Almacén</span>
+                                <span class="badge-id">materiales / mano_obra</span>
+                            </div>
+                            <div class="store-fields">
+                                <div><span>Materiales:</span> <strong>codigo, stock, costo, venta</strong></div>
+                                <div><span>Mano de Obra:</span> <strong>codigo, labor, tarifa, minutos</strong></div>
+                                <div><span>Propósito:</span> <strong>Estandariza costos en P1 y P3</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- FOOTER: MATRIZ DE CONECTORES Y FLUJO -->
+            <footer class="footer-connections">
+                <div>
+                    <h4>🔁 Conexión de Datos y Dependencias del Sistema</h4>
+                    <table class="conn-table">
+                        <thead>
+                            <tr>
+                                <th>Flujo de Datos</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Datos que Viajan</th>
+                                <th>Acción que Dispara</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1. Aprobación Presupuesto</strong></td>
+                                <td><code>presupuestos</code></td>
+                                <td><code>ordenes</code></td>
+                                <td><code>clientId, clientName, items</code></td>
+                                <td>Apertura automática de Orden de Trabajo.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. Asignación Logística</strong></td>
+                                <td><code>usuarios</code></td>
+                                <td><code>ordenes</code></td>
+                                <td><code>assignees[] (uids / nombres)</code></td>
+                                <td>Aparece en la agenda del técnico en tiempo real.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. Cierre de Planilla</strong></td>
+                                <td><code>planillas</code></td>
+                                <td><code>ordenes</code></td>
+                                <td><code>orderId, estadoPDT</code></td>
+                                <td>Cambia estado de la OT a <em>"Completado"</em>.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4. Imputación de Cuenta</strong></td>
+                                <td><code>cobros_movimientos</code></td>
+                                <td><code>clientes</code></td>
+                                <td><code>amount, type (cargo/abono)</code></td>
+                                <td>Suma o resta directamente al <code>balance</code> del cliente.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4>📌 Claves de Conexión</h4>
+                    <ul class="legend-list">
+                        <li><strong>D1 (Clientes)</strong> es el centro gravitacional: todo presupuesto, orden y movimiento financiero conecta con un <code>clientId</code>.</li>
+                        <li><strong>D5 ➔ D6 (1 a 1):</strong> Una OT origina una única PDT con el detalle real de insumos usados.</li>
+                        <li><strong>Sincronización Reactiva:</strong> Todo cambio en Firestore actualiza instantáneamente las pantallas de Oficina y los teléfonos de los Técnicos sin recargar la página.</li>
+                    </ul>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleOrientation() {
+            const page = document.getElementById('printablePage');
+            const style = document.querySelector('style');
+            if (page.classList.contains('portrait')) {
+                page.classList.remove('portrait');
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*portrait/g, 'size: A4 landscape');
+            } else {
+                page.classList.add('portrait');
+                style.innerHTML = style.innerHTML.replace(/size:\s*A4\s*landscape/g, 'size: A4 portrait');
+            }
+        }
+    </script>
+</body>
+</html>

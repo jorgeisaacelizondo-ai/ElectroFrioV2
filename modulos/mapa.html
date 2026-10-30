@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mapa de Técnicos - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos del sistema -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Leaflet JS (Mapas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+        }
+
+        .map-header {
+            background-color: var(--bg-card, #16243d);
+            border-bottom: 1px solid var(--border-color, #1e3656);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .map-title-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .map-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(0, 180, 216, 0.15);
+            border: 1px solid var(--color-blue, #00b4d8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-blue, #00b4d8);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .map-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-primary, #ffffff);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-subtitle {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            color: var(--text-muted, #94a3b8);
+        }
+
+        .map-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-action-primary {
+            background-color: var(--color-blue, #00b4d8);
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .btn-action-primary:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-action-outline {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color, #1e3656);
+            color: var(--text-primary, #ffffff);
+        }
+
+        .btn-action-outline:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-chip {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color, #1e3656);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted, #94a3b8);
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: rgba(0, 180, 216, 0.15);
+            border-color: var(--color-blue, #00b4d8);
+            color: var(--color-blue, #00b4d8);
+        }
+
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: calc(100% - 63px);
+            display: flex;
+        }
+
+        #techMap {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: #0d1726;
+        }
+
+        /* Sidebar flotante con lista de técnicos */
+        .tech-sidebar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            bottom: 15px;
+            width: 320px;
+            background: rgba(17, 28, 48, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 12px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tech-sidebar.collapsed {
+            transform: translateX(calc(100% + 25px));
+        }
+
+        .tech-sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color, #1e3656);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .tech-sidebar-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary, #ffffff);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tech-sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tech-card:hover {
+            background: rgba(0, 180, 216, 0.08);
+            border-color: rgba(0, 180, 216, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .tech-card.active {
+            border-color: var(--color-blue, #00b4d8);
+            background: rgba(0, 180, 216, 0.12);
+        }
+
+        .tech-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .tech-avatar-online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #111c30;
+        }
+
+        .tech-avatar-online-dot.online {
+            background-color: #10b981;
+        }
+
+        .tech-avatar-online-dot.offline {
+            background-color: #64748b;
+        }
+
+        .tech-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tech-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary, #ffffff);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tech-meta {
+            font-size: 11px;
+            color: var(--text-muted, #94a3b8);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .btn-toggle-sidebar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 999;
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            color: var(--text-primary, #fff);
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Marker pulse animation */
+        @keyframes mapPulse {
+            0% { transform: scale(0.9); opacity: 0.9; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* Custom Leaflet Popups */
+        .leaflet-popup-content-wrapper {
+            background: #111c30 !important;
+            color: #ffffff !important;
+            border: 1px solid #1e3656 !important;
+            border-radius: 12px !important;
+            padding: 0 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 14px 16px !important;
+            line-height: 1.4 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .leaflet-popup-tip {
+            background: #111c30 !important;
+            border: 1px solid #1e3656 !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .map-header {
+                padding: 10px 14px;
+            }
+            .tech-sidebar {
+                top: auto;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                width: auto;
+                max-height: 50vh;
+            }
+            .tech-sidebar.collapsed {
+                transform: translateY(calc(100% + 20px));
+            }
+            .map-subtitle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header superior del módulo -->
+    <header class="map-header">
+        <div class="map-title-box">
+            <div class="map-icon">🗺️</div>
+            <div>
+                <h1 class="map-title">
+                    Ubicación en Tiempo Real
+                    <span id="badgeActiveCount" style="font-size: 12px; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 12px;">
+                        0 activos
+                    </span>
+                </h1>
+                <p class="map-subtitle">Monitoreo GPS en vivo de colaboradores en ruta y en servicio</p>
+            </div>
+        </div>
+
+        <div class="map-actions">
+            <!-- Chips de filtro -->
+            <div style="display: flex; gap: 6px; align-items: center; margin-right: 6px;">
+                <button class="filter-chip active" id="chipFilterAll" onclick="setTechFilter('all')">Todos (<span id="cntAll">0</span>)</button>
+                <button class="filter-chip" id="chipFilterOnline" onclick="setTechFilter('online')">🟢 En Servicio (<span id="cntOnline">0</span>)</button>
+                <button class="filter-chip" id="chipFilterOffline" onclick="setTechFilter('offline')">⚪ Fuera de Turno (<span id="cntOffline">0</span>)</button>
+            </div>
+
+            <button class="btn-action btn-action-outline" id="btnCenterAll" onclick="centerMapOnAll()" title="Centrar mapa en todos los colaboradores">
+                <span>📍</span> Centrar
+            </button>
+
+            <button class="btn-action btn-action-primary" id="btnRefreshTechMap" onclick="refreshTechMap()">
+                <span id="refreshIcon">🔄</span> Actualizar
+            </button>
+        </div>
+    </header>
+
+    <!-- Área interactiva del mapa -->
+    <main class="map-wrapper">
+        <div id="techMap"></div>
+
+        <!-- Botón para alternar sidebar si está oculta -->
+        <button class="btn-toggle-sidebar" id="btnToggleSidebar" onclick="toggleTechSidebar()">
+            <span>👥</span> <span id="btnSidebarLabel">Ver Técnicos</span>
+        </button>
+
+        <!-- Sidebar flotante con la lista de colaboradores -->
+        <aside class="tech-sidebar" id="techSidebar">
+            <div class="tech-sidebar-header">
+                <h3 class="tech-sidebar-title">
+                    <span>👥</span> Colaboradores (<span id="collabTotalCount">0</span>)
+                </h3>
+                <button onclick="toggleTechSidebar()" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+            <div class="tech-sidebar-body" id="techListContainer">
+                <div style="text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 13px;">
+                    Cargando ubicaciones...
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- LÓGICA DE APLICACIÓN -->
+    <script>
+        // 1. CONFIGURACIÓN FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHtMvkoHg2-OQaLOZ1Jvlsp6Bi3_-LP-s",
+            authDomain: "electrofriov2.firebaseapp.com",
+            projectId: "electrofriov2",
+            storageBucket: "electrofriov2.firebasestorage.app",
+            messagingSenderId: "905702352769",
+            appId: "1:905702352769:web:32454687d6e6abfa189c2b"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // 2. ESTADO GLOBAL
+        let mapInstance = null;
+        let mapMarkers = {}; // uid -> L.Marker
+        let colaboradoresList = [];
+        let fichajesList = [];
+        let currentFilter = 'all';
+        const DEFAULT_CENTER = [-29.4131, -66.8558]; // La Rioja, Argentina
+        const DEFAULT_ZOOM = 13;
+
+        // 3. INICIALIZACIÓN DEL MAPA LEAFLET
+        function initLeafletMap() {
+            if (mapInstance) return;
+
+            mapInstance = L.map('techMap', {
+                center: DEFAULT_CENTER,
+                zoom: DEFAULT_ZOOM,
+                zoomControl: true
+            });
+
+            // Capa de OpenStreetMap estándar
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mapInstance);
+
+            // Ajustar tamaño tras render inicial
+            setTimeout(() => {
+                mapInstance.invalidateSize();
+            }, 250);
+
+            window.addEventListener('resize', () => {
+                if (mapInstance) mapInstance.invalidateSize();
+            });
+        }
+
+        // 4. VERIFICACIÓN DE ESTADO EN SERVICIO / FUERA DE TURNO (CERO LECTURAS FIRESTORE)
+        function loadLocalFichajes() {
+            try {
+                const cached = localStorage.getItem('electrofrio_fichajes');
+                if (cached) {
+                    fichajesList = JSON.parse(cached);
+                }
+            } catch(e) {
+                console.warn("Error leyendo fichajes locales:", e);
+            }
+        }
+
+        function isCollabOnline(collabName) {
+            if (!collabName) return false;
+            if (!Array.isArray(fichajesList) || fichajesList.length === 0) {
+                loadLocalFichajes();
+            }
+
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayISO = `${yyyy}-${mm}-${dd}`;
+            const todayAR = `${dd}/${mm}/${yyyy}`;
+
+            const myTodayFichajes = fichajesList
+                .filter(f => {
+                    const isToday = f.date === todayISO || f.date === todayAR || f.date === 'Hoy';
+                    const isNameMatch = f.name && f.name.trim().toLowerCase() === (collabName || '').trim().toLowerCase();
+                    return isToday && isNameMatch;
+                })
+                .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+
+            if (myTodayFichajes.length === 0) return false;
+            const latest = myTodayFichajes[myTodayFichajes.length - 1];
+            return latest.type === 'Entrada';
+        }
+
+        // 5. OBTENER COLOR ÚNICO SEGÚN NOMBRE
+        function getTechnicianColor(name) {
+            let hash = 0;
+            for (let i = 0; i < (name || '').length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const colors = ['#00b4d8', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#6366f1'];
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function getInitials(name) {
+            if (!name) return 'TC';
+            return name.split(' ')
+                .filter(Boolean)
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+        }
+
+        // Formato relativo de tiempo
+        function formatRelativeTime(timestamp) {
+            if (!timestamp) return 'Sin fecha';
+            const diffMs = Date.now() - timestamp;
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 1) return 'Recién';
+            if (diffMin < 60) return `hace ${diffMin} min`;
+            const diffHours = Math.floor(diffMin / 60);
+            if (diffHours < 24) return `hace ${diffHours} h`;
+            return `hace ${Math.floor(diffHours / 24)} d`;
+        }
+
+        // 6. ACTUALIZAR MARCADORES EN EL MAPA
+        function renderMarkers() {
+            if (!mapInstance) return;
+
+            let onlineCount = 0;
+            let offlineCount = 0;
+            const validCoords = [];
+
+            // Filtrar y procesar colaboradores
+            colaboradoresList.forEach((data, index) => {
+                const uid = data.id || `collab-${index}`;
+                const name = data.name || 'Técnico';
+                const isOnline = isCollabOnline(name);
+
+                if (isOnline) onlineCount++;
+                else offlineCount++;
+
+                const matchesFilter = (currentFilter === 'all') ||
+                                      (currentFilter === 'online' && isOnline) ||
+                                      (currentFilter === 'offline' && !isOnline);
+
+                // Si no tiene ubicación o no coincide con el filtro, retirar marcador si existía
+                if (!data.location || !data.location.lat || !data.location.lng || !matchesFilter) {
+                    if (mapMarkers[uid]) {
+                        mapMarkers[uid].remove();
+                        delete mapMarkers[uid];
+                    }
+                    return;
+                }
+
+                // Omitir colaboradores con datos de GPS de más de 12 horas si están fuera de servicio
+                const twelveHoursMs = 12 * 60 * 60 * 1000;
+                const lastUpdate = data.location.timestamp || 0;
+                if (!isOnline && lastUpdate > 0 && (Date.now() - lastUpdate > twelveHoursMs)) {
+                    if (mapMarkers[uid]) {
+                        mapMarkers[uid].remove();
+                        delete mapMarkers[uid];
+                    }
+                    return;
+                }
+
+                let finalLat = Number(data.location.lat);
+                let finalLng = Number(data.location.lng);
+
+                // Evitar superposición exacta de marcadores aplicando leve dispersión
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                Object.keys(mapMarkers).forEach(otherUid => {
+                    if (otherUid !== uid) {
+                        const otherLatLng = mapMarkers[otherUid].getLatLng();
+                        const dist = mapInstance.distance([finalLat, finalLng], otherLatLng);
+                        if (dist < 8) {
+                            const angle = (Math.abs(hash) % 360) * (Math.PI / 180);
+                            finalLat += 0.00005 * Math.sin(angle);
+                            finalLng += 0.00005 * Math.cos(angle);
+                        }
+                    }
+                });
+
+                const latLng = [finalLat, finalLng];
+                validCoords.push(latLng);
+
+                const statusColor = isOnline ? '#10b981' : '#64748b';
+                const statusText = isOnline ? '🟢 En Servicio' : '⚪ Fuera de Turno';
+                const userColor = getTechnicianColor(name);
+                const initials = getInitials(name);
+                const timeStr = formatRelativeTime(data.location.timestamp);
+
+                const googleMapsNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLng}`;
+                const whatsappUrl = data.phone ? `https://wa.me/${data.phone.replace(/[^0-9]/g, '')}` : null;
+
+                const popupHtml = `
+                    <div style="font-family: 'Inter', sans-serif; min-width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: ${userColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 2px solid ${statusColor};">
+                                ${initials}
+                            </div>
+                            <div>
+                                <strong style="font-size: 14px; color: #fff;">${name}</strong>
+                                <div style="font-size: 11px; color: ${statusColor}; font-weight: 600;">${statusText}</div>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
+                            <div>⏱️ Último reporte: <span style="color: #fff;">${timeStr}</span></div>
+                            <div>📍 Coords: <span style="color: #fff; font-family: monospace;">${finalLat.toFixed(5)}, ${finalLng.toFixed(5)}</span></div>
+                        </div>
+
+                        <div style="display: flex; gap: 6px;">
+                            <a href="${googleMapsNavUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 10px; background: #00b4d8; color: #000; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                🗺️ Navegar
+                            </a>
+                            ${whatsappUrl ? `
+                            <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; padding: 6px 10px; background: #25d366; color: #fff; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                💬 WhatsApp
+                            </a>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Icono con onda expansiva (pulso) si está en servicio
+                const customIcon = L.divIcon({
+                    className: 'custom-tech-marker',
+                    html: `
+                        <div style="position: relative; width: 36px; height: 36px;">
+                            ${isOnline ? `<div style="position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px; border-radius: 50%; border: 3px solid ${statusColor}; animation: mapPulse 2s infinite ease-out;"></div>` : ''}
+                            <div style="
+                                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                                background-color: ${userColor}; 
+                                border-radius: 50%; 
+                                border: 3px solid ${statusColor}; 
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: bold; font-size: 13px;
+                                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                                box-sizing: border-box;
+                            ">${initials}</div>
+                        </div>
+                    `,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18],
+                    popupAnchor: [0, -18]
+                });
+
+                if (mapMarkers[uid]) {
+                    mapMarkers[uid].setLatLng(latLng);
+                    mapMarkers[uid].setIcon(customIcon);
+                    mapMarkers[uid].getPopup().setContent(popupHtml);
+                } else {
+                    const marker = L.marker(latLng, { icon: customIcon }).addTo(mapInstance);
+                    marker.bindPopup(popupHtml);
+                    mapMarkers[uid] = marker;
+                }
+            });
+
+            // Actualizar contadores
+            document.getElementById('badgeActiveCount').innerText = `${onlineCount} en servicio`;
+            document.getElementById('cntAll').innerText = colaboradoresList.length;
+            document.getElementById('cntOnline').innerText = onlineCount;
+            document.getElementById('cntOffline').innerText = offlineCount;
+            document.getElementById('collabTotalCount').innerText = colaboradoresList.length;
+
+            renderSidebarList();
+        }
+
+        // 7. RENDERIZAR LISTA DE TÉCNICOS EN EL SIDEBAR
+        function renderSidebarList() {
+            const container = document.getElementById('techListContainer');
+            if (!container) return;
+
+            const filtered = colaboradoresList.filter(c => {
+                const isOnline = isCollabOnline(c.name);
+                if (currentFilter === 'online') return isOnline;
+                if (currentFilter === 'offline') return !isOnline;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 25px 10px; font-size: 13px;">
+                        No hay colaboradores en esta vista.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(c => {
+                const uid = c.id;
+                const name = c.name || 'Técnico';
+                const isOnline = isCollabOnline(name);
+                const userColor = getTechnicianColor(name);
+                const initials = getInitials(name);
+                const hasGps = c.location && c.location.lat && c.location.lng;
+                const timeStr = hasGps ? formatRelativeTime(c.location.timestamp) : 'Sin GPS';
+
+                const card = document.createElement('div');
+                card.className = 'tech-card';
+                card.onclick = () => focusTechnician(uid);
+
+                card.innerHTML = `
+                    <div class="tech-avatar" style="background-color: ${userColor};">
+                        ${initials}
+                        <div class="tech-avatar-online-dot ${isOnline ? 'online' : 'offline'}"></div>
+                    </div>
+                    <div class="tech-info">
+                        <div class="tech-name">${name}</div>
+                        <div class="tech-meta">
+                            <span>${isOnline ? '🟢 En Servicio' : '⚪ Fuera de Turno'}</span>
+                            <span>•</span>
+                            <span>${hasGps ? `📍 ${timeStr}` : 'Sin señal'}</span>
+                        </div>
+                    </div>
+                    <button type="button" style="background: none; border: none; color: var(--color-blue); font-size: 16px; cursor: pointer;" title="Centrar mapa en ${name}">
+                        🎯
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 8. ACCIÓN: CENTRAR EN UN TÉCNICO
+        window.focusTechnician = function(uid) {
+            const marker = mapMarkers[uid];
+            if (marker && mapInstance) {
+                mapInstance.setView(marker.getLatLng(), 16, { animate: true, duration: 1 });
+                setTimeout(() => marker.openPopup(), 400);
+
+                // En pantallas móviles, contraer el sidebar para ver el mapa
+                if (window.innerWidth <= 768) {
+                    toggleTechSidebar(true);
+                }
+            } else {
+                const collab = colaboradoresList.find(c => c.id === uid);
+                if (collab && (!collab.location || !collab.location.lat)) {
+                    alert(`El colaborador ${collab.name} no ha reportado coordenadas GPS recientes.`);
+                } else {
+                    alert('El marcador del colaborador no está disponible en este filtro.');
+                }
+            }
+        };
+
+        // 9. ACCIÓN: CENTRAR MAPA EN TODOS
+        window.centerMapOnAll = function() {
+            if (!mapInstance) return;
+            const markerKeys = Object.keys(mapMarkers);
+            if (markerKeys.length === 0) {
+                mapInstance.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+                return;
+            }
+
+            const bounds = L.latLngBounds();
+            markerKeys.forEach(uid => {
+                bounds.extend(mapMarkers[uid].getLatLng());
+            });
+            mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        };
+
+        // 10. FILTRO DE TÉCNICOS (all, online, offline)
+        window.setTechFilter = function(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (filter === 'all') document.getElementById('chipFilterAll').classList.add('active');
+            if (filter === 'online') document.getElementById('chipFilterOnline').classList.add('active');
+            if (filter === 'offline') document.getElementById('chipFilterOffline').classList.add('active');
+            renderMarkers();
+        };
+
+        // 11. ALTERNAR SIDEBAR
+        window.toggleTechSidebar = function(forceCollapse = false) {
+            const sidebar = document.getElementById('techSidebar');
+            const label = document.getElementById('btnSidebarLabel');
+            if (forceCollapse || !sidebar.classList.contains('collapsed')) {
+                sidebar.classList.add('collapsed');
+                if (label) label.innerText = 'Ver Técnicos';
+            } else {
+                sidebar.classList.remove('collapsed');
+                if (label) label.innerText = 'Ocultar Panel';
+            }
+        };
+
+        // 12. ACTUALIZACIÓN MANUAL (OPTIMIZADA: 0 LECTURAS EN FICHAJES)
+        window.refreshTechMap = async function() {
+            const btn = document.getElementById('btnRefreshTechMap');
+            if (btn) btn.disabled = true;
+
+            try {
+                // Fichajes desde memoria local (0 lecturas a Firestore)
+                loadLocalFichajes();
+
+                // Cargar únicamente colaboradores (solo 1 lectura por técnico, ej: 5 a 10)
+                const userSnap = await db.collection('usuarios').where('role', '==', 'Colaborador').get();
+                colaboradoresList = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                renderMarkers();
+            } catch (err) {
+                console.error("Error al actualizar mapa:", err);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        };
+
+        // 13. LISTENERS EN TIEMPO REAL (OPTIMIZADO: Solo ubicación de colaboradores)
+        function startRealtimeListeners() {
+            // Escuchar únicamente la colección usuarios (muy bajo consumo, solo se dispara si un técnico actualiza GPS)
+            db.collection('usuarios')
+              .where('role', '==', 'Colaborador')
+              .onSnapshot(snap => {
+                  colaboradoresList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                  renderMarkers();
+              }, err => console.warn("Listener colaboradores:", err));
+
+            // Sincronizar estado cuando se registra o edita un fichaje sin consultar Firestore
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'FICHAJE_UPDATED') {
+                    loadLocalFichajes();
+                    renderMarkers();
+                }
+            });
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'electrofrio_fichajes') {
+                    loadLocalFichajes();
+                    renderMarkers();
+                }
+            });
+        }
+
+        // INICIAR (Una sola carga limpia sin redundancias)
+        window.addEventListener('DOMContentLoaded', () => {
+            initLeafletMap();
+            loadLocalFichajes();      // 0 lecturas en Firestore
+            startRealtimeListeners(); // Trae el snapshot inicial de colaboradores una sola vez
+        });
+    </script>
+</body>
+</html>

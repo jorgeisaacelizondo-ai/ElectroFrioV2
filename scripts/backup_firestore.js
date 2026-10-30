@@ -130,7 +130,7 @@ async function runBackup() {
     console.log("=================================================");
     console.log(`Iniciando a las: ${new Date().toLocaleString('es-AR')}`);
 
-    const backupDir = path.join(__dirname, 'backups', 'datos_semanales');
+    const backupDir = path.join(__dirname, '..', 'backups', 'datos_semanales');
     if (!fs.existsSync(backupDir)) {
         fs.mkdirSync(backupDir, { recursive: true });
     }
