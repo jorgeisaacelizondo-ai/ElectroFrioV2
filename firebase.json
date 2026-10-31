@@ -43,7 +43,13 @@
           ]
         },
         {
-          "source": "/index.html",
+          "source": "**/*.html",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          ]
+        },
+        {
+          "source": "**/*.@(js|css)",
           "headers": [
             { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
           ]
@@ -58,12 +64,6 @@
           "source": "**/*.@(png|jpg|jpeg|svg|webp|ico)",
           "headers": [
             { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
-          ]
-        },
-        {
-          "source": "**/*.@(js|css)",
-          "headers": [
-            { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
           ]
         }
       ],
