@@ -679,16 +679,30 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Exportar Excel <span id="selectedWorksheetsCount" style="background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px; font-size: 11px; display: none;">0</span>
             </button>
-            <select id="filterWorksheetAddress" class="filter-select" style="flex: 1; min-width: 140px;">
-                <option value="">-- Todos los domicilios --</option>
-            </select>
-            <select id="filterWorksheetWeek" class="filter-select" style="flex: 1; min-width: 140px;">
+            <select id="filterWorksheetWeek" class="filter-select" style="flex: 1; min-width: 135px;" title="Filtrar por semana del año">
                 <option value="">-- Todas las semanas --</option>
             </select>
-            <select id="filterWorksheetAuthor" class="filter-select" style="flex: 1; min-width: 140px;">
+            <select id="filterWorksheetDay" class="filter-select" style="flex: 0.9; min-width: 125px;" title="Filtrar por día de la semana">
+                <option value="">-- Todos los días --</option>
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+            </select>
+            <input type="date" id="filterWorksheetDate" class="filter-select" style="flex: 0.9; min-width: 130px;" title="Filtrar por fecha calendario exacta">
+            <select id="filterWorksheetAddress" class="filter-select" style="flex: 1; min-width: 135px;" title="Filtrar por domicilio">
+                <option value="">-- Todos los domicilios --</option>
+            </select>
+            <select id="filterWorksheetAuthor" class="filter-select" style="flex: 1; min-width: 125px;" title="Filtrar por autor / creador">
                 <option value="">-- Todos los autores --</option>
             </select>
-            <input type="text" id="searchWorksheetInput" class="search-input" placeholder="🔍 Buscar por cliente, código, tarea..." style="flex: 1.5; min-width: 160px;">
+            <input type="text" id="searchWorksheetInput" class="search-input" placeholder="🔍 Buscar por día, fecha, cliente, técnico, domicilio, colaborador, repuesto..." style="flex: 2; min-width: 200px;">
+            <button type="button" id="btnResetFilters" onclick="resetWorksheetFilters()" title="Restablecer todos los filtros" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; padding: 0 12px; height: 38px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; white-space: nowrap;">
+                ↺ Limpiar
+            </button>
         </div>
 
         <!-- TABLA DE PLANILLAS -->
@@ -962,7 +976,26 @@
             return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dStr;
         }
 
-        // 4. CÓDIGOS PDT
+        // Helper para obtener el día de la semana a partir de la fecha
+        function getDayNameFromDate(dStr) {
+            if (!dStr) return '';
+            let dateObj = null;
+            if (dStr.includes('/')) {
+                const parts = dStr.split('/');
+                if (parts.length === 3) dateObj = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+            } else if (dStr.includes('-')) {
+                const parts = dStr.split('-');
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                    else dateObj = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                }
+            }
+            if (!dateObj || isNaN(dateObj.getTime())) return '';
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            return days[dateObj.getDay()] || '';
+        }
+
+        // 4. CÓDIGOS PDT ÚNICOS (GARANTÍA ESTRICTA ANTI-DUPLICADOS)
         function formatPdtCode(yearSuffix, month, sequential) {
             return `PDT-${String(yearSuffix).padStart(2, '0')}${String(month).padStart(2, '0')}${String(sequential).padStart(3, '0')}`;
         }
@@ -986,15 +1019,49 @@
                 mm = now.getMonth() + 1;
             }
             const prefix = `PDT-${String(yy).padStart(2, '0')}${String(mm).padStart(2, '0')}`;
+            
+            // Recopilar exhaustivamente TODOS los códigos usados en memoria, historial y localStorage
+            const usedCodes = new Set();
+            const allSources = [
+                ...(Array.isArray(planillas) ? planillas : []),
+                ...(window.localHistoricalPlanillas && Array.isArray(window.localHistoricalPlanillas) ? window.localHistoricalPlanillas : [])
+            ];
+            try {
+                const stored = JSON.parse(localStorage.getItem('electrofrio_worksheets') || '[]');
+                if (Array.isArray(stored)) allSources.push(...stored);
+            } catch(e) {}
+
             let maxSeq = 0;
-            planillas.forEach(p => {
-                const code = p.pdtCode || (typeof p.id === 'string' && p.id.startsWith('PDT-') ? p.id : "");
-                if (typeof code === 'string' && code.startsWith(prefix)) {
-                    const seq = parseInt(code.substring(prefix.length), 10);
-                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
-                }
+            allSources.forEach(p => {
+                if (!p) return;
+                const candidates = [
+                    p.pdtCode,
+                    p.originalPdtCode,
+                    typeof p.id === 'string' && p.id.startsWith('PDT-') ? p.id : null
+                ];
+                candidates.forEach(rawCode => {
+                    if (typeof rawCode === 'string' && rawCode.trim()) {
+                        const cleanCode = rawCode.split(' ')[0].trim().toUpperCase();
+                        usedCodes.add(cleanCode);
+                        if (cleanCode.startsWith(prefix)) {
+                            const seqPart = cleanCode.substring(prefix.length);
+                            const seq = parseInt(seqPart, 10);
+                            if (!isNaN(seq) && seq > maxSeq) {
+                                maxSeq = seq;
+                            }
+                        }
+                    }
+                });
             });
-            return formatPdtCode(yy, mm, maxSeq + 1);
+
+            // Garantizar que NUNCA se repita un PDT: si maxSeq + 1 ya existe, seguir incrementando hasta encontrar uno libre
+            let nextSeq = maxSeq + 1;
+            let candidateCode = formatPdtCode(yy, mm, nextSeq);
+            while (usedCodes.has(candidateCode)) {
+                nextSeq++;
+                candidateCode = formatPdtCode(yy, mm, nextSeq);
+            }
+            return candidateCode;
         }
 
         function getPdtCodeForSheet(p) {
@@ -1205,10 +1272,12 @@
 
             const searchVal = (document.getElementById('searchWorksheetInput')?.value || '').trim().toLowerCase();
             const weekFilter = document.getElementById('filterWorksheetWeek')?.value || '';
+            const dayFilter = (document.getElementById('filterWorksheetDay')?.value || '').trim();
+            const dateFilter = (document.getElementById('filterWorksheetDate')?.value || '').trim();
             const addressFilter = document.getElementById('filterWorksheetAddress')?.value || '';
             const authorFilter = document.getElementById('filterWorksheetAuthor')?.value || '';
 
-            // Filtrar planillas
+            // Filtrar planillas con buscador general omnibox y filtros por días/fecha
             let filtered = planillas.filter(p => {
                 // REGLA: Los colaboradores solo crean planillas, no ven historial, solo ven los borradores
                 if (!isAdmin) {
@@ -1219,30 +1288,84 @@
                     if (!isMine) return false;
                 }
 
+                // Filtro por semana
                 if (weekFilter) {
                     const info = getSheetWeekKey(p);
                     if (!info || info.key !== weekFilter) return false;
                 }
+
+                // Filtro por día de la semana (Lunes, Martes, etc.)
+                if (dayFilter) {
+                    const dayName = getDayNameFromDate(p.date);
+                    if (dayName.toLowerCase() !== dayFilter.toLowerCase()) return false;
+                }
+
+                // Filtro por fecha calendario exacta (YYYY-MM-DD)
+                if (dateFilter) {
+                    const rawDate = p.date || '';
+                    let pIso = '';
+                    if (rawDate.includes('/')) {
+                        const parts = rawDate.split('/');
+                        if (parts.length === 3) pIso = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    } else if (rawDate.includes('-')) {
+                        const parts = rawDate.split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) pIso = rawDate;
+                            else pIso = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
+                    }
+                    if (pIso !== dateFilter) return false;
+                }
+
+                // Filtro por domicilio
                 if (addressFilter) {
                     const addr = (p.address || p.domicilio || '').trim();
                     if (addr !== addressFilter) return false;
                 }
+
+                // Filtro por autor
                 if (authorFilter && isAdmin) {
                     const auth = (p.cargado_por || p.completedBy || '').trim();
                     if (auth !== authorFilter) return false;
                 }
+
+                // BUSCADOR GENERAL (Busca por día, fecha, técnico, cliente, domicilio, colaboradores, tareas, repuestos, etc.)
                 if (searchVal) {
-                    const pCode = getPdtCodeForSheet(p).toLowerCase();
+                    const terms = searchVal.split(/\s+/).filter(Boolean);
+                    
+                    const pCode = (getPdtCodeForSheet(p) || '').toLowerCase();
+                    const origCode = (p.originalPdtCode || '').toLowerCase();
+                    const idStr = (typeof p.id === 'string' ? p.id.toLowerCase() : '');
                     const client = (p.client || '').toLowerCase();
                     const addr = (p.address || p.domicilio || '').toLowerCase();
-                    const tech = (Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '')).toLowerCase();
+                    const rawDate = (p.date || '').toLowerCase();
+                    const arDate = formatDateToAR(p.date).toLowerCase();
+                    const dayName = getDayNameFromDate(p.date).toLowerCase();
+                    
+                    const techs = (Array.isArray(p.technicians) ? p.technicians.join(' ') : (p.completedBy || '')).toLowerCase();
+                    const author = (p.cargado_por || '').toLowerCase();
+                    const collabs = `${techs} ${author}`;
+                    const horario = `${p.horaEntrada || ''} ${p.horaSalida || ''} ${p.timeRange || ''}`.toLowerCase();
                     const mo = (p.manoObra || '').toLowerCase();
                     const mat = (p.materiales || '').toLowerCase();
+                    const spare = (p.spareParts || '').toLowerCase();
+                    const techDetails = (p.techDetails || '').toLowerCase();
+                    const area = (p.area || (Array.isArray(p.areas) ? p.areas.join(' ') : '')).toLowerCase();
                     const est = (p.estadoPDT || '').toLowerCase();
+                    const status = (p.status || '').toLowerCase();
                     const obs = (p.observations || '').toLowerCase();
-                    const idStr = (typeof p.id === 'string' ? p.id.toLowerCase() : '');
-                    const match = pCode.includes(searchVal) || idStr.includes(searchVal) || client.includes(searchVal) || addr.includes(searchVal) || tech.includes(searchVal) || mo.includes(searchVal) || mat.includes(searchVal) || est.includes(searchVal) || obs.includes(searchVal);
-                    if (!match) return false;
+
+                    const haystack = `${pCode} ${origCode} ${idStr} ${client} ${addr} ${rawDate} ${arDate} ${dayName} ${collabs} ${horario} ${mo} ${mat} ${spare} ${techDetails} ${area} ${est} ${status} ${obs}`.toLowerCase();
+
+                    // Normalizar acentos para que "miercoles" coincida con "miércoles", "garantia" con "garantía", etc.
+                    const normHaystack = haystack.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                    const allMatch = terms.every(term => {
+                        const normTerm = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        return normHaystack.includes(normTerm);
+                    });
+
+                    if (!allMatch) return false;
                 }
                 return true;
             });
@@ -1291,7 +1414,42 @@
                 return;
             }
 
+            // Agrupación y separación visual clara por días
+            const countByDate = {};
             displayed.forEach(p => {
+                const dKey = formatDateToAR(p.date) || 'Sin Fecha';
+                countByDate[dKey] = (countByDate[dKey] || 0) + 1;
+            });
+
+            let lastDateKey = null;
+
+            displayed.forEach(p => {
+                const curDateKey = formatDateToAR(p.date) || 'Sin Fecha';
+                const dayName = getDayNameFromDate(p.date);
+
+                // SEPARADOR DE DÍA: Identifica claramente las planillas de cada día dentro de la semana o lista
+                if (curDateKey !== lastDateKey) {
+                    lastDateKey = curDateKey;
+                    const dayCount = countByDate[curDateKey] || 1;
+                    const sepTr = document.createElement('tr');
+                    sepTr.className = 'day-group-header-row';
+                    sepTr.innerHTML = `
+                        <td colspan="13" style="background: linear-gradient(90deg, rgba(0, 184, 240, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%) !important; border-top: 2px solid rgba(0, 184, 240, 0.45) !important; border-bottom: 1px solid rgba(0, 184, 240, 0.25) !important; padding: 10px 16px !important; text-align: left;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                <div style="display: inline-flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 16px;">📅</span>
+                                    <span style="color: #00b8f0; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${dayName ? dayName.toUpperCase() : 'JORNADA'}</span>
+                                    <span style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;">${curDateKey}</span>
+                                </div>
+                                <span style="background: rgba(0, 184, 240, 0.18); color: #7dd3fc; border: 1px solid rgba(0, 184, 240, 0.35); padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                    ${dayCount} ${dayCount === 1 ? 'planilla' : 'planillas'}
+                                </span>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(sepTr);
+                }
+
                 const tr = document.createElement('tr');
                 const isSelected = window.selectedWorksheets.has(p.id);
                 const pdtCode = getPdtCodeForSheet(p);
@@ -1388,7 +1546,7 @@
             }
         };
 
-        // 7. MULTISELECCIÓN Y EXPORTACIÓN EXCEL
+        // 7. MULTISELECCIÓN Y EXPORTACIÓN EXCEL COMPLETA
         window.toggleWorksheetSelection = function(id, checked) {
             if (checked) window.selectedWorksheets.add(id);
             else window.selectedWorksheets.delete(id);
@@ -1418,32 +1576,93 @@
                 return;
             }
             let list = planillas;
-            if (window.selectedWorksheets.size > 0) {
+            if (window.selectedWorksheets && window.selectedWorksheets.size > 0) {
                 list = planillas.filter(p => window.selectedWorksheets.has(p.id));
+            } else if (window.currentFilteredWorksheetIds && window.currentFilteredWorksheetIds.length > 0) {
+                const idSet = new Set(window.currentFilteredWorksheetIds);
+                list = planillas.filter(p => idSet.has(p.id));
             }
 
-            const rows = list.map(p => ({
-                "Código PDT": getPdtCodeForSheet(p),
-                "Fecha": p.date || '',
-                "Cliente": p.client || '',
-                "Domicilio": p.address || p.domicilio || '',
-                "Hora Entrada": p.horaEntrada || '',
-                "Hora Salida": p.horaSalida || '',
-                "Técnicos": Array.isArray(p.technicians) ? p.technicians.join(', ') : (p.completedBy || ''),
-                "Área": p.area || '',
-                "Mano de Obra ($)": p.manoObra || '',
-                "Materiales ($)": p.materiales || '',
-                "Repuestos": p.spareParts || '',
-                "Observaciones": p.observations || '',
-                "Estado": p.status || 'Enviada',
-                "Cargado Por": p.cargado_por || ''
-            }));
+            if (!list || list.length === 0) {
+                showToast("No hay planillas para exportar con los filtros seleccionados", "warning");
+                return;
+            }
+
+            const rows = list.map(p => {
+                // Detalles técnicos y trabajos realizados limpios y completos
+                let techClean = '';
+                if (p.techDetails) {
+                    const blocks = p.techDetails.split('||').map(b => b.trim()).filter(Boolean);
+                    techClean = blocks.join(' \n• ');
+                    if (techClean) techClean = '• ' + techClean;
+                } else if (p.manoObra) {
+                    techClean = p.manoObra;
+                } else {
+                    techClean = 'Tareas generales';
+                }
+
+                // Repuestos y materiales utilizados completos
+                const matItems = [];
+                if (p.spareParts && p.spareParts.trim() && p.spareParts.toLowerCase() !== 'ninguno') {
+                    matItems.push(p.spareParts.trim());
+                }
+                if (p.materiales && p.materiales.trim()) {
+                    matItems.push(p.materiales.trim());
+                }
+                const materialesClean = matItems.length > 0 ? matItems.join(' | ') : 'Sin repuestos/materiales registrados';
+
+                // Observaciones y recomendaciones
+                const obsClean = (p.observations && p.observations.trim()) ? p.observations.trim() : 'Sin observaciones';
+
+                // Horario
+                const horarioStr = (p.horaEntrada && p.horaSalida) ? `${p.horaEntrada}HS - ${p.horaSalida}HS` : (p.timeRange || '');
+
+                return {
+                    "Código PDT": getPdtCodeForSheet(p),
+                    "Fecha": formatDateToAR(p.date) || p.date || '',
+                    "Día": getDayNameFromDate(p.date),
+                    "Cliente": p.client || 'Cliente Particular',
+                    "Domicilio": p.address || p.domicilio || '',
+                    "Horario": horarioStr,
+                    "Técnicos / Colaboradores": Array.isArray(p.technicians) && p.technicians.length > 0 ? p.technicians.join(', ') : (p.completedBy || ''),
+                    "Área": p.area || (Array.isArray(p.areas) ? p.areas.join(', ') : 'Refrigeración'),
+                    "Detalles Técnicos y Trabajos Realizados": techClean,
+                    "Repuestos y Materiales Utilizados": materialesClean,
+                    "Observaciones y Recomendaciones": obsClean,
+                    "Mano de Obra ($)": p.manoObra || '',
+                    "Materiales ($)": p.materiales || '',
+                    "Estado PDT": (p.estadoPDT || 'NO REALIZADO').toUpperCase(),
+                    "Estado": p.status || 'Enviada',
+                    "Impreso": p.impreso || 'NO',
+                    "Cargado Por": p.cargado_por || p.completedBy || ''
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [
+                { wch: 14 }, // Código PDT
+                { wch: 12 }, // Fecha
+                { wch: 12 }, // Día
+                { wch: 28 }, // Cliente
+                { wch: 34 }, // Domicilio
+                { wch: 18 }, // Horario
+                { wch: 26 }, // Técnicos / Colaboradores
+                { wch: 18 }, // Área
+                { wch: 48 }, // Detalles Técnicos y Trabajos Realizados
+                { wch: 36 }, // Repuestos y Materiales Utilizados
+                { wch: 36 }, // Observaciones y Recomendaciones
+                { wch: 16 }, // Mano de Obra ($)
+                { wch: 16 }, // Materiales ($)
+                { wch: 15 }, // Estado PDT
+                { wch: 12 }, // Estado
+                { wch: 10 }, // Impreso
+                { wch: 16 }  // Cargado Por
+            ];
+
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Planillas");
+            XLSX.utils.book_append_sheet(wb, ws, "Planillas de Trabajo");
             XLSX.writeFile(wb, `Planillas_ElectroFrio_${getLocalISODate()}.xlsx`);
-            showToast("Archivo Excel generado con éxito", "success");
+            showToast(`Exportadas ${rows.length} planillas a Excel con éxito`, "success");
         };
 
         // 8. FILTROS DINÁMICOS
@@ -1524,9 +1743,28 @@
             if (cur && set.has(cur)) sel.value = cur;
         }
 
+        // Restablecer filtros
+        window.resetWorksheetFilters = function() {
+            const elSearch = document.getElementById('searchWorksheetInput');
+            const elWeek = document.getElementById('filterWorksheetWeek');
+            const elDay = document.getElementById('filterWorksheetDay');
+            const elDate = document.getElementById('filterWorksheetDate');
+            const elAddr = document.getElementById('filterWorksheetAddress');
+            const elAuth = document.getElementById('filterWorksheetAuthor');
+            if (elSearch) elSearch.value = '';
+            if (elWeek) elWeek.value = '';
+            if (elDay) elDay.value = '';
+            if (elDate) elDate.value = '';
+            if (elAddr) elAddr.value = '';
+            if (elAuth) elAuth.value = '';
+            renderWorksheetsTable();
+        };
+
         // Listeners para filtros
         document.getElementById('filterWorksheetAddress')?.addEventListener('change', renderWorksheetsTable);
         document.getElementById('filterWorksheetWeek')?.addEventListener('change', renderWorksheetsTable);
+        document.getElementById('filterWorksheetDay')?.addEventListener('change', renderWorksheetsTable);
+        document.getElementById('filterWorksheetDate')?.addEventListener('change', renderWorksheetsTable);
         document.getElementById('filterWorksheetAuthor')?.addEventListener('change', renderWorksheetsTable);
         document.getElementById('searchWorksheetInput')?.addEventListener('input', renderWorksheetsTable);
 
@@ -3177,12 +3415,27 @@
 
             let pdtCodeToSave = "Borrador";
             if (statusVal !== "Borrador") {
+                let codeCandidate = null;
                 if (existingPlanilla && existingPlanilla.pdtCode && existingPlanilla.pdtCode !== "Borrador") {
-                    pdtCodeToSave = existingPlanilla.pdtCode;
+                    codeCandidate = existingPlanilla.pdtCode;
                 } else if (existingPlanilla && existingPlanilla.originalPdtCode && existingPlanilla.originalPdtCode !== "Borrador") {
-                    pdtCodeToSave = existingPlanilla.originalPdtCode;
+                    codeCandidate = existingPlanilla.originalPdtCode;
                 } else if (existingPlanilla && typeof existingPlanilla.id === 'string' && existingPlanilla.id.startsWith('PDT-')) {
-                    pdtCodeToSave = existingPlanilla.id;
+                    codeCandidate = existingPlanilla.id;
+                }
+
+                // Si ya tenía un código PDT, verificar estrictamente que otra planilla no lo tenga
+                if (codeCandidate) {
+                    const otherWithSameCode = planillas.find(p => 
+                        p && p.id !== (planillaId || "") && 
+                        (p.pdtCode === codeCandidate || p.id === codeCandidate || p.originalPdtCode === codeCandidate)
+                    );
+                    if (otherWithSameCode) {
+                        console.warn(`Conflicto de código PDT detectado para ${codeCandidate}. Se generará uno nuevo único correlativo.`);
+                        pdtCodeToSave = getNextPdtCode(dateDisplay);
+                    } else {
+                        pdtCodeToSave = codeCandidate;
+                    }
                 } else {
                     pdtCodeToSave = getNextPdtCode(dateDisplay);
                 }

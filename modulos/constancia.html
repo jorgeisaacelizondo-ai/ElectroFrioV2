@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Constancia de Electrodomésticos - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos del sistema -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 24px 30px;
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .working-container {
+            max-width: 680px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(16, 29, 46, 0.85), rgba(11, 19, 32, 0.95));
+            border: 1px solid rgba(0, 184, 240, 0.25);
+            border-radius: 20px;
+            padding: 48px 36px;
+            text-align: center;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 35px rgba(0, 184, 240, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .working-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00b8f0, #fbbf24, #00b8f0);
+            background-size: 200% 100%;
+            animation: gradientMove 3s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .icon-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 22px;
+            background: rgba(0, 184, 240, 0.12);
+            border: 1px solid rgba(0, 184, 240, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px auto;
+            color: #00b8f0;
+            box-shadow: 0 8px 24px rgba(0, 184, 240, 0.18);
+        }
+
+        .icon-badge svg {
+            width: 42px;
+            height: 42px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #fbbf24;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .curiosity-image {
+            display: block;
+            width: 180px;
+            height: 180px;
+            max-width: 100%;
+            object-fit: cover;
+            margin: 0 auto 24px;
+            border: 2px solid rgba(0, 184, 240, 0.45);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #fbbf24;
+            box-shadow: 0 0 8px #fbbf24;
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        p.lead {
+            color: #8faed8;
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0 auto 30px auto;
+            max-width: 520px;
+        }
+    </style>
+</head>
+<body>
+    <div class="working-container">
+        <div class="icon-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <path d="m9 15 2 2 4-4"></path>
+            </svg>
+        </div>
+
+        <div class="status-pill">
+            <span class="pulse-dot"></span>
+            <span>Módulo en Construcción</span>
+        </div>
+
+        <img class="curiosity-image" src="https://pbs.twimg.com/media/CIytkOeWoAAgr8H.jpg?name=orig" alt="Meme de Chile: Toma por curioso">
+
+        <h1>TOMA POR CURIOSO </h1>
+        
+        <p class="lead">
+            Estamos trabajando... SUPUESTAMENTE 
+        </p>
+    </div>
+</body>
+</html>
