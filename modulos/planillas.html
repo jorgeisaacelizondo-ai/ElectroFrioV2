@@ -126,6 +126,29 @@
             margin-bottom: 16px;
         }
 
+        /* Ocultar filtros avanzados (semanas, días, fecha, domicilios, autor, limpiar, excel) para colaboradores */
+        body.role-colaborador .role-admin-filter {
+            display: none !important;
+        }
+        body.role-colaborador .history-card {
+            display: flex;
+            flex-direction: column;
+        }
+        body.role-colaborador .filters-bar {
+            order: -1;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-card, #16243d);
+            padding: 8px 0;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        body.role-colaborador .filters-bar #searchWorksheetInput {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+        }
+
         .filter-select, .search-input {
             height: 38px;
             padding: 0 12px;
@@ -454,27 +477,44 @@
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
-                overflow-x: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: visible !important;
+            }
+
+            /* En versión móvil PARA TODOS (Admin y Colaboradores): ocultar todos los filtros desplegables, fechas y botones; solo queda el buscador */
+            .role-admin-filter,
+            .filter-select,
+            .btn-excel,
+            #btnResetFilters {
+                display: none !important;
             }
 
             .filters-bar {
-                flex-direction: column !important;
-                align-items: stretch !important;
+                order: -1 !important;
+                position: sticky !important;
+                top: 0px !important;
+                z-index: 100 !important;
+                background: var(--bg-card, #16243d) !important;
+                flex-direction: row !important;
+                align-items: center !important;
                 gap: 8px !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
+                padding: 8px 0 !important;
+                margin-top: 0 !important;
+                margin-bottom: 10px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
             }
-            .filter-select, .search-input, .btn-excel {
+            .search-input {
                 width: 100% !important;
                 min-width: 0 !important;
                 max-width: 100% !important;
+                flex: 1 1 100% !important;
                 box-sizing: border-box !important;
                 text-overflow: ellipsis !important;
                 overflow: hidden !important;
-            }
-            .btn-excel {
-                justify-content: center;
             }
 
             /* Contenedor de tabla en móvil: sin scroll horizontal */
@@ -588,14 +628,15 @@
             /* Modales en móvil: ocupan casi toda la pantalla y no desbordan */
             .modal-overlay {
                 padding: 8px !important;
+                padding-bottom: 75px !important; /* Margen de resguardo para atajos inferiores */
                 align-items: flex-end !important;
                 touch-action: pan-y !important;
             }
             .modal-content {
-                max-height: 94vh !important;
-                border-bottom-left-radius: 0 !important;
-                border-bottom-right-radius: 0 !important;
-                padding: 16px 12px !important;
+                max-height: 86vh !important;
+                border-bottom-left-radius: 16px !important;
+                border-bottom-right-radius: 16px !important;
+                padding: 16px 12px 24px 12px !important;
                 overflow-x: hidden !important;
                 width: 100% !important;
                 max-width: 100% !important;
@@ -614,6 +655,9 @@
             }
             .pdig-footer-actions {
                 flex-direction: column !important;
+                gap: 10px !important;
+                padding-bottom: 70px !important; /* Espacio amplio inferior para scrollear y presionar Enviar con total comodidad */
+                margin-bottom: 20px !important;
             }
 
             /* Tablas de subformularios dentro de modales (Mano de Obra y Materiales) */
@@ -675,14 +719,14 @@
 
         <!-- BARRA DE FILTROS Y BÚSQUEDA -->
         <div class="filters-bar">
-            <button type="button" class="btn-excel" onclick="exportWorksheetsToExcel()" title="Exportar planillas filtradas o seleccionadas a Excel">
+            <button type="button" class="btn-excel role-admin-filter" onclick="exportWorksheetsToExcel()" title="Exportar planillas filtradas o seleccionadas a Excel">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Exportar Excel <span id="selectedWorksheetsCount" style="background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px; font-size: 11px; display: none;">0</span>
             </button>
-            <select id="filterWorksheetWeek" class="filter-select" style="flex: 1; min-width: 135px;" title="Filtrar por semana del año">
+            <select id="filterWorksheetWeek" class="filter-select role-admin-filter" style="flex: 1; min-width: 135px;" title="Filtrar por semana del año">
                 <option value="">-- Todas las semanas --</option>
             </select>
-            <select id="filterWorksheetDay" class="filter-select" style="flex: 0.9; min-width: 125px;" title="Filtrar por día de la semana">
+            <select id="filterWorksheetDay" class="filter-select role-admin-filter" style="flex: 0.9; min-width: 125px;" title="Filtrar por día de la semana">
                 <option value="">-- Todos los días --</option>
                 <option value="Lunes">Lunes</option>
                 <option value="Martes">Martes</option>
@@ -692,15 +736,15 @@
                 <option value="Sábado">Sábado</option>
                 <option value="Domingo">Domingo</option>
             </select>
-            <input type="date" id="filterWorksheetDate" class="filter-select" style="flex: 0.9; min-width: 130px;" title="Filtrar por fecha calendario exacta">
-            <select id="filterWorksheetAddress" class="filter-select" style="flex: 1; min-width: 135px;" title="Filtrar por domicilio">
+            <input type="date" id="filterWorksheetDate" class="filter-select role-admin-filter" style="flex: 0.9; min-width: 130px;" title="Filtrar por fecha calendario exacta">
+            <select id="filterWorksheetAddress" class="filter-select role-admin-filter" style="flex: 1; min-width: 135px;" title="Filtrar por domicilio">
                 <option value="">-- Todos los domicilios --</option>
             </select>
-            <select id="filterWorksheetAuthor" class="filter-select" style="flex: 1; min-width: 125px;" title="Filtrar por autor / creador">
+            <select id="filterWorksheetAuthor" class="filter-select role-admin-filter" style="flex: 1; min-width: 125px;" title="Filtrar por autor / creador">
                 <option value="">-- Todos los autores --</option>
             </select>
-            <input type="text" id="searchWorksheetInput" class="search-input" placeholder="🔍 Buscar por día, fecha, cliente, técnico, domicilio, colaborador, repuesto..." style="flex: 2; min-width: 200px;">
-            <button type="button" id="btnResetFilters" onclick="resetWorksheetFilters()" title="Restablecer todos los filtros" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; padding: 0 12px; height: 38px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; white-space: nowrap;">
+            <input type="text" id="searchWorksheetInput" class="search-input" placeholder="Buscar" style="flex: 2; min-width: 200px;">
+            <button type="button" id="btnResetFilters" class="role-admin-filter" onclick="resetWorksheetFilters()" title="Restablecer todos los filtros" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; padding: 0 12px; height: 38px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; white-space: nowrap;">
                 ↺ Limpiar
             </button>
         </div>
@@ -938,6 +982,11 @@
         let colaboradores = [];
         let ordenesTrabajo = [];
         let role = localStorage.getItem('electrofrio_role') || 'Colaborador';
+        if (role !== 'Administrador') {
+            document.body.classList.add('role-colaborador');
+        } else {
+            document.body.classList.add('role-administrador');
+        }
         let pdigAreaCounter = 0;
         let pdigEquipoCounter = 0;
         window.selectedWorksheets = new Set();
@@ -1264,6 +1313,15 @@
             const isAdmin = role === 'Administrador';
             const myName = (localStorage.getItem('electrofrio_name') || '').trim().toLowerCase();
 
+            // Sincronizar clases en body para control de roles por CSS
+            if (isAdmin) {
+                document.body.classList.remove('role-colaborador');
+                document.body.classList.add('role-administrador');
+            } else {
+                document.body.classList.add('role-colaborador');
+                document.body.classList.remove('role-administrador');
+            }
+
             // Sincronizar título y visibilidad según el rol
             const titleElem = document.getElementById('pdtTableTitle');
             if (titleElem) {
@@ -1273,17 +1331,17 @@
             if (btnExcel) {
                 btnExcel.style.display = isAdmin ? 'inline-flex' : 'none';
             }
-            const authorFilterSelect = document.getElementById('filterWorksheetAuthor');
-            if (authorFilterSelect) {
-                authorFilterSelect.style.display = isAdmin ? '' : 'none';
-            }
+            // Ocultar filtros de semanas, días, fecha, domicilios, autor y botón limpiar para colaboradores
+            document.querySelectorAll('.role-admin-filter').forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
+            });
 
             const searchVal = (document.getElementById('searchWorksheetInput')?.value || '').trim().toLowerCase();
-            const weekFilter = document.getElementById('filterWorksheetWeek')?.value || '';
-            const dayFilter = (document.getElementById('filterWorksheetDay')?.value || '').trim();
-            const dateFilter = (document.getElementById('filterWorksheetDate')?.value || '').trim();
-            const addressFilter = document.getElementById('filterWorksheetAddress')?.value || '';
-            const authorFilter = document.getElementById('filterWorksheetAuthor')?.value || '';
+            const weekFilter = isAdmin ? (document.getElementById('filterWorksheetWeek')?.value || '') : '';
+            const dayFilter = isAdmin ? (document.getElementById('filterWorksheetDay')?.value || '').trim() : '';
+            const dateFilter = isAdmin ? (document.getElementById('filterWorksheetDate')?.value || '').trim() : '';
+            const addressFilter = isAdmin ? (document.getElementById('filterWorksheetAddress')?.value || '') : '';
+            const authorFilter = isAdmin ? (document.getElementById('filterWorksheetAuthor')?.value || '') : '';
 
             // Filtrar planillas con buscador general omnibox y filtros por días/fecha
             let filtered = planillas.filter(p => {
@@ -1774,7 +1832,26 @@
         document.getElementById('filterWorksheetDay')?.addEventListener('change', renderWorksheetsTable);
         document.getElementById('filterWorksheetDate')?.addEventListener('change', renderWorksheetsTable);
         document.getElementById('filterWorksheetAuthor')?.addEventListener('change', renderWorksheetsTable);
-        document.getElementById('searchWorksheetInput')?.addEventListener('input', renderWorksheetsTable);
+        
+        const elSearchInput = document.getElementById('searchWorksheetInput');
+        if (elSearchInput) {
+            elSearchInput.addEventListener('input', renderWorksheetsTable);
+            // Cuando los técnicos tocan para escribir, subir automáticamente el cuadro de texto arriba de todo
+            const scrollSearchToTop = () => {
+                setTimeout(() => {
+                    elSearchInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+                setTimeout(() => {
+                    const rect = elSearchInput.getBoundingClientRect();
+                    if (rect.top > 25 || rect.top < 0) {
+                        const y = window.pageYOffset + rect.top - 8;
+                        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+                    }
+                }, 280);
+            };
+            elSearchInput.addEventListener('focus', scrollSearchToTop);
+            elSearchInput.addEventListener('click', scrollSearchToTop);
+        }
 
         // 9. ACTUALIZACIÓN EN LÍNEA Y GUARDADO MANUAL DE PLANILLAS
         window._pendingPlanillaUpdates = {};
@@ -2830,6 +2907,9 @@
             window.agregarAreaDigital();
 
             modal.classList.add("show");
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'MODAL_STATE_CHANGED', isOpen: true }, '*');
+            }
         };
 
         window.closePlanillaDigitalModal = function() {
@@ -2849,6 +2929,9 @@
                 draftBtn.innerHTML = '💾 Guardar Borrador';
             }
             document.getElementById("modalNuevaPlanillaDigital").classList.remove("show");
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'MODAL_STATE_CHANGED', isOpen: false }, '*');
+            }
         };
 
         // Abre la planilla para una Orden de Trabajo asignada

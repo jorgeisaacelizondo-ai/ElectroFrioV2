@@ -1842,12 +1842,14 @@
 
             /* Ajustes en Dashboard */
             .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
             }
 
             .stat-card {
-                padding: 15px;
+                padding: 12px 10px !important;
+                gap: 8px !important;
+                border-radius: 12px !important;
             }
 
             /* Convertir tablas en tarjetas para lectura móvil */
@@ -2874,6 +2876,13 @@
         padding-bottom: env(safe-area-inset-bottom, 0px);
         justify-content: space-around;
         align-items: center;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .mobile-bottom-nav.hide-for-modal {
+        transform: translateY(120%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
 
     .bottom-nav-item {

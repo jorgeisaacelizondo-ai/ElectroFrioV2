@@ -788,21 +788,21 @@
                 </svg>
                 <span>Órdenes</span>
             </button>
+            <button type="button" class="bottom-nav-item" data-module="database" onclick="switchTab('database')" title="Planillas de Trabajo (PDT)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    <path d="M9 12h6"></path>
+                    <path d="M9 16h6"></path>
+                </svg>
+                <span>Planillas (PDT)</span>
+            </button>
             <button type="button" class="bottom-nav-item" data-module="tareas" onclick="switchTab('tareas')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 11 12 14 22 4"></polyline>
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                 </svg>
                 <span>Tareas</span>
-            </button>
-            <button type="button" class="bottom-nav-item" data-module="dashboard" onclick="switchTab('dashboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="9"></rect>
-                    <rect x="14" y="3" width="7" height="5"></rect>
-                    <rect x="14" y="12" width="7" height="9"></rect>
-                    <rect x="3" y="16" width="7" height="5"></rect>
-                </svg>
-                <span>Panel</span>
             </button>
             <button type="button" class="bottom-nav-item" id="btnBottomMoreMenu" onclick="toggleMobileSidebar()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1333,6 +1333,18 @@
             // Cambio de pantalla solicitado por un módulo (ej. Dashboard)
             if (event.data.type === 'NAVIGATE' && event.data.page) {
                 switchTab(event.data.page);
+            }
+
+            // Ocultar / Mostrar barra inferior de atajos cuando un modal esté abierto
+            if (event.data.type === 'MODAL_STATE_CHANGED') {
+                const bNav = document.getElementById('mobileBottomNav');
+                if (bNav) {
+                    if (event.data.isOpen) {
+                        bNav.classList.add('hide-for-modal');
+                    } else {
+                        bNav.classList.remove('hide-for-modal');
+                    }
+                }
             }
 
             // Mostrar notificación Toast
