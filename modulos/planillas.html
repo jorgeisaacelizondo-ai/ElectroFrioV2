@@ -1075,6 +1075,22 @@
             return p.id ? `#${p.id.slice(-6)}` : 'PDT';
         }
 
+        // Función segura para guardar planillas en localStorage protegiendo la cuota máxima (5MB) del navegador
+        function safeSavePlanillasLocalStorage(data) {
+            try {
+                localStorage.setItem('electrofrio_worksheets', JSON.stringify(data));
+            } catch (err) {
+                console.warn("Aviso: Cuota de almacenamiento del navegador (localStorage) excedida. Guardando versión reducida:", err);
+                try {
+                    // Si se superan los 5MB del navegador (frecuente en Mac/Safari/móviles), guardamos solo las 250 más recientes en caché local
+                    const recentOnly = (data || []).slice(0, 250);
+                    localStorage.setItem('electrofrio_worksheets', JSON.stringify(recentOnly));
+                } catch (innerErr) {
+                    console.warn("No se pudo escribir en el almacenamiento local del navegador:", innerErr);
+                }
+            }
+        }
+
         // 5. CARGA Y SINCRONIZACIÓN DE DATOS
         function cargarDatos() {
             try {
@@ -1090,11 +1106,7 @@
                 const missingHistory = window.localHistoricalPlanillas.filter(h => !existingCodes.has((h.pdtCode || h.id || '').toUpperCase()));
                 if (missingHistory.length > 0) {
                     planillas = [...planillas, ...missingHistory];
-                    try {
-                        localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
-                    } catch(err) {
-                        console.warn("Aviso localStorage quota excedida al guardar historial:", err);
-                    }
+                    safeSavePlanillasLocalStorage(planillas);
                 }
             }
 
@@ -1135,11 +1147,7 @@
                 }
 
                 if (planillas.length > 0) {
-                    try {
-                        localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
-                    } catch(err) {
-                        console.warn("Aviso localStorage:", err);
-                    }
+                    safeSavePlanillasLocalStorage(planillas);
                     renderWorksheetsTable();
                     populateWorksheetAddressDropdown();
                     populateWorksheetWeekDropdown();
@@ -1776,7 +1784,7 @@
             const pIndex = planillas.findIndex(p => p.id === planillaId);
             if (pIndex > -1) {
                 planillas[pIndex][field] = value;
-                localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
+                safeSavePlanillasLocalStorage(planillas);
 
                 if (!window._pendingPlanillaUpdates[planillaId]) {
                     window._pendingPlanillaUpdates[planillaId] = {};
@@ -1817,7 +1825,7 @@
                     if (moInput) planillas[pIndex].manoObra = moInput.value.trim();
                     if (matInput) planillas[pIndex].materiales = matInput.value.trim();
 
-                    localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
+                    safeSavePlanillasLocalStorage(planillas);
 
                     if (typeof db !== 'undefined') {
                         await db.collection('planillas').doc(planillaId).set(planillas[pIndex], { merge: true });
@@ -1853,7 +1861,7 @@
                             origCode = planillas[idx].originalPdtCode;
                         }
                         targetOrderId = planillas[idx].orderId;
-                        localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
+                        safeSavePlanillasLocalStorage(planillas);
                     }
                     if (typeof db !== 'undefined') {
                         const updObj = { status: 'Borrador' };
@@ -1913,7 +1921,7 @@
             try {
                 await db.collection('planillas').doc(id).delete();
                 planillas = planillas.filter(p => p.id !== id);
-                localStorage.setItem('electrofrio_worksheets', JSON.stringify(planillas));
+                safeSavePlanillasLocalStorage(planillas);
                 closeDeletePdtModal();
                 renderWorksheetsTable();
                 showToast("Planilla eliminada exitosamente", "success");
@@ -3491,7 +3499,7 @@
             } else {
                 planillas.unshift(dataToSave);
             }
-            localStorage.setItem("electrofrio_worksheets", JSON.stringify(planillas));
+            safeSavePlanillasLocalStorage(planillas);
 
             // Si el ID cambió de BORRADOR-xxx a PDT-xxx, borrar el documento de borrador anterior de Firestore para evitar duplicados
             if (planillaId && planillaId !== docId) {
