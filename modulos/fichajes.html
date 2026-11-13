@@ -986,17 +986,14 @@
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                Control de Asistencia y Fichajes
+                Registrar Mi Asistencia
             </h1>
-            <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">
-                Registro de ingresos, salidas, presencia diaria y geolocalización satelital
-            </p>
         </div>
 
         <div class="header-actions">
-            <!-- Indicador de Rol -->
-            <span id="badgeCurrentRole" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #38bdf8;">
-                Modo: <strong id="lblCurrentRole">Cargando...</strong>
+            <!-- Indicador de Rol oculto -->
+            <span id="badgeCurrentRole" style="display: none;">
+                <strong id="lblCurrentRole"></strong>
             </span>
 
             <!-- Botones Admin -->
@@ -1017,10 +1014,7 @@
     <!-- 2. VISTA DEL COLABORADOR: PANEL PRINCIPAL DE FICHAJE -->
     <div class="fichaje-collab-container" id="sectionCollabFichaje">
         <div class="fichaje-panel">
-            <h2 style="margin: 0; font-size: 20px; font-family: 'Outfit', sans-serif;">Registrar Mi Asistencia</h2>
-            <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 16px 0;">
-                Presiona el botón para marcar tu entrada o salida con geolocalización
-            </p>
+            <h2 style="margin: 0 0 18px 0; font-size: 20px; font-family: 'Outfit', sans-serif;"></h2>
 
             <!-- Reloj Digital en Vivo -->
             <div class="clock-display" id="fichajeClock">--:--:--</div>

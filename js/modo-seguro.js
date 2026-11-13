@@ -123,66 +123,10 @@
     }
 
     function crearIndicadorVisual() {
-        // No duplicar indicador si ya existe (o si es un iframe hijo)
-        if (document.getElementById('modo-seguro-badge') || window.self !== window.top) {
-            return;
-        }
-
-        const badge = document.createElement('div');
-        badge.id = 'modo-seguro-badge';
-        badge.style.position = 'fixed';
-        badge.style.bottom = '16px';
-        badge.style.right = '16px';
-        badge.style.zIndex = '999999';
-        badge.style.display = 'flex';
-        badge.style.alignItems = 'center';
-        badge.style.gap = '8px';
-        badge.style.padding = '8px 14px';
-        badge.style.borderRadius = '30px';
-        badge.style.fontSize = '12px';
-        badge.style.fontWeight = '600';
-        badge.style.fontFamily = "'Inter', sans-serif";
-        badge.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-        badge.style.transition = 'all 0.3s ease';
-        badge.style.cursor = 'pointer';
-
-        function actualizarEstilo() {
-            if (modoSeguroActivo) {
-                badge.style.backgroundColor = '#382b0e';
-                badge.style.color = '#f1c40f';
-                badge.style.border = '1px solid #f39c12';
-                badge.innerHTML = `🛡️ <span>Modo Seguro: <strong>ACTIVADO</strong> (Escrituras bloqueadas)</span>`;
-                badge.title = "Las escrituras a la base de datos están bloqueadas. Haz clic para activar escrituras reales.";
-            } else {
-                badge.style.backgroundColor = '#0b3d20';
-                badge.style.color = '#4cd964';
-                badge.style.border = '1px solid #2ecc71';
-                badge.innerHTML = `🟢 <span>Firestore Real: <strong>CONECTADO</strong> (Escrituras activas)</span>`;
-                badge.title = "Las altas, ediciones y fichajes impactan en la base real de Cloud Firestore. Haz clic para activar Modo Seguro si deseas bloquearlas.";
-            }
-        }
-
-        badge.addEventListener('click', () => {
-            modoSeguroActivo = !modoSeguroActivo;
-            localStorage.setItem(STORAGE_KEY, modoSeguroActivo ? 'true' : 'false');
-            actualizarEstilo();
-            if (typeof window.showToast === 'function') {
-                window.showToast(
-                    modoSeguroActivo
-                        ? '🛡️ Modo Seguro ACTIVADO: Las escrituras en Firestore están bloqueadas'
-                        : '🟢 Firestore Real CONECTADO: Las operaciones se guardan en la base real',
-                    modoSeguroActivo ? 'warning' : 'success'
-                );
-            }
-        });
-
-        actualizarEstilo();
-
-        if (document.body) {
-            document.body.appendChild(badge);
-        } else {
-            document.addEventListener('DOMContentLoaded', () => document.body.appendChild(badge));
-        }
+        // Indicador visual desactivado para mantener la interfaz limpia sin widgets flotantes
+        const existing = document.getElementById('modo-seguro-badge');
+        if (existing) existing.remove();
+        return;
     }
 
     // Exponer API global por si se necesita controlar programáticamente

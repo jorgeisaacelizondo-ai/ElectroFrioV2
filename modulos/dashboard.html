@@ -288,6 +288,13 @@
             display: none;
         }
 
+        .collab-actions-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .dashboard-sections {
@@ -297,10 +304,66 @@
 
         @media (max-width: 768px) {
             body {
-                padding: 15px;
+                padding: 12px 10px;
             }
+            /* Grid de 2 en 2 en móvil */
             .dashboard-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            .collab-actions-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            .collab-actions-grid .action-card-btn:last-child:nth-child(odd) {
+                grid-column: span 2 !important;
+            }
+
+            /* Tarjetas de estadísticas más chicas */
+            .stat-card {
+                padding: 12px 10px !important;
+                gap: 8px !important;
+                border-radius: 12px !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .stat-icon {
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 8px !important;
+            }
+            .stat-icon svg {
+                width: 18px !important;
+                height: 18px !important;
+            }
+            .stat-label {
+                font-size: 10px !important;
+                letter-spacing: 0.2px !important;
+            }
+            .stat-value {
+                font-size: 15px !important;
+                line-height: 1.2 !important;
+            }
+            .stat-trend {
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Botones de acción rápida más chicos */
+            .collab-action-btn {
+                padding: 12px 8px !important;
+                gap: 6px !important;
+                border-radius: 12px !important;
+            }
+            .collab-action-btn .btn-icon {
+                font-size: 22px !important;
+            }
+            .collab-action-btn .btn-title {
+                font-size: 12px !important;
+                font-weight: 700 !important;
+            }
+            .collab-action-btn .btn-desc {
+                font-size: 9.5px !important;
             }
         }
     </style>
@@ -493,21 +556,21 @@
             </div>
 
             <!-- Accesos rápidos para el colaborador -->
-            <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <button type="button" onclick="navigateToPage('fichajes')" class="action-card-btn" style="padding: 16px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-                    <span style="font-size: 26px;">⏱️</span>
-                    <span style="font-weight: 700;">Registrar Mi Fichaje</span>
-                    <span style="font-size: 11px; color: var(--text-muted);">Entrada / Salida con GPS</span>
+            <div class="collab-actions-grid">
+                <button type="button" onclick="navigateToPage('fichajes')" class="action-card-btn collab-action-btn" style="padding: 14px 10px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+                    <span class="btn-icon" style="font-size: 26px;">⏱️</span>
+                    <span class="btn-title" style="font-weight: 700;">Registrar Mi Fichaje</span>
+                    <span class="btn-desc" style="font-size: 11px; color: var(--text-muted);">Entrada / Salida con GPS</span>
                 </button>
-                <button type="button" onclick="navigateToPage('database')" class="action-card-btn" style="padding: 16px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-                    <span style="font-size: 26px;">📄</span>
-                    <span style="font-weight: 700;">Nueva Planilla PDT</span>
-                    <span style="font-size: 11px; color: var(--text-muted);">Cargar trabajo técnico</span>
+                <button type="button" onclick="navigateToPage('database')" class="action-card-btn collab-action-btn" style="padding: 14px 10px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+                    <span class="btn-icon" style="font-size: 26px;">📄</span>
+                    <span class="btn-title" style="font-weight: 700;">Nueva Planilla PDT</span>
+                    <span class="btn-desc" style="font-size: 11px; color: var(--text-muted);">Cargar trabajo técnico</span>
                 </button>
-                <button type="button" onclick="navigateToPage('ordenes')" class="action-card-btn" style="padding: 16px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-                    <span style="font-size: 26px;">📋</span>
-                    <span style="font-weight: 700;">Mis Órdenes de Trabajo</span>
-                    <span style="font-size: 11px; color: var(--text-muted);">Revisar itinerario</span>
+                <button type="button" onclick="navigateToPage('ordenes')" class="action-card-btn collab-action-btn" style="padding: 14px 10px; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+                    <span class="btn-icon" style="font-size: 26px;">📋</span>
+                    <span class="btn-title" style="font-weight: 700;">Mis Órdenes de Trabajo</span>
+                    <span class="btn-desc" style="font-size: 11px; color: var(--text-muted);">Revisar itinerario</span>
                 </button>
             </div>
         </div>
