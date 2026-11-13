@@ -277,6 +277,12 @@
         .status-reprogramar { background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
         .status-presupuesto { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(76, 217, 100, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 217, 100, 0); }
+        }
+
         /* Vistas de Rol */
         .view-admin, .view-collab {
             display: none;
@@ -366,35 +372,40 @@
 
         <!-- Secciones del Dashboard -->
         <div class="dashboard-sections">
-            <!-- Tabla de Órdenes Recientes -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <span>📋</span> Órdenes de Trabajo Activas
-                    </h3>
-                    <span style="font-size:12px; color:var(--color-blue); font-weight:700; cursor:pointer;" onclick="navigateToPage('ordenes')">
-                        Ver todas &rarr;
-                    </span>
-                </div>
-                <div class="table-responsive">
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Cliente</th>
-                                <th>Descripción</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminRecentOrdersBody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 25px;">
-                                    Cargando órdenes de trabajo...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Banner de Monitoreo en Vivo: Técnicos Trabajando en Domicilio Ahora -->
+                <div id="adminLiveWorkSummary"></div>
+
+                <!-- Tabla de Órdenes Recientes -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span>📋</span> Órdenes de Trabajo Activas
+                        </h3>
+                        <span style="font-size:12px; color:var(--color-blue); font-weight:700; cursor:pointer;" onclick="navigateToPage('ordenes')">
+                            Ver todas &rarr;
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminRecentOrdersBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                                        Cargando órdenes de trabajo...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -610,8 +621,120 @@
             return { class: 'status-pendiente', text: '🔴 Pendiente visita' };
         }
 
-        // 6. RENDERIZAR DASHBOARD ADMINISTRADOR
+        // Resolución de enlaces satelitales con Google Maps
+        function getGoogleMapsUrl(address, clientOrMapsUrl) {
+            let directUrl = '';
+            if (typeof clientOrMapsUrl === 'string' && clientOrMapsUrl.trim()) {
+                directUrl = clientOrMapsUrl.trim();
+            } else if (clientOrMapsUrl && typeof clientOrMapsUrl === 'object') {
+                const client = clientOrMapsUrl;
+                if (client.addressMapsLinks && address && client.addressMapsLinks[address]) {
+                    directUrl = client.addressMapsLinks[address];
+                } else if (Array.isArray(client.addresses) && Array.isArray(client.addressesMaps)) {
+                    const idx = client.addresses.indexOf(address);
+                    if (idx !== -1 && client.addressesMaps[idx]) {
+                        directUrl = client.addressesMaps[idx];
+                    }
+                }
+                if (!directUrl && client.mapsUrl && (address === client.address || !address)) {
+                    directUrl = client.mapsUrl;
+                }
+            }
+
+            function normalizeMapTarget(target) {
+                if (!target) return '';
+                let str = target.trim();
+                if (/^https?:\/\//i.test(str)) return str;
+                if (/^(www\.)?(maps\.google|maps\.app\.goo\.gl|goo\.gl\/maps|google\.[a-z.]+\/maps)/i.test(str)) {
+                    return 'https://' + str.replace(/^www\./, '');
+                }
+                if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(str)) {
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(str.replace(/\s+/g, ''))}`;
+                }
+                if (str && str.toLowerCase() !== 'sin especificar' && str.toLowerCase() !== 'sin domicilio') {
+                    const hasCity = /la rioja|argentina/i.test(str);
+                    const query = hasCity ? str : `${str}, La Rioja, Argentina`;
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                }
+                return '';
+            }
+
+            if (directUrl) {
+                const res = normalizeMapTarget(directUrl);
+                if (res) return res;
+            }
+            if (address && typeof address === 'string') {
+                return normalizeMapTarget(address);
+            }
+            return '';
+        }
+
+        // 6. RENDER MONITOREO EN VIVO (TÉCNICOS TRABAJANDO EN DOMICILIO AHORA)
+        function renderLiveWorkSummary() {
+            if (currentUserRole !== 'Administrador') return;
+            const container = document.getElementById('adminLiveWorkSummary');
+            if (!container) return;
+
+            const workingNow = ordenesTrabajo.filter(o => o.status === 'En Proceso');
+            const techSet = new Set();
+            workingNow.forEach(o => {
+                if (Array.isArray(o.assignees)) {
+                    o.assignees.forEach(name => {
+                        if (name && name !== 'Sin Asignar') techSet.add(name);
+                    });
+                } else if (typeof o.assignee === 'string' && o.assignee !== 'Sin Asignar') {
+                    techSet.add(o.assignee);
+                }
+            });
+            const totalTechsCount = techSet.size > 0 ? techSet.size : workingNow.length;
+
+            if (workingNow.length > 0) {
+                container.innerHTML = `
+                    <div class="content-card" style="background: rgba(76, 217, 100, 0.08); border: 1px solid rgba(76, 217, 100, 0.4); padding: 14px 18px; border-radius: 14px; margin-bottom: 0;">
+                        <div style="font-weight: 700; color: #4cd964; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #4cd964; box-shadow: 0 0 8px #4cd964; animation: pulseGreen 2s infinite;"></span>
+                                <span>TÉCNICOS TRABAJANDO EN DOMICILIO AHORA (${totalTechsCount})</span>
+                            </div>
+                            <span style="font-size: 11px; color: var(--color-blue); font-weight: 700; cursor: pointer;" onclick="navigateToPage('ordenes')">
+                                Ver en Órdenes &rarr;
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${workingNow.map(o => {
+                                const nowCObj = clientes.find(c => c.id === o.clientId || (c.name && c.name.toLowerCase() === (o.client || '').toLowerCase()));
+                                const nowMUrl = getGoogleMapsUrl(o.address, nowCObj);
+                                const nowMapsBtn = (nowMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
+                                    ? `<a href="${nowMUrl}" target="_blank" rel="noopener noreferrer" style="margin-left:6px; display:inline-flex; align-items:center; gap:3px; padding:2px 7px; background:rgba(0, 180, 216, 0.2); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; font-weight:700; text-decoration:none;" title="Ver en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a>`
+                                    : '';
+                                return `
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.4)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'" onclick="navigateToPage('ordenes')">
+                                    <div>
+                                        <strong style="color: var(--color-blue); font-size: 14px;">${o.id}</strong> - <strong style="color:#fff;">${o.client || 'Particular'}</strong> en 📍 <span style="color:var(--color-yellow); font-weight:600;">${o.address || 'Sin dirección'}</span>
+                                        ${nowMapsBtn}
+                                        <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px;">(🔧 ${o.type || o.equipment || 'Servicio técnico'})</span>
+                                    </div>
+                                    <div style="font-size: 12px; color: #4cd964; font-weight: 700; background: rgba(76, 217, 100, 0.15); padding: 4px 10px; border-radius: 6px;">
+                                        👥 ${Array.isArray(o.assignees) ? o.assignees.join(', ') : o.assignee || 'Sin Asignar'}
+                                    </div>
+                                </div>
+                            `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="content-card" style="padding: 12px 18px; border-radius: 14px; font-size: 13px; color: var(--text-muted); margin-bottom: 0;">
+                        ℹ️ Ningún técnico se encuentra trabajando en domicilio en este momento.
+                    </div>
+                `;
+            }
+        }
+
+        // 7. RENDERIZAR DASHBOARD ADMINISTRADOR
         function renderAdminDashboard() {
+            renderLiveWorkSummary();
             const todayISO = getTodayString();
             const todayAR = getTodayARString();
 

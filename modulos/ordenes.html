@@ -88,6 +88,15 @@
             align-items: center;
             gap: 8px;
             color: var(--text-secondary, #94a3b8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .stat-pill:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--color-blue);
         }
 
         .stat-pill strong {
@@ -101,16 +110,32 @@
             color: #00e676;
         }
 
+        .stat-pill.pill-today:hover {
+            background: rgba(0, 230, 118, 0.18);
+            box-shadow: 0 2px 10px rgba(0, 230, 118, 0.2);
+        }
+
         .stat-pill.pill-uncoord {
             border-color: rgba(245, 158, 11, 0.4);
             background: rgba(245, 158, 11, 0.08);
             color: #f59e0b;
         }
 
+        .stat-pill.pill-uncoord:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.25);
+        }
+
         .stat-pill.pill-completed {
             border-color: rgba(90, 200, 250, 0.4);
             background: rgba(90, 200, 250, 0.08);
             color: #5ac8fa;
+        }
+
+        .stat-pill.pill-completed:hover {
+            background: rgba(90, 200, 250, 0.18);
+            box-shadow: 0 2px 10px rgba(90, 200, 250, 0.2);
         }
 
         .orders-actions-bar {
@@ -476,19 +501,19 @@
 
         <!-- Pastillas de conteo rápido -->
         <div class="orders-stats-pills">
-            <div class="stat-pill">
+            <div class="stat-pill" onclick="handlePillFilter('ALL')" title="Ver todas las órdenes activas">
                 <span>Activas:</span>
                 <strong id="statActiveCount">0</strong>
             </div>
-            <div class="stat-pill pill-today">
+            <div class="stat-pill pill-today" onclick="handlePillFilter('HOY')" title="Ver órdenes programadas para hoy">
                 <span>Hoy:</span>
                 <strong id="statTodayCount">0</strong>
             </div>
-            <div class="stat-pill pill-uncoord role-admin-only">
+            <div class="stat-pill pill-uncoord role-admin-only" onclick="openUncoordinatedModal()" title="Abrir y coordinar órdenes sin fecha/horario asignado">
                 <span>Sin Coord:</span>
                 <strong id="statUncoordCount">0</strong>
             </div>
-            <div class="stat-pill pill-completed role-admin-only">
+            <div class="stat-pill pill-completed role-admin-only" onclick="handlePillFilter('COMPLETADO')" title="Ver órdenes completadas">
                 <span>Completadas:</span>
                 <strong id="statCompletedCount">0</strong>
             </div>
@@ -510,27 +535,11 @@
         </div>
     </div>
 
-    <!-- SECCIÓN SUPERIOR SOLO ADMIN: Monitoreo en vivo + Tarjeta Sin Coordinar -->
-    <div class="role-admin-only" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 20px;">
-        <!-- Banner de Monitoreo en Tiempo Real -->
-        <div id="adminLiveWorkSummary" style="flex: 2; min-width: 320px; margin-bottom: 0;">
+    <!-- SECCIÓN SUPERIOR SOLO ADMIN: Monitoreo en vivo -->
+    <div class="role-admin-only" style="margin-bottom: 20px;">
+        <!-- Banner de Monitoreo en Tiempo Real (Ocupa ancho completo sin tarjeta residual) -->
+        <div id="adminLiveWorkSummary" style="width: 100%; margin-bottom: 0;">
             <!-- Dinámico: muestra técnicos trabajando actualmente en domicilio -->
-        </div>
-
-        <!-- Panel Lateral: Botón para Órdenes Sin Coordinar -->
-        <div class="uncoordinated-orders-button" style="flex: 1; min-width: 240px; max-width: 320px; display: flex; align-items: stretch;">
-            <div class="content-card" style="width: 100%; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.2s ease;" onclick="openUncoordinatedModal()" onmouseover="this.style.borderColor='var(--color-yellow)'; this.style.boxShadow='0 4px 12px rgba(255, 193, 7, 0.15)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background-color: rgba(255, 193, 7, 0.15); padding: 10px; border-radius: 8px; color: var(--color-yellow); display: flex; align-items: center; justify-content: center;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    </div>
-                    <div>
-                        <h3 class="card-title" style="margin: 0; font-size: 15px;">Sin Coordinar</h3>
-                        <span style="font-size: 11px; color: var(--text-muted);">Pendientes de visita</span>
-                    </div>
-                </div>
-                <span class="badge warning" id="uncoordinatedCountBadge" style="background-color: var(--color-yellow); color: #000; font-weight: 700; border-radius: 10px; padding: 4px 10px; font-size: 14px;">0</span>
-            </div>
         </div>
     </div>
 
@@ -777,11 +786,31 @@
                     </div>
                     <div>
                         <span style="font-size: 11px; font-weight:600; color:var(--text-secondary); text-transform:uppercase;">Estado del Trabajo</span>
-                        <div id="detail-status-collab-badge" style="margin-top: 4px;">-</div>
+                        <div style="margin-top: 6px;">
+                            <!-- Botón de acción interactivo cuando la orden está en Pendiente visita -->
+                            <button type="button" id="btnActionStartWork" onclick="handleCollabStatusChange('En Proceso')" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.4)); border: 2px solid #ef4444; color: #fff; font-weight: 800; font-size: 13px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3); transition: all 0.2s ease;">
+                                <span>🔴 Pendiente visita</span>
+                                <span style="font-size: 11px; font-weight: 800; background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.3px;">▶ Tocar para Iniciar</span>
+                            </button>
+
+                            <!-- Selector completo cuando ya fue iniciada o para cambiar estado -->
+                            <select id="detail-status-collab-select" onchange="handleCollabStatusChange(this.value)" style="width: 100%; padding: 11px 14px; background: rgba(0, 191, 255, 0.12); border: 1px solid var(--color-blue); color: #fff; font-weight: 700; font-size: 13px; border-radius: 8px; cursor: pointer; outline: none; appearance: auto; transition: all 0.2s ease;">
+                                <option value="Pendiente" style="background: #1a2332; color: #ff5252;">🔴 Pendiente visita</option>
+                                <option value="En Proceso" style="background: #1a2332; color: #00e676;">🟢 En proceso / Trabajando</option>
+                                <option value="Reprogramar" style="background: #1a2332; color: #d084f7;">🟣 No terminado / Reprogramar</option>
+                                <option value="Completado" style="background: #1a2332; color: #5ac8fa;">🔵 Completado</option>
+                            </select>
+                            <div id="detail-status-collab-badge" style="display: none;"></div>
+                        </div>
                     </div>
                     <div id="detail-collab-obs-wrap" style="display: none;">
                         <span style="font-size: 11px; font-weight:600; color:var(--text-secondary); text-transform:uppercase;">Observaciones del Servicio</span>
                         <div id="detail-collab-obs" style="font-size: 12px; color: #cbd5e1; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-top: 4px; white-space: pre-wrap;">-</div>
+                    </div>
+
+                    <!-- Aviso mientras esté en Pendiente visita -->
+                    <div id="collab-modal-planilla-locked" style="margin-top: 4px; padding: 12px; border-radius: 8px; background: rgba(255, 82, 82, 0.08); border: 1px dashed rgba(255, 82, 82, 0.35); font-size: 12px; color: #ff8a80; text-align: center; display: none;">
+                        🔒 <strong>Planilla Bloqueada:</strong> Toca arriba en <strong>"🔴 Pendiente visita ▶ Tocar para Iniciar"</strong> para pasar a <em>En Proceso</em> y habilitar la carga de la planilla.
                     </div>
 
                     <!-- Botón para Llenar o Ver Planilla de Trabajo -->
@@ -1619,12 +1648,17 @@
 
                 const linkedSheet = planillas.find(p => p.orderId === o.id && p.status === 'Borrador') || planillas.find(p => p.orderId === o.id);
                 const hasDraft = linkedSheet && linkedSheet.status === 'Borrador';
-                const planillaBtnLabel = hasDraft
-                    ? `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #ff9800; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Planilla en Borrador devuelta para revisión">✏️ Revisar Planilla</button>`
-                    : (linkedSheet
-                        ? `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #00bcd4; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Ver / Editar Planilla (${linkedSheet.pdtCode || linkedSheet.id})">📋 Planilla</button>`
-                        : `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #00bcd4; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Crear Planilla de Trabajo">📋 Planilla</button>`
-                    );
+                const isPendiente = (o.status === 'Pendiente' || o.status === 'Pendiente visita' || rowType === 'sinCoordinar');
+
+                let planillaBtnLabel = '';
+                if (hasDraft) {
+                    planillaBtnLabel = `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #ff9800; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Planilla en Borrador devuelta para revisión">✏️ Revisar Planilla</button>`;
+                } else if (linkedSheet) {
+                    planillaBtnLabel = `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #00bcd4; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Ver / Editar Planilla (${linkedSheet.pdtCode || linkedSheet.id})">📋 Planilla</button>`;
+                } else if (!isPendiente) {
+                    // Si la orden está en estado 'Pendiente visita', no se muestra el botón para crear planilla
+                    planillaBtnLabel = `<button class="save-btn" style="width:auto; margin:0; padding:4px 8px; font-size:11px; background-color: #00bcd4; color: #000; font-weight:700;" onclick="triggerCreatePlanillaForOrder('${o.id}')" title="Crear Planilla de Trabajo">📋 Planilla</button>`;
+                }
 
                 const actionTd = role === 'Administrador' ? `
                     <td data-label="ACCIONES">
@@ -2345,6 +2379,136 @@
             window.parent.postMessage({ type: 'OPEN_PLANILLA_FOR_ORDER', orderId: orderId }, '*');
         };
 
+        // Filtro rápido mediante las pastillas de estadísticas
+        window.handlePillFilter = function(type) {
+            const statusSelect = document.getElementById('orderStatusFilter');
+            const searchInput = document.getElementById('orderSearchInput');
+            if (type === 'ALL') {
+                if (statusSelect) statusSelect.value = 'ALL';
+                if (searchInput) searchInput.value = '';
+                renderOrdersFullTable();
+            } else if (type === 'HOY') {
+                if (statusSelect) statusSelect.value = 'ALL';
+                renderOrdersFullTable();
+                const hoySection = document.querySelector('tr div span');
+                if (hoySection) hoySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (type === 'COMPLETADO') {
+                if (statusSelect) {
+                    statusSelect.value = 'Completado';
+                    renderOrdersFullTable();
+                }
+            }
+        };
+
+        // Estilo dinámico para el selector de estado en vista de Colaborador (móvil)
+        function updateCollabStatusSelectStyle(status) {
+            const sel = document.getElementById('detail-status-collab-select');
+            if (!sel) return;
+            sel.value = status;
+            if (status === 'Pendiente' || status === 'Pendiente visita') {
+                sel.style.borderColor = 'rgba(255, 82, 82, 0.6)';
+                sel.style.backgroundColor = 'rgba(255, 82, 82, 0.15)';
+                sel.style.color = '#ff8a80';
+            } else if (status === 'En Proceso') {
+                sel.style.borderColor = 'rgba(0, 230, 118, 0.6)';
+                sel.style.backgroundColor = 'rgba(0, 230, 118, 0.15)';
+                sel.style.color = '#69f0ae';
+            } else if (status === 'Completado') {
+                sel.style.borderColor = 'rgba(90, 200, 250, 0.6)';
+                sel.style.backgroundColor = 'rgba(90, 200, 250, 0.15)';
+                sel.style.color = '#80d8ff';
+            } else if (status === 'Reprogramar') {
+                sel.style.borderColor = 'rgba(208, 132, 247, 0.6)';
+                sel.style.backgroundColor = 'rgba(208, 132, 247, 0.15)';
+                sel.style.color = '#e1bee7';
+            } else {
+                sel.style.borderColor = 'var(--color-blue)';
+                sel.style.backgroundColor = 'rgba(0, 191, 255, 0.15)';
+                sel.style.color = '#fff';
+            }
+        }
+
+        // Control de visibilidad del botón de planilla según el estado de la orden
+        function updatePlanillaVisibilityInModal(ord) {
+            const collabModalPlanillaBox = document.getElementById('collab-modal-planilla-box');
+            const collabModalPlanillaLocked = document.getElementById('collab-modal-planilla-locked');
+            const btnActionStartWork = document.getElementById('btnActionStartWork');
+            const collabSelect = document.getElementById('detail-status-collab-select');
+            const noticePlanilla = document.getElementById('status-notice-planilla');
+            const hasExistingPlanilla = !!(planillas.find(p => p.orderId === ord.id));
+            const isPending = (ord.status === 'Pendiente' || ord.status === 'Pendiente visita' || !ord.status);
+
+            if (isPending && !hasExistingPlanilla) {
+                // Estado Pendiente: mostrar botón de iniciar trabajo y bloquear la planilla
+                if (btnActionStartWork) btnActionStartWork.style.display = 'flex';
+                if (collabSelect) collabSelect.style.display = 'none';
+                if (collabModalPlanillaLocked) collabModalPlanillaLocked.style.display = 'block';
+                if (collabModalPlanillaBox) collabModalPlanillaBox.style.display = 'none';
+
+                if (noticePlanilla) {
+                    noticePlanilla.style.display = 'block';
+                    noticePlanilla.style.backgroundColor = 'rgba(239, 68, 68, 0.12)';
+                    noticePlanilla.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+                    noticePlanilla.style.color = '#ff8a80';
+                    noticePlanilla.innerHTML = `
+                        <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                            🔴 Orden en Pendiente de Visita
+                        </div>
+                        Para habilitar la planilla de trabajo, debes iniciar la orden y pasar a <strong>En Proceso</strong>.
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="save-btn" onclick="handleCollabStatusChange('En Proceso')" style="width: auto; padding: 6px 14px; font-size: 12px; background: #00e676; color: #000; font-weight: 800; border-radius: 6px; cursor: pointer;">
+                                ▶ Iniciar Trabajo (Pasar a En Proceso)
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                // Estado En Proceso o con planilla: habilitar planilla y selector
+                if (btnActionStartWork) btnActionStartWork.style.display = 'none';
+                if (collabSelect) collabSelect.style.display = 'block';
+                if (collabModalPlanillaLocked) collabModalPlanillaLocked.style.display = 'none';
+                if (collabModalPlanillaBox) collabModalPlanillaBox.style.display = 'block';
+                if (noticePlanilla) noticePlanilla.style.display = 'block';
+            }
+        }
+
+        // Cambio de estado directo desde la versión celular / Colaborador
+        window.handleCollabStatusChange = function(newStatus) {
+            const orderId = document.getElementById('detail-order-id').textContent.trim();
+            const ord = ordenesTrabajo.find(o => o.id === orderId);
+            if (!ord) return;
+
+            ord.status = newStatus;
+            const ordIdx = ordenesTrabajo.findIndex(o => o.id === ord.id);
+            if (ordIdx > -1) {
+                ordenesTrabajo[ordIdx].status = newStatus;
+                localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
+            }
+
+            updateCollabStatusSelectStyle(newStatus);
+            updatePlanillaVisibilityInModal(ord);
+
+            const adminSelect = document.getElementById('detail-status');
+            if (adminSelect) adminSelect.value = newStatus;
+
+            if (typeof db !== 'undefined' && db.collection) {
+                db.collection('ordenes').doc(ord.id).set({
+                    status: newStatus
+                }, { merge: true }).catch(err => console.error("Error al actualizar estado en Firestore:", err));
+            }
+
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'ORDER_UPDATED',
+                    orderId: ord.id,
+                    status: newStatus
+                }, '*');
+            }
+
+            renderOrdersFullTable();
+            renderLiveWorkSummary();
+        };
+
         window.openOrderDetailsModal = function (orderId) {
             const ord = ordenesTrabajo.find(o => o.id === orderId);
             if (!ord) return;
@@ -2378,6 +2542,8 @@
                 const bInfo = getBadgeInfo(ord.status || 'Pendiente');
                 detailStatusCollab.innerHTML = `<span class="badge ${bInfo.class}">${bInfo.text}</span>`;
             }
+            updateCollabStatusSelectStyle(ord.status || 'Pendiente');
+            updatePlanillaVisibilityInModal(ord);
 
             const collabObsWrap = document.getElementById('detail-collab-obs-wrap');
             const collabObsText = document.getElementById('detail-collab-obs');
@@ -2468,7 +2634,12 @@
             }
 
             if (statusSelect) {
-                statusSelect.onchange = updateStatusNotices;
+                statusSelect.onchange = () => {
+                    updateStatusNotices();
+                    ord.status = statusSelect.value;
+                    updatePlanillaVisibilityInModal(ord);
+                    updateCollabStatusSelectStyle(statusSelect.value);
+                };
                 updateStatusNotices();
             }
 
