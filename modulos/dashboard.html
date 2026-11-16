@@ -365,6 +365,78 @@
             .collab-action-btn .btn-desc {
                 font-size: 9.5px !important;
             }
+
+            /* Tabla responsiva convertida en tarjetas legibles para celular */
+            .table-responsive {
+                overflow-x: visible !important;
+            }
+
+            .custom-table thead {
+                display: none !important;
+            }
+
+            .custom-table, .custom-table tbody, .custom-table tr, .custom-table td {
+                display: block !important;
+                width: 100% !important;
+            }
+
+            .custom-table tr {
+                margin-bottom: 12px !important;
+                border: 1px solid var(--border-color, #1e3656) !important;
+                border-radius: 12px !important;
+                background: rgba(15, 23, 42, 0.45) !important;
+                padding: 10px 14px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+                transition: transform 0.15s ease, background 0.15s ease;
+            }
+
+            .custom-table tr:active {
+                transform: scale(0.99);
+                background: rgba(0, 180, 216, 0.08) !important;
+            }
+
+            .custom-table td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 6px 0 !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                font-size: 13px !important;
+                text-align: right !important;
+            }
+
+            .custom-table td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 2px !important;
+            }
+
+            .custom-table td:first-child {
+                padding-top: 2px !important;
+            }
+
+            .custom-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: var(--text-muted, #94a3b8);
+                text-align: left;
+                margin-right: 12px;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+            }
+
+            .custom-table td[colspan] {
+                display: block !important;
+                text-align: center !important;
+                justify-content: center !important;
+                padding: 20px 10px !important;
+            }
+
+            .custom-table td[colspan]::before {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -456,13 +528,15 @@
                                     <th>ID</th>
                                     <th>Cliente</th>
                                     <th>Descripción</th>
-                                    <th>Estado</th>
+                                    <th>Horario</th>
+                                    <th>Colaboradores</th>
                                     <th>Fecha</th>
+                                    <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody id="adminRecentOrdersBody">
                                 <tr>
-                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">
                                         Cargando órdenes de trabajo...
                                     </td>
                                 </tr>
@@ -591,13 +665,14 @@
                             <th>Dirección</th>
                             <th>Fecha</th>
                             <th>Horario</th>
+                            <th>Colaboradores</th>
                             <th>Equipo / Trabajo</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody id="collabOrdersTableBody">
                         <tr>
-                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 25px;">
                                 Cargando tus órdenes asignadas...
                             </td>
                         </tr>
@@ -682,6 +757,33 @@
             if (status === 'Reprogramar') return { class: 'status-reprogramar', text: '🟣 Reprogramar' };
             if (status === 'Presupuesto') return { class: 'status-presupuesto', text: '🟡 Presupuesto' };
             return { class: 'status-pendiente', text: '🔴 Pendiente visita' };
+        }
+
+        function formatOrderDate(dateStr) {
+            if (!dateStr) return '<span style="color:var(--text-muted); font-style:italic;">Sin fecha</span>';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function formatOrderTime(o) {
+            if (o.time && o.timeEnd) return `${o.time} a ${o.timeEnd} hs`;
+            if (o.time) return `${o.time} hs`;
+            if (o.timeRange) return o.timeRange;
+            return '<span style="color:var(--text-muted); font-style:italic;">Sin horario</span>';
+        }
+
+        function formatOrderCollabs(o) {
+            if (Array.isArray(o.assignees) && o.assignees.length > 0) {
+                const valid = o.assignees.filter(a => a && a !== 'Sin Asignar');
+                if (valid.length > 0) return valid.join(', ');
+            }
+            if (typeof o.assignee === 'string' && o.assignee && o.assignee !== 'Sin Asignar') {
+                return o.assignee;
+            }
+            return '<span style="color:var(--text-muted); font-style:italic;">Sin Asignar</span>';
         }
 
         // Resolución de enlaces satelitales con Google Maps
@@ -770,15 +872,25 @@
                                 const nowMapsBtn = (nowMUrl && o.address && o.address !== 'Sin especificar' && o.address !== 'Sin domicilio')
                                     ? `<a href="${nowMUrl}" target="_blank" rel="noopener noreferrer" style="margin-left:6px; display:inline-flex; align-items:center; gap:3px; padding:2px 7px; background:rgba(0, 180, 216, 0.2); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; font-weight:700; text-decoration:none;" title="Ver en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a>`
                                     : '';
+                                const timeStr = formatOrderTime(o);
+                                const collabsStr = formatOrderCollabs(o);
                                 return `
-                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.4)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'" onclick="navigateToPage('ordenes')">
-                                    <div>
-                                        <strong style="color: var(--color-blue); font-size: 14px;">${o.id}</strong> - <strong style="color:#fff;">${o.client || 'Particular'}</strong> en 📍 <span style="color:var(--color-yellow); font-weight:600;">${o.address || 'Sin dirección'}</span>
-                                        ${nowMapsBtn}
-                                        <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px;">(🔧 ${o.type || o.equipment || 'Servicio técnico'})</span>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(76, 217, 100, 0.2); font-size: 13px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="navigateToPage('ordenes')">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <strong style="color: var(--color-blue); font-size: 14px;">${o.id}</strong> - <strong style="color:#fff;">${o.client || 'Particular'}</strong>
+                                            ${nowMapsBtn}
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                                            📍 <span style="color:var(--color-yellow); font-weight:600;">${o.address || 'Sin dirección'}</span>
+                                            <span style="margin-left: 6px;">(🔧 ${o.type || o.equipment || 'Servicio técnico'})</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                                            ⏰ Horario asignado: <strong style="color:#e2e8f0;">${timeStr}</strong>
+                                        </div>
                                     </div>
-                                    <div style="font-size: 12px; color: #4cd964; font-weight: 700; background: rgba(76, 217, 100, 0.15); padding: 4px 10px; border-radius: 6px;">
-                                        👥 ${Array.isArray(o.assignees) ? o.assignees.join(', ') : o.assignee || 'Sin Asignar'}
+                                    <div style="font-size: 12px; color: #4cd964; font-weight: 700; background: rgba(76, 217, 100, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(76, 217, 100, 0.3); white-space: nowrap;">
+                                        👥 ${collabsStr}
                                     </div>
                                 </div>
                             `;
@@ -841,7 +953,7 @@
 
             const activeList = ordenesTrabajo.filter(o => o.status !== 'Completado');
             if (activeList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:25px;">No hay órdenes activas registradas.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:25px;">No hay órdenes activas registradas.</td></tr>`;
                 return;
             }
 
@@ -858,17 +970,22 @@
             activeList.slice(0, 15).forEach(o => {
                 const badge = getBadgeInfo(o.status);
                 const isToday = o.date === todayISO || o.date === todayAR;
-                const dateDisplay = o.date ? `${o.date} ${isToday ? '<span style="color:#10b981; font-weight:700;">(Hoy)</span>' : ''}` : 'Sin fecha';
+                const formattedDate = formatOrderDate(o.date);
+                const dateDisplay = formattedDate + (isToday ? ' <span style="background:rgba(16,185,129,0.18); color:#10b981; font-weight:700; font-size:10px; padding:2px 6px; border-radius:8px;">Hoy</span>' : '');
+                const timeDisplay = formatOrderTime(o);
+                const collabsDisplay = formatOrderCollabs(o);
 
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
                 tr.onclick = () => navigateToPage('ordenes');
                 tr.innerHTML = `
-                    <td style="font-weight:700; color:var(--color-blue);">${o.id}</td>
-                    <td style="font-weight:600;">${o.client || 'Particular'}</td>
-                    <td>${o.type || o.equipment || 'Servicio técnico'}</td>
-                    <td><span class="badge ${badge.class}">${badge.text}</span></td>
-                    <td style="font-size:12px;">${dateDisplay}</td>
+                    <td data-label="ID" style="font-weight:700; color:var(--color-blue);">${o.id}</td>
+                    <td data-label="CLIENTE" style="font-weight:600;">${o.client || 'Particular'}</td>
+                    <td data-label="DESCRIPCIÓN">${o.type || o.equipment || 'Servicio técnico'}</td>
+                    <td data-label="HORARIO" style="font-size:12px; font-weight:600; color:#cbd5e1;">⏰ ${timeDisplay}</td>
+                    <td data-label="COLABORADORES" style="font-size:12px;">👥 <span style="color:var(--color-yellow); font-weight:600;">${collabsDisplay}</span></td>
+                    <td data-label="FECHA" style="font-size:12px;">${dateDisplay}</td>
+                    <td data-label="ESTADO"><span class="badge ${badge.class}">${badge.text}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -920,7 +1037,7 @@
             if (!tbody) return;
 
             if (myOrders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:25px;">No tienes órdenes activas asignadas actualmente.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:25px;">No tienes órdenes activas asignadas actualmente.</td></tr>`;
                 return;
             }
 
@@ -937,19 +1054,23 @@
             myOrders.slice(0, 10).forEach(o => {
                 const badge = getBadgeInfo(o.status);
                 const isToday = o.date === todayISO || o.date === todayAR;
-                const dateDisplay = o.date ? `${o.date} ${isToday ? '<span style="color:#10b981; font-weight:700;">(Hoy)</span>' : ''}` : 'Sin fecha';
+                const formattedDate = formatOrderDate(o.date);
+                const dateDisplay = formattedDate + (isToday ? ' <span style="background:rgba(16,185,129,0.18); color:#10b981; font-weight:700; font-size:10px; padding:2px 6px; border-radius:8px;">Hoy</span>' : '');
+                const timeDisplay = formatOrderTime(o);
+                const collabsDisplay = formatOrderCollabs(o);
 
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
                 tr.onclick = () => navigateToPage('ordenes');
                 tr.innerHTML = `
-                    <td style="font-weight:700; color:var(--color-blue);">${o.id}</td>
-                    <td style="font-weight:600;">${o.client || 'Particular'}</td>
-                    <td style="font-size:12px;">${o.address || 'Sin especificar'}</td>
-                    <td style="font-size:12px;">${dateDisplay}</td>
-                    <td style="font-size:12px;">${o.time ? o.time + ' hs' : '-'}</td>
-                    <td>${o.type || o.equipment || '-'}</td>
-                    <td><span class="badge ${badge.class}">${badge.text}</span></td>
+                    <td data-label="ID" style="font-weight:700; color:var(--color-blue);">${o.id}</td>
+                    <td data-label="CLIENTE" style="font-weight:600;">${o.client || 'Particular'}</td>
+                    <td data-label="DIRECCIÓN" style="font-size:12px;">${o.address || 'Sin especificar'}</td>
+                    <td data-label="FECHA" style="font-size:12px;">${dateDisplay}</td>
+                    <td data-label="HORARIO" style="font-size:12px; font-weight:600; color:#cbd5e1;">⏰ ${timeDisplay}</td>
+                    <td data-label="COLABORADORES" style="font-size:12px;">👥 <span style="color:var(--color-yellow); font-weight:600;">${collabsDisplay}</span></td>
+                    <td data-label="TRABAJO">${o.type || o.equipment || '-'}</td>
+                    <td data-label="ESTADO"><span class="badge ${badge.class}">${badge.text}</span></td>
                 `;
                 tbody.appendChild(tr);
             });

@@ -1186,10 +1186,19 @@
                     list.push(data);
                 });
 
-                // Mergear documentos de Firestore con el historial compilado
+                // Mergear documentos de Firestore con el historial compilado sin duplicar borradores devueltos
                 if (window.localHistoricalPlanillas && Array.isArray(window.localHistoricalPlanillas)) {
-                    const firestoreCodes = new Set(list.map(s => (s.pdtCode || s.id || '').toUpperCase()));
-                    const missingHistory = window.localHistoricalPlanillas.filter(h => !firestoreCodes.has((h.pdtCode || h.id || '').toUpperCase()));
+                    const firestoreCodes = new Set();
+                    list.forEach(s => {
+                        if (s.pdtCode) firestoreCodes.add(s.pdtCode.toUpperCase());
+                        if (s.id) firestoreCodes.add(s.id.toUpperCase());
+                        if (s.originalPdtCode) firestoreCodes.add(s.originalPdtCode.toUpperCase());
+                    });
+                    const missingHistory = window.localHistoricalPlanillas.filter(h => {
+                        const hCode = (h.pdtCode || h.id || '').toUpperCase();
+                        const hOrig = (h.originalPdtCode || '').toUpperCase();
+                        return !firestoreCodes.has(hCode) && (!hOrig || !firestoreCodes.has(hOrig));
+                    });
                     planillas = [...list, ...missingHistory];
                 } else if (list.length > 0) {
                     planillas = list;
@@ -3115,7 +3124,9 @@
             if (tbodyMat) {
                 tbodyMat.innerHTML = "";
                 let matList = [];
-                if (p.spareParts && p.spareParts !== "Ninguno") {
+                if (Array.isArray(p.materialsList) && p.materialsList.length > 0) {
+                    matList = p.materialsList;
+                } else if (p.spareParts && p.spareParts !== "Ninguno") {
                     matList = p.spareParts.split(",").map(s => s.trim()).filter(Boolean);
                 }
                 if (matList.length === 0) {
@@ -3125,7 +3136,7 @@
                         const tr = document.createElement("tr");
                         tr.className = "pdig-mat-row";
                         tr.innerHTML = `
-                            <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" value="${m}" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
+                            <td class="pdig-mat-input-cell"><input type="text" class="pdig-mat-nombre" value="${(m || '').replace(/"/g, '&quot;')}" placeholder="Ej: Cable 2.5mm, Gas R410" style="width:100%; padding:7px 10px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; font-size: 13px; box-sizing: border-box;"></td>
                             <td class="pdig-mat-action-cell" style="text-align: center;"><button type="button" class="action-icon-btn btn-delete" onclick="eliminarFilaTablaPdig(this)" title="Quitar material">✕</button></td>
                         `;
                         tbodyMat.appendChild(tr);
@@ -3133,14 +3144,10 @@
                 }
             }
 
-            // Reconstruir áreas especializadas con soporte total para ambos formatos (index.html original y modular)
+            // Reconstruir áreas especializadas con soporte total para ambos formatos (estructurado nativo y texto)
             const areasCont = document.getElementById("pdig-areas-container");
             if (areasCont) areasCont.innerHTML = "";
             pdigAreaCounter = 0;
-
-            let rawAreas = [];
-            if (Array.isArray(p.areas) && p.areas.length > 0) rawAreas = p.areas;
-            else if (p.area) rawAreas = p.area.split(",").map(s => s.trim()).filter(Boolean);
 
             const normalizeAreaKey = (key) => {
                 const k = (key || "").toLowerCase().trim();
@@ -3155,184 +3162,219 @@
                 return "otra";
             };
 
-            const rawTechDetails = p.techDetails || "";
-            const techAreaBlocks = rawTechDetails.split("||").map(b => b.trim()).filter(Boolean);
+            // PRIORIDAD 1: Si existen datos estructurados nativos guardados en areasData, cargarlos directamente 1:1 sin perder ningún campo
+            if (p.areasData && Array.isArray(p.areasData) && p.areasData.length > 0) {
+                p.areasData.forEach(areaObj => {
+                    const normK = normalizeAreaKey(areaObj.areaKey || areaObj.area || "refrigeracion");
+                    window.agregarAreaDigital(normK, areaObj);
+                });
+            } else {
+                // PRIORIDAD 2 (FALLBACK): Reconstruir a partir del resumen de texto para planillas históricas previas
+                let rawAreas = [];
+                if (Array.isArray(p.areas) && p.areas.length > 0) rawAreas = p.areas;
+                else if (p.area) rawAreas = p.area.split(",").map(s => s.trim()).filter(Boolean);
 
-            if (rawAreas.length === 0) {
-                rawAreas = [""];
-            }
+                const rawTechDetails = p.techDetails || "";
+                const techAreaBlocks = rawTechDetails.split("||").map(b => b.trim()).filter(Boolean);
 
-            rawAreas.forEach((rawItem, areaIndex) => {
-                const normKey = normalizeAreaKey(rawItem);
-                let datosArea = null;
-
-                const matchingBlock = techAreaBlocks.find(b => {
-                    const bUpper = b.toUpperCase();
-                    if (normKey === "refrigeracion" && bUpper.includes("REFRIGERACI")) return true;
-                    if (normKey === "electricidad" && bUpper.includes("ELECTRICIDAD")) return true;
-                    if (normKey === "electrodomesticos" && bUpper.includes("ELECTRODOM")) return true;
-                    if (normKey === "iluminacion" && bUpper.includes("ILUMINACI")) return true;
-                    if (normKey === "tecnologias" && bUpper.includes("TECNOLOG")) return true;
-                    if (normKey === "domotica" && bUpper.includes("DOM")) return true;
-                    if (normKey === "tareas_varias" && bUpper.includes("TAREAS VARIAS")) return true;
-                    if (normKey === "otra" && bUpper.includes(rawItem.toUpperCase())) return true;
-                    return false;
-                }) || (rawAreas.length === 1 ? (techAreaBlocks[0] || "") : (techAreaBlocks[areaIndex] || ""));
-
-                let blockTrabajosList = [];
-                let blockTechPart = matchingBlock;
-
-                if (matchingBlock.includes("| Trabajos:")) {
-                    const splitParts = matchingBlock.split("| Trabajos:");
-                    blockTechPart = splitParts[0].trim();
-                    const rawJobs = splitParts.slice(1).join("| Trabajos:").trim();
-                    if (rawJobs) {
-                        const jobItems = rawJobs.split(",").map(s => s.trim()).filter(Boolean);
-                        jobItems.forEach(item => {
-                            let accionVal = item;
-                            let zonaVal = "";
-                            const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Ubicacion|Sector):\s*([^\]\)]+)[\)\]]/i);
-                            if (zonaMatch) {
-                                zonaVal = zonaMatch[1].trim();
-                                accionVal = item.replace(zonaMatch[0], "").trim();
-                            }
-                            blockTrabajosList.push({ accion: accionVal, zona: zonaVal });
-                        });
-                    }
+                if (rawAreas.length === 0) {
+                    rawAreas = [""];
                 }
 
-                if (normKey === "refrigeracion") {
-                    const eqList = [];
-                    if (blockTechPart && blockTechPart.includes("|")) {
-                        const rawEqs = blockTechPart.split("|").slice(1).join("|").trim();
-                        const eqStrings = rawEqs.split(" ; ").map(s => s.trim()).filter(s => s.startsWith("Eq #"));
-                        eqStrings.forEach(eqStr => {
-                            const cleanEq = eqStr.replace(/^Eq #\d+:\s*/, "");
-                            let detectedType = "otro";
-                            if (cleanEq.includes("Split Muro")) detectedType = "split";
-                            else if (cleanEq.includes("Piso Techo")) detectedType = "piso_techo";
-                            else if (cleanEq.includes("Cassette")) detectedType = "cassette";
-                            else if (cleanEq.includes("Central Ducto")) detectedType = "central";
-                            else if (cleanEq.includes("Ventana")) detectedType = "ventana";
-                            else if (cleanEq.includes("Rooftop")) detectedType = "rooftop";
+                rawAreas.forEach((rawItem, areaIndex) => {
+                    const normKey = normalizeAreaKey(rawItem);
+                    let datosArea = null;
 
-                            let detectedTech = "on_off";
-                            if (cleanEq.includes("(Inverter)")) detectedTech = "inverter";
-                            else if (cleanEq.includes("(On/Off)")) detectedTech = "on_off";
+                    // Asignar el bloque correspondiente por índice en lugar de siempre el primero
+                    let matchingBlock = "";
+                    if (techAreaBlocks[areaIndex]) {
+                        matchingBlock = techAreaBlocks[areaIndex];
+                    } else {
+                        matchingBlock = techAreaBlocks.find(b => {
+                            const bUpper = b.toUpperCase();
+                            if (normKey === "refrigeracion" && bUpper.includes("REFRIGERACI")) return true;
+                            if (normKey === "electricidad" && bUpper.includes("ELECTRICIDAD")) return true;
+                            if (normKey === "electrodomesticos" && bUpper.includes("ELECTRODOM")) return true;
+                            if (normKey === "iluminacion" && bUpper.includes("ILUMINACI")) return true;
+                            if (normKey === "tecnologias" && bUpper.includes("TECNOLOG")) return true;
+                            if (normKey === "domotica" && bUpper.includes("DOM")) return true;
+                            if (normKey === "tareas_varias" && bUpper.includes("TAREAS VARIAS")) return true;
+                            if (normKey === "otra" && bUpper.includes(rawItem.toUpperCase())) return true;
+                            return false;
+                        }) || (rawAreas.length === 1 ? (techAreaBlocks[0] || "") : "");
+                    }
 
-                            let ubi = "";
-                            const ubiMatch = cleanEq.match(/\[Ubicación:\s*([^\]]+)\]/i);
-                            if (ubiMatch && ubiMatch[1]) ubi = ubiMatch[1].trim();
+                    let blockTrabajosList = [];
+                    let blockTechPart = matchingBlock;
 
-                            let remaining = cleanEq;
-                            const typeNames = ["Split Muro", "Piso Techo", "Cassette", "Central Ducto", "Ventana", "Rooftop", "Otro"];
-                            typeNames.forEach(tn => { remaining = remaining.replace(tn, ""); });
-                            remaining = remaining.replace("(Inverter)", "").replace("(On/Off)", "");
-                            if (ubiMatch && ubiMatch[0]) remaining = remaining.replace(ubiMatch[0], "");
-
-                            eqList.push({
-                                tipo: detectedType,
-                                tecnologia: detectedTech,
-                                modelo: remaining.trim(),
-                                ubicacion: ubi
+                    if (matchingBlock.includes("| Trabajos:")) {
+                        const splitParts = matchingBlock.split("| Trabajos:");
+                        blockTechPart = splitParts[0].trim();
+                        const rawJobs = splitParts.slice(1).join("| Trabajos:").trim();
+                        if (rawJobs) {
+                            const jobItems = rawJobs.split(",").map(s => s.trim()).filter(Boolean);
+                            jobItems.forEach(item => {
+                                let accionVal = item;
+                                let zonaVal = "";
+                                const zonaMatch = item.match(/[\(\[](?:Zona|Ubicación|Ubicacion|Sector):\s*([^\]\)]+)[\)\]]/i);
+                                if (zonaMatch) {
+                                    zonaVal = zonaMatch[1].trim();
+                                    accionVal = item.replace(zonaMatch[0], "").trim();
+                                }
+                                blockTrabajosList.push({ accion: accionVal, zona: zonaVal });
                             });
-                        });
-                    }
-                    const simpleDet = blockTechPart ? blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").replace(/^Área:\s*REFRIGERACI[ÓO]N\s*\|?\s*/i, "").trim() : "";
-                    datosArea = { equipos: eqList, detalle: eqList.length === 0 ? simpleDet : "", trabajos: blockTrabajosList };
-                } else if (normKey === "electrodomesticos") {
-                    let artVal = "";
-                    let reqRetiroVal = "no";
-                    let estadoVal = "";
-                    let serieVal = "";
-                    let accVal = "";
-                    if (blockTechPart) {
-                        if (blockTechPart.includes("Artefacto:")) {
-                            artVal = blockTechPart.split("Artefacto:")[1].split(" [")[0].split(" (")[0].trim();
-                        } else {
-                            artVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
-                        }
-                        if (blockTechPart.includes("[RETIRO A TALLER]")) reqRetiroVal = "si";
-                        const sMatch = blockTechPart.match(/\(S\/N:\s*([^\)]+)\)/i);
-                        if (sMatch) serieVal = sMatch[1].trim();
-                        const eMatch = blockTechPart.match(/\(Estado:\s*([^\)]+)\)/i);
-                        if (eMatch) estadoVal = eMatch[1].trim();
-                        const aMatch = blockTechPart.match(/\(Acc:\s*([^\)]+)\)/i);
-                        if (aMatch) accVal = aMatch[1].trim();
-                    }
-                    datosArea = { artefacto: artVal, requiereRetiro: reqRetiroVal, estado: estadoVal, serie: serieVal, accesorios: accVal, trabajos: blockTrabajosList };
-                } else if (normKey === "electricidad") {
-                    let tipoVal = "monofasica";
-                    let tenVal = "220V";
-                    if (blockTechPart) {
-                        if (blockTechPart.toLowerCase().includes("trifasica")) tipoVal = "trifasica";
-                        if (blockTechPart.includes("Tensión:") || blockTechPart.includes("Tension:")) {
-                            tenVal = (blockTechPart.split(/Tensi[oó]n:/i)[1] || "").split("|")[0].split(";")[0].trim();
-                        } else {
-                            tenVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
                         }
                     }
-                    datosArea = { tipo: tipoVal, tension: tenVal, trabajos: blockTrabajosList };
-                } else if (normKey === "iluminacion") {
-                    let lumVal = "";
-                    if (blockTechPart && blockTechPart.includes("Luminarias:")) {
-                        lumVal = blockTechPart.split("Luminarias:")[1].split("|")[0].trim();
-                    } else if (blockTechPart) {
-                        lumVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
-                    }
-                    datosArea = { tipo: lumVal, trabajos: blockTrabajosList };
-                } else if (normKey === "tecnologias") {
-                    let dispVal = "";
-                    let ipsVal = "";
-                    let puertosVal = "";
-                    if (blockTechPart) {
-                        if (blockTechPart.includes("Disp:")) {
-                            dispVal = blockTechPart.split("Disp:")[1].split(" (")[0].trim();
-                        } else {
-                            dispVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
-                        }
-                        const ipMatch = blockTechPart.match(/\(IPs?:\s*([^\)]+)\)/i);
-                        if (ipMatch) ipsVal = ipMatch[1].trim();
-                        const pMatch = blockTechPart.match(/\(Puertos?:\s*([^\)]+)\)/i);
-                        if (pMatch) puertosVal = pMatch[1].trim();
-                    }
-                    datosArea = { dispositivos: dispVal, ips: ipsVal, puertos: puertosVal, trabajos: blockTrabajosList };
-                } else if (normKey === "domotica") {
-                    let ecoVal = "alexa";
-                    let escVal = "";
-                    if (blockTechPart) {
-                        if (blockTechPart.toLowerCase().includes("google")) ecoVal = "google";
-                        else if (blockTechPart.toLowerCase().includes("apple")) ecoVal = "apple";
-                        else if (blockTechPart.toLowerCase().includes("independiente") || blockTechPart.toLowerCase().includes("cerrado")) ecoVal = "independiente";
-                        if (blockTechPart.includes("Escenas:")) {
-                            escVal = blockTechPart.split("Escenas:")[1].split("|")[0].trim();
-                        } else {
-                            escVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
-                        }
-                    }
-                    datosArea = { ecosistema: ecoVal, escenas: escVal, trabajos: blockTrabajosList };
-                } else if (normKey === "otra") {
-                    let detVal = "";
-                    if (blockTechPart && blockTechPart.includes("Detalle:")) {
-                        detVal = blockTechPart.split("Detalle:")[1].split("|")[0].trim();
-                    } else if (blockTechPart) {
-                        detVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
-                    }
-                    datosArea = { nombre: rawItem, detalle: detVal, trabajos: blockTrabajosList };
-                } else if (normKey === "tareas_varias") {
-                    let detVal = "";
-                    if (blockTechPart && blockTechPart.includes("Detalle:")) {
-                        detVal = blockTechPart.split("Detalle:")[1].split("|")[0].trim();
-                    } else if (blockTechPart) {
-                        detVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").replace(/^Área:\s*TAREAS VARIAS\s*\|?\s*/i, "").trim();
-                    }
-                    datosArea = { detalle: detVal, trabajos: blockTrabajosList };
-                } else {
-                    datosArea = { trabajos: blockTrabajosList };
-                }
 
-                window.agregarAreaDigital(normKey, datosArea);
-            });
+                    if (normKey === "refrigeracion") {
+                        const eqList = [];
+                        if (blockTechPart && blockTechPart.includes("|")) {
+                            const rawEqs = blockTechPart.split("|").slice(1).join("|").trim();
+                            const eqStrings = rawEqs.split(" ; ").map(s => s.trim()).filter(s => s.startsWith("Eq #"));
+                            eqStrings.forEach(eqStr => {
+                                const cleanEq = eqStr.replace(/^Eq #\d+:\s*/, "");
+                                let detectedType = "otro";
+                                if (cleanEq.includes("Split Muro")) detectedType = "split";
+                                else if (cleanEq.includes("Piso Techo")) detectedType = "piso_techo";
+                                else if (cleanEq.includes("Cassette")) detectedType = "cassette";
+                                else if (cleanEq.includes("Central Ducto")) detectedType = "central";
+                                else if (cleanEq.includes("Ventana")) detectedType = "ventana";
+                                else if (cleanEq.includes("Rooftop")) detectedType = "rooftop";
+
+                                let detectedTech = "on_off";
+                                if (cleanEq.includes("(Inverter)")) detectedTech = "inverter";
+                                else if (cleanEq.includes("(On/Off)")) detectedTech = "on_off";
+
+                                let ubi = "";
+                                const ubiMatch = cleanEq.match(/\[Ubicación:\s*([^\]]+)\]/i);
+                                if (ubiMatch && ubiMatch[1]) ubi = ubiMatch[1].trim();
+
+                                let remaining = cleanEq;
+                                const typeNames = ["Split Muro", "Piso Techo", "Cassette", "Central Ducto", "Ventana", "Rooftop", "Otro"];
+                                typeNames.forEach(tn => { remaining = remaining.replace(tn, ""); });
+                                remaining = remaining.replace("(Inverter)", "").replace("(On/Off)", "");
+                                if (ubiMatch && ubiMatch[0]) remaining = remaining.replace(ubiMatch[0], "");
+
+                                let capVal = "";
+                                const capMatch = remaining.match(/(\d+[\s\w]*(?:fg|btu|frigor[ií]as?))/i);
+                                if (capMatch) {
+                                    capVal = capMatch[1].trim();
+                                    remaining = remaining.replace(capMatch[0], "");
+                                }
+
+                                let gasVal = "";
+                                const gasMatch = remaining.match(/(\d+\s*psi(?:\s*\([^\)]+\))?|r410a?|r22|r32|r404a?|r134a?)/i);
+                                if (gasMatch) {
+                                    gasVal = gasMatch[1].trim();
+                                    remaining = remaining.replace(gasMatch[0], "");
+                                }
+
+                                eqList.push({
+                                    tipo: detectedType,
+                                    tecnologia: detectedTech,
+                                    modelo: remaining.trim(),
+                                    capacidad: capVal,
+                                    gas: gasVal,
+                                    ubicacion: ubi
+                                });
+                            });
+                        }
+                        const simpleDet = blockTechPart ? blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").replace(/^Área:\s*REFRIGERACI[ÓO]N\s*\|?\s*/i, "").trim() : "";
+                        datosArea = { equipos: eqList, detalle: eqList.length === 0 ? simpleDet : "", trabajos: blockTrabajosList };
+                    } else if (normKey === "electrodomesticos") {
+                        let artVal = "";
+                        let reqRetiroVal = "no";
+                        let estadoVal = "";
+                        let serieVal = "";
+                        let accVal = "";
+                        if (blockTechPart) {
+                            if (blockTechPart.includes("Artefacto:")) {
+                                artVal = blockTechPart.split("Artefacto:")[1].split(" [")[0].split(" (")[0].trim();
+                            } else {
+                                artVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                            }
+                            if (blockTechPart.includes("[RETIRO A TALLER]")) reqRetiroVal = "si";
+                            const sMatch = blockTechPart.match(/\(S\/N:\s*([^\)]+)\)/i);
+                            if (sMatch) serieVal = sMatch[1].trim();
+                            const eMatch = blockTechPart.match(/\(Estado:\s*([^\)]+)\)/i);
+                            if (eMatch) estadoVal = eMatch[1].trim();
+                            const aMatch = blockTechPart.match(/\(Acc:\s*([^\)]+)\)/i);
+                            if (aMatch) accVal = aMatch[1].trim();
+                        }
+                        datosArea = { artefacto: artVal, requiereRetiro: reqRetiroVal, estado: estadoVal, serie: serieVal, accesorios: accVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "electricidad") {
+                        let tipoVal = "monofasica";
+                        let tenVal = "220V";
+                        if (blockTechPart) {
+                            if (blockTechPart.toLowerCase().includes("trifasica")) tipoVal = "trifasica";
+                            if (blockTechPart.includes("Tensión:") || blockTechPart.includes("Tension:")) {
+                                tenVal = (blockTechPart.split(/Tensi[oó]n:/i)[1] || "").split("|")[0].split(";")[0].trim();
+                            } else {
+                                tenVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                            }
+                        }
+                        datosArea = { tipo: tipoVal, tension: tenVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "iluminacion") {
+                        let lumVal = "";
+                        if (blockTechPart && blockTechPart.includes("Luminarias:")) {
+                            lumVal = blockTechPart.split("Luminarias:")[1].split("|")[0].trim();
+                        } else if (blockTechPart) {
+                            lumVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                        }
+                        datosArea = { tipo: lumVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "tecnologias") {
+                        let dispVal = "";
+                        let ipsVal = "";
+                        let puertosVal = "";
+                        if (blockTechPart) {
+                            if (blockTechPart.includes("Disp:")) {
+                                dispVal = blockTechPart.split("Disp:")[1].split(" (")[0].trim();
+                            } else {
+                                dispVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                            }
+                            const ipMatch = blockTechPart.match(/\(IPs?:\s*([^\)]+)\)/i);
+                            if (ipMatch) ipsVal = ipMatch[1].trim();
+                            const pMatch = blockTechPart.match(/\(Puertos?:\s*([^\)]+)\)/i);
+                            if (pMatch) puertosVal = pMatch[1].trim();
+                        }
+                        datosArea = { dispositivos: dispVal, ips: ipsVal, puertos: puertosVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "domotica") {
+                        let ecoVal = "alexa";
+                        let escVal = "";
+                        if (blockTechPart) {
+                            if (blockTechPart.toLowerCase().includes("google")) ecoVal = "google";
+                            else if (blockTechPart.toLowerCase().includes("apple")) ecoVal = "apple";
+                            else if (blockTechPart.toLowerCase().includes("independiente") || blockTechPart.toLowerCase().includes("cerrado")) ecoVal = "independiente";
+                            if (blockTechPart.includes("Escenas:")) {
+                                escVal = blockTechPart.split("Escenas:")[1].split("|")[0].trim();
+                            } else {
+                                escVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                            }
+                        }
+                        datosArea = { ecosistema: ecoVal, escenas: escVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "otra") {
+                        let detVal = "";
+                        if (blockTechPart && blockTechPart.includes("Detalle:")) {
+                            detVal = blockTechPart.split("Detalle:")[1].split("|")[0].trim();
+                        } else if (blockTechPart) {
+                            detVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").trim();
+                        }
+                        datosArea = { nombre: rawItem, detalle: detVal, trabajos: blockTrabajosList };
+                    } else if (normKey === "tareas_varias") {
+                        let detVal = "";
+                        if (blockTechPart && blockTechPart.includes("Detalle:")) {
+                            detVal = blockTechPart.split("Detalle:")[1].split("|")[0].trim();
+                        } else if (blockTechPart) {
+                            detVal = blockTechPart.replace(/^\[[^\]]+\]\s*-?\s*/, "").replace(/^Área:\s*TAREAS VARIAS\s*\|?\s*/i, "").trim();
+                        }
+                        datosArea = { detalle: detVal, trabajos: blockTrabajosList };
+                    } else {
+                        datosArea = { trabajos: blockTrabajosList };
+                    }
+
+                    window.agregarAreaDigital(normKey, datosArea);
+                });
+            }
         };
 
         // 15. SUBMIT DEL FORMULARIO DE PLANILLA
@@ -3414,6 +3456,7 @@
             const areaSummaries = [];
             const areaKeys = [];
             const allMoList = [];
+            const structuredAreasData = [];
 
             areaCards.forEach(card => {
                 const areaSel = card.querySelector(".pdig-area-select");
@@ -3422,12 +3465,17 @@
                 if (!currentAreaKey) return;
 
                 let areaSummary = "";
+                const structuredArea = {
+                    areaKey: currentAreaKey,
+                    trabajos: []
+                };
 
                 if (currentAreaKey === "refrigeracion") {
                     areaKeys.push("refrigeracion");
                     areaSummary = "Área: REFRIGERACIÓN";
                     const eqCards = card.querySelectorAll(".pdig-equipo-card");
                     const eqDetails = [];
+                    const structuredEquipos = [];
                     const tipoMap = {
                         split: "Split Muro",
                         piso_techo: "Piso Techo",
@@ -3451,6 +3499,15 @@
                         const gas = eqCard.querySelector(".pdig-ref-gas")?.value.trim() || "";
                         const ubi = eqCard.querySelector(".pdig-ref-ubicacion")?.value.trim() || "";
 
+                        structuredEquipos.push({
+                            tipo: tipoKey,
+                            tecnologia: techKey,
+                            modelo: mod,
+                            capacidad: cap,
+                            gas: gas,
+                            ubicacion: ubi
+                        });
+
                         let eqStr = `Eq #${idx + 1}: ${tipo} (${tech})`;
                         if (ubi) eqStr += ` [Ubicación: ${ubi}]`;
                         if (mod) eqStr += ` ${mod}`;
@@ -3458,16 +3515,22 @@
                         if (gas) eqStr += ` ${gas}`;
                         eqDetails.push(eqStr.trim());
                     });
+                    structuredArea.equipos = structuredEquipos;
                     if (eqDetails.length > 0) areaSummary += ` | ${eqDetails.join(" ; ")}`;
                 } else if (currentAreaKey === "electrodomesticos") {
                     areaKeys.push("electrodomesticos");
                     const art = card.querySelector(".pdig-el-artefacto")?.value.trim() || "";
                     const reqRetiro = card.querySelector(".pdig-el-requiere-retiro")?.value || "no";
+                    structuredArea.artefacto = art;
+                    structuredArea.requiereRetiro = reqRetiro;
                     areaSummary = `Área: ELECTRODOMÉSTICOS | Artefacto: ${art}` + (reqRetiro === "si" ? " [RETIRO A TALLER]" : "");
                     if (reqRetiro === "si") {
                         const estado = card.querySelector(".pdig-retiro-estado")?.value.trim() || "";
                         const serie = card.querySelector(".pdig-retiro-serie")?.value.trim() || "";
                         const acc = card.querySelector(".pdig-retiro-accesorios")?.value.trim() || "";
+                        structuredArea.estado = estado;
+                        structuredArea.serie = serie;
+                        structuredArea.accesorios = acc;
                         if (serie) areaSummary += ` (S/N: ${serie})`;
                         if (estado) areaSummary += ` (Estado: ${estado})`;
                         if (acc) areaSummary += ` (Acc: ${acc})`;
@@ -3476,16 +3539,22 @@
                     areaKeys.push("electricidad");
                     const tipo = card.querySelector(".pdig-elec-tipo")?.value || "monofasica";
                     const ten = card.querySelector(".pdig-elec-tension")?.value.trim() || "";
+                    structuredArea.tipo = tipo;
+                    structuredArea.tension = ten;
                     areaSummary = `Área: ELECTRICIDAD | ${tipo} - Tensión: ${ten}`;
                 } else if (currentAreaKey === "iluminacion") {
                     areaKeys.push("iluminacion");
                     const tipo = card.querySelector(".pdig-ilu-tipo")?.value.trim() || "";
+                    structuredArea.tipo = tipo;
                     areaSummary = `Área: ILUMINACIÓN | Luminarias: ${tipo}`;
                 } else if (currentAreaKey === "tecnologias") {
                     areaKeys.push("tecnologias");
                     const disp = card.querySelector(".pdig-tec-dispositivos")?.value.trim() || "";
                     const ips = card.querySelector(".pdig-tec-ips")?.value.trim() || "";
                     const puertos = card.querySelector(".pdig-tec-puertos")?.value.trim() || "";
+                    structuredArea.dispositivos = disp;
+                    structuredArea.ips = ips;
+                    structuredArea.puertos = puertos;
                     areaSummary = `Área: TECNOLOGÍAS | Disp: ${disp}`;
                     if (ips) areaSummary += ` (IPs: ${ips})`;
                     if (puertos) areaSummary += ` (Puertos: ${puertos})`;
@@ -3493,21 +3562,27 @@
                     areaKeys.push("domotica");
                     const eco = card.querySelector(".pdig-dom-ecosistema")?.value || "";
                     const escenas = card.querySelector(".pdig-dom-escenas")?.value.trim() || "";
+                    structuredArea.ecosistema = eco;
+                    structuredArea.escenas = escenas;
                     areaSummary = `Área: DOMÓTICA | Ecosistema: ${eco}${escenas ? ` - Escenas: ${escenas}` : ""}`;
                 } else if (currentAreaKey === "otra") {
                     const nomOtra = card.querySelector(".pdig-otra-nombre")?.value.trim() || "Otra Especialidad";
                     const detOtra = card.querySelector(".pdig-otra-detalle")?.value.trim() || "";
+                    structuredArea.nombre = nomOtra;
+                    structuredArea.detalle = detOtra;
                     areaKeys.push(nomOtra);
                     areaSummary = `Área: ${nomOtra.toUpperCase()}${detOtra ? ` | Detalle: ${detOtra}` : ""}`;
                 } else if (currentAreaKey === "tareas_varias") {
                     areaKeys.push("tareas_varias");
                     const detVarias = card.querySelector(".pdig-varias-detalle")?.value.trim() || "";
+                    structuredArea.detalle = detVarias;
                     areaSummary = `Área: TAREAS VARIAS${detVarias ? ` | Detalle: ${detVarias}` : ""}`;
                 }
 
                 // Recolectar tareas de mano de obra realizadas en esta área
                 const thisAreaMoRows = card.querySelectorAll(".pdig-tabla-mano-obra tbody tr");
                 const thisAreaMoList = [];
+                const thisAreaTrabajos = [];
                 thisAreaMoRows.forEach(row => {
                     const accInput = row.querySelector(".pdig-mo-accion");
                     const zonaInput = row.querySelector(".pdig-mo-zona");
@@ -3515,6 +3590,7 @@
                         const acc = accInput.value.trim();
                         const zona = zonaInput ? zonaInput.value.trim() : "";
                         if (acc) {
+                            thisAreaTrabajos.push({ accion: acc, zona: zona });
                             let itemStr = acc;
                             if (zona) itemStr += ` (Zona: ${zona})`;
                             thisAreaMoList.push(itemStr);
@@ -3522,6 +3598,8 @@
                         }
                     }
                 });
+                structuredArea.trabajos = thisAreaTrabajos;
+                structuredAreasData.push(structuredArea);
 
                 if (thisAreaMoList.length > 0) {
                     areaSummary += ` | Trabajos: ${thisAreaMoList.join(", ")}`;
@@ -3555,31 +3633,27 @@
             const existingPlanilla = planillaId ? planillas.find(p => p.id === planillaId || p.pdtCode === planillaId) : null;
 
             let pdtCodeToSave = "Borrador";
-            if (statusVal !== "Borrador") {
-                let codeCandidate = null;
-                if (existingPlanilla && existingPlanilla.pdtCode && existingPlanilla.pdtCode !== "Borrador") {
-                    codeCandidate = existingPlanilla.pdtCode;
-                } else if (existingPlanilla && existingPlanilla.originalPdtCode && existingPlanilla.originalPdtCode !== "Borrador") {
+            let codeCandidate = null;
+
+            if (existingPlanilla) {
+                if (existingPlanilla.originalPdtCode && existingPlanilla.originalPdtCode !== "Borrador") {
                     codeCandidate = existingPlanilla.originalPdtCode;
-                } else if (existingPlanilla && typeof existingPlanilla.id === 'string' && existingPlanilla.id.startsWith('PDT-')) {
+                } else if (existingPlanilla.pdtCode && existingPlanilla.pdtCode !== "Borrador") {
+                    codeCandidate = existingPlanilla.pdtCode;
+                } else if (typeof existingPlanilla.id === 'string' && existingPlanilla.id.startsWith('PDT-')) {
                     codeCandidate = existingPlanilla.id;
                 }
+            }
 
-                // Si ya tenía un código PDT, verificar estrictamente que otra planilla no lo tenga
+            if (statusVal !== "Borrador") {
+                // Si la planilla ya tenía un código PDT propio (ej. devuelta a borrador por el admin), mantenerlo estrictamente
                 if (codeCandidate) {
-                    const otherWithSameCode = planillas.find(p => 
-                        p && p.id !== (planillaId || "") && 
-                        (p.pdtCode === codeCandidate || p.id === codeCandidate || p.originalPdtCode === codeCandidate)
-                    );
-                    if (otherWithSameCode) {
-                        console.warn(`Conflicto de código PDT detectado para ${codeCandidate}. Se generará uno nuevo único correlativo.`);
-                        pdtCodeToSave = getNextPdtCode(dateDisplay);
-                    } else {
-                        pdtCodeToSave = codeCandidate;
-                    }
+                    pdtCodeToSave = codeCandidate;
                 } else {
                     pdtCodeToSave = getNextPdtCode(dateDisplay);
                 }
+            } else {
+                pdtCodeToSave = "Borrador";
             }
 
             // FORMATO FIRESTORE: Guardar con el código PDT como ID de documento (ej: PDT-2311033) en lugar de un hash aleatorio
@@ -3591,7 +3665,7 @@
                     docId = `BORRADOR-${Date.now()}`;
                 }
             } else if (pdtCodeToSave && pdtCodeToSave !== "Borrador") {
-                docId = (typeof docId === "string" && docId.startsWith("PDT-")) ? docId : (existingPlanilla && typeof existingPlanilla.id === "string" && existingPlanilla.id.startsWith("PDT-") ? existingPlanilla.id : pdtCodeToSave);
+                docId = (typeof docId === "string" && docId.startsWith("PDT-")) ? docId : (codeCandidate || pdtCodeToSave);
             }
 
             const docRef = db.collection("planillas").doc(docId);
@@ -3600,7 +3674,7 @@
                 id: docId,
                 orderId: window.pdigCurrentOrderId || (existingPlanilla ? existingPlanilla.orderId || "" : ""),
                 pdtCode: pdtCodeToSave,
-                originalPdtCode: existingPlanilla ? (existingPlanilla.originalPdtCode || (existingPlanilla.pdtCode !== 'Borrador' ? existingPlanilla.pdtCode : '') || '') : '',
+                originalPdtCode: existingPlanilla ? (existingPlanilla.originalPdtCode || (existingPlanilla.pdtCode !== 'Borrador' ? existingPlanilla.pdtCode : '') || '') : (codeCandidate || ''),
                 date: dateDisplay,
                 client: clienteVal || "Cliente Particular",
                 clientId: clienteIdVal || "",
@@ -3611,9 +3685,11 @@
                 technicians: checkedTechs,
                 area: areaKeys.length > 0 ? areaKeys.join(", ") : "tareas_varias",
                 areas: areaKeys.length > 0 ? areaKeys : ["tareas_varias"],
+                areasData: structuredAreasData,
                 techDetails: techDetailsFormatted,
                 manoObra: existingPlanilla ? (existingPlanilla.manoObra || "") : "",
                 materiales: existingPlanilla ? (existingPlanilla.materiales || "") : "",
+                materialsList: matList,
                 spareParts: matList.join(", ") || "Ninguno",
                 observations: obsVal || "Sin observaciones",
                 status: statusVal,
@@ -3626,16 +3702,31 @@
             };
 
             // Actualizar en el array local reemplazando el registro original (incluso si cambió de BORRADOR-xxx a PDT-xxx)
-            const targetIdx = planillas.findIndex(p => p.id === docId || (planillaId && p.id === planillaId));
+            const targetIdx = planillas.findIndex(p => 
+                p.id === docId || 
+                (planillaId && p.id === planillaId) || 
+                (codeCandidate && (p.id === codeCandidate || p.pdtCode === codeCandidate || p.originalPdtCode === codeCandidate))
+            );
             if (targetIdx > -1) {
                 planillas[targetIdx] = { ...planillas[targetIdx], ...dataToSave };
             } else {
                 planillas.unshift(dataToSave);
             }
+
+            // Limpieza activa de posibles registros gemelos con el mismo código o docId
+            if (docId && docId.startsWith("PDT-")) {
+                const keepIndex = targetIdx > -1 ? targetIdx : 0;
+                planillas = planillas.filter((item, index) => {
+                    if (index === keepIndex) return true;
+                    if (item.id === docId) return false;
+                    if (codeCandidate && (item.pdtCode === codeCandidate || item.originalPdtCode === codeCandidate) && item.id !== docId) return false;
+                    return true;
+                });
+            }
             safeSavePlanillasLocalStorage(planillas);
 
             // Si el ID cambió de BORRADOR-xxx a PDT-xxx, borrar el documento de borrador anterior de Firestore para evitar duplicados
-            if (planillaId && planillaId !== docId) {
+            if (planillaId && planillaId !== docId && planillaId.startsWith("BORRADOR-")) {
                 try {
                     await db.collection("planillas").doc(planillaId).delete();
                 } catch(delErr) {

@@ -762,6 +762,11 @@
                 </h3>
                 <button class="modal-close" onclick="closeDetailModal()">&times;</button>
             </div>
+            <!-- Meta información: Creado por y Asignado por -->
+            <div id="detail-order-meta" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 6px 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; color: var(--text-secondary);">
+                <div>👤 Creada por: <strong id="detail-created-by" style="color: #e2e8f0;">-</strong></div>
+                <div>📌 Asignada por: <strong id="detail-assigned-by" style="color: #e2e8f0;">-</strong></div>
+            </div>
             <div class="detail-body" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
                 <!-- Vista Colaborador: Solo Lectura y Acceso a Planilla (Los técnicos no modifican la orden) -->
                 <div id="collabOrderDetailView" class="role-colaborador-only" style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px;">
@@ -1627,7 +1632,10 @@
                 };
 
                 const badgeData = getBadgeInfo(o.status);
-                const collaboratorsNames = o.assignees ? o.assignees.join(', ') : (o.assignee || 'Sin Asignar');
+                const hasAssignees = o.assignees && o.assignees.length > 0 && !o.assignees.every(a => a === 'Sin Asignar');
+                const collaboratorsNames = hasAssignees 
+                    ? o.assignees.filter(a => a && a !== 'Sin Asignar').join(', ') 
+                    : (o.assignee && o.assignee !== 'Sin Asignar' ? o.assignee : 'Sin Asignar');
                 const collabTd = role === 'Administrador' ? `<td data-label="COLABORADORES">${collaboratorsNames}</td>` : '';
 
                 let formattedDate = '';
@@ -1640,7 +1648,7 @@
 
                 let formattedTime = '';
                 if (rowType === 'sinCoordinar') {
-                    formattedTime = '<span style="color:var(--text-muted); font-style:italic; font-size:12px;">Sin horario</span>';
+                    formattedTime = '<span style="color:#f59e0b; font-style:italic; font-size:12px;">Sin horario</span>';
                 } else {
                     let orderTimeStr = o.timeEnd ? `${o.time}HS-${o.timeEnd}HS` : (o.time ? `${o.time} hs` : '');
                     formattedTime = orderTimeStr || '<span style="color:var(--text-muted); font-style:italic;">Pendiente</span>';
@@ -1688,9 +1696,24 @@
                     ? `<div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"><span>${o.address}</span><a href="${mUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px; background:rgba(0,180,216,0.15); border:1px solid var(--color-blue); color:var(--color-blue); border-radius:4px; font-size:11px; text-decoration:none; font-weight:600;" title="Abrir en Google Maps" onclick="event.stopPropagation();">🗺️ Maps</a></div>`
                     : (o.address || 'Sin especificar');
 
+                const creatorName = o.createdBy || o.assignedBy || 'Admin';
+                const hasDiffAssigner = o.assignedBy && o.createdBy && o.assignedBy !== o.createdBy;
+                const adminDisplay = hasDiffAssigner 
+                    ? `👤 ${o.createdBy} <span style="color:#64748b; font-size:9.5px;">• 📌 ${o.assignedBy}</span>` 
+                    : `👤 ${creatorName}`;
+
+                const idMetaBlock = `
+                    <div style="margin-top: 3px; font-size: 11px; font-weight: 500; color: #94a3b8; white-space: nowrap; line-height: 1.2;">
+                        ${adminDisplay}
+                    </div>
+                `;
+
                 tr.innerHTML = `
                     <td data-label="FECHA">${formattedDate}</td>
-                    <td data-label="ID" style="font-weight:700; color: var(--color-blue);">${o.id}</td>
+                    <td data-label="ID" style="font-weight:700; color: var(--color-blue); vertical-align: top; min-width: 110px;">
+                        <div style="white-space: nowrap; font-size: 13.5px; font-weight: 800;">${o.id}</div>
+                        ${idMetaBlock}
+                    </td>
                     <td data-label="CLIENTE" style="font-weight:600;">${o.client}</td>
                     <td data-label="DIRECCIÓN">${addrHtml}</td>
                     <td data-label="HORARIO">${formattedTime}</td>
@@ -1816,9 +1839,13 @@
                             <tbody>
                 `;
                 uncoordinatedOrders.forEach(o => {
+                    const uncoordMeta = `<div style="font-size:10px; font-weight:400; color:var(--text-muted); margin-top:2px; white-space:nowrap;">👤 <span style="color:#cbd5e1;">${o.createdBy || 'Admin'}</span></div>`;
                     tableHTML += `
                         <tr style="cursor: pointer;" onclick="closeUncoordinatedModal(); openOrderDetailsModal('${o.id}')">
-                            <td data-label="ID" style="font-weight:700; color:var(--color-blue);">${o.id}</td>
+                            <td data-label="ID" style="font-weight:700; color:var(--color-blue); vertical-align:middle; white-space:nowrap;">
+                                <div>${o.id}</div>
+                                ${uncoordMeta}
+                            </td>
                             <td data-label="CLIENTE" style="font-weight:600; text-transform:uppercase;">${o.client || 'Sin Cliente'}</td>
                             <td data-label="DOMICILIO">${o.address || '<span style="color:var(--text-muted); font-style:italic;">Sin especificar</span>'}</td>
                             <td data-label="TAREA">${o.type || '<span style="color:var(--text-muted); font-style:italic;">Servicio técnico</span>'}</td>
@@ -2301,6 +2328,9 @@
                     if (timeVal && timeEndVal) timeRangeVal = `${timeVal}HS-${timeEndVal}HS`;
                     else if (timeVal) timeRangeVal = `${timeVal}HS`;
 
+                    const currentAdminName = localStorage.getItem('electrofrio_name') || localStorage.getItem('electrofrio_user') || 'Admin';
+                    const hasAssignedTechs = assignees.length > 0 && !assignees.every(a => a === "Sin Asignar");
+
                     const nuevaOT = {
                         id: orderIdStr,
                         clientId: clientId,
@@ -2313,6 +2343,8 @@
                         timeEnd: timeEndVal,
                         timeRange: timeRangeVal,
                         type: type,
+                        createdBy: currentAdminName,
+                        assignedBy: hasAssignedTechs ? currentAdminName : '',
                         timestamp: new Date().toISOString()
                     };
 
@@ -2514,6 +2546,17 @@
             if (!ord) return;
 
             document.getElementById('detail-order-id').textContent = ord.id;
+
+            const detailCreatedBy = document.getElementById('detail-created-by');
+            if (detailCreatedBy) {
+                detailCreatedBy.textContent = ord.createdBy || '-';
+            }
+            const detailAssignedBy = document.getElementById('detail-assigned-by');
+            if (detailAssignedBy) {
+                const hasAssignees = ord.assignees && ord.assignees.length > 0 && !ord.assignees.includes('Sin Asignar');
+                detailAssignedBy.textContent = ord.assignedBy || (hasAssignees ? (ord.createdBy || 'Admin') : 'Sin asignar');
+            }
+
             document.getElementById('detail-client-name').textContent = ord.client || "";
             document.getElementById('detail-address').textContent = ord.address || "";
             document.getElementById('detail-type').textContent = ord.type || "";
@@ -2799,12 +2842,26 @@
                 }
 
                 // 1. Optimistic Update
+                const currentAdminName = localStorage.getItem('electrofrio_name') || localStorage.getItem('electrofrio_user') || 'Admin';
                 const ordIdx = ordenesTrabajo.findIndex(o => o.id === orderId);
                 let timeRangeVal = "";
                 if (time && timeEnd) timeRangeVal = `${time}HS-${timeEnd}HS`;
                 else if (time) timeRangeVal = `${time}HS`;
 
+                let newAssignedBy = '';
                 if (ordIdx > -1) {
+                    newAssignedBy = ordenesTrabajo[ordIdx].assignedBy || '';
+                    const hasAssignedTechs = assignees.length > 0 && !assignees.every(a => a === "Sin Asignar");
+                    if (hasAssignedTechs) {
+                        const oldAssignees = (ordenesTrabajo[ordIdx].assignees || []).filter(a => a !== 'Sin Asignar').sort().join(',');
+                        const curAssignees = assignees.filter(a => a !== 'Sin Asignar').sort().join(',');
+                        if (!newAssignedBy || oldAssignees !== curAssignees) {
+                            newAssignedBy = currentAdminName;
+                        }
+                    } else {
+                        newAssignedBy = '';
+                    }
+
                     if (role === 'Colaborador') {
                         ordenesTrabajo[ordIdx].status = status;
                         ordenesTrabajo[ordIdx].observations = obsVal;
@@ -2819,6 +2876,10 @@
                         ordenesTrabajo[ordIdx].timeEnd = timeEnd;
                         ordenesTrabajo[ordIdx].timeRange = timeRangeVal;
                         ordenesTrabajo[ordIdx].assignees = assignees.length > 0 ? assignees : ["Sin Asignar"];
+                        ordenesTrabajo[ordIdx].assignedBy = newAssignedBy;
+                        if (!ordenesTrabajo[ordIdx].createdBy) {
+                            ordenesTrabajo[ordIdx].createdBy = currentAdminName;
+                        }
                     }
                     localStorage.setItem('electrofrio_workorders', JSON.stringify(ordenesTrabajo));
                 }
@@ -2837,7 +2898,7 @@
                             observations: obsVal
                         });
                     } else {
-                        await db.collection('ordenes').doc(orderId).update({
+                        const updateData = {
                             client: clientVal,
                             address: addressVal,
                             type: typeVal,
@@ -2848,8 +2909,13 @@
                             timeEnd: timeEnd,
                             timeRange: timeRangeVal,
                             assignees: assignees.length > 0 ? assignees : ["Sin Asignar"],
+                            assignedBy: newAssignedBy,
                             timestamp: new Date().toISOString()
-                        });
+                        };
+                        if (ordIdx > -1 && ordenesTrabajo[ordIdx]?.createdBy) {
+                            updateData.createdBy = ordenesTrabajo[ordIdx].createdBy;
+                        }
+                        await db.collection('ordenes').doc(orderId).update(updateData);
                         await saveNewAddressToClient("", clientVal, addressVal);
                     }
                     window.parent.postMessage({ type: 'ORDER_UPDATED' }, '*');
