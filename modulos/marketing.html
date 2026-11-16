@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marketing Simple - ElectroFrío</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/icon.png?v=3" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos compartidos -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/modo-seguro.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px 24px;
+            background-color: var(--bg-main, #0b1320);
+            color: var(--text-primary, #ffffff);
+            font-family: 'Inter', sans-serif;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* HEADER SIMPLE */
+        .header-simple {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color, #1e3656);
+        }
+
+        .header-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p {
+            margin: 3px 0 0 0;
+            font-size: 13px;
+            color: var(--text-muted, #627d98);
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-s {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .btn-blue {
+            background: #0084ff;
+            color: #ffffff;
+        }
+        .btn-blue:hover { background: #0076e5; }
+
+        .btn-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+        .btn-amber:hover { background: rgba(245, 158, 11, 0.25); }
+
+        .btn-dark {
+            background: var(--bg-card, #16243d);
+            color: #8ab4f8;
+            border-color: var(--border-color, #1e3656);
+        }
+        .btn-dark:hover { color: #ffffff; }
+
+        /* BARRA DEL CLIMA COMPACTA */
+        .weather-bar {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 10px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .weather-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .weather-temp {
+            font-size: 24px;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #ef4444;
+        }
+
+        .weather-desc {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .weather-desc small {
+            color: #94a3b8;
+            font-size: 11px;
+            display: block;
+        }
+
+        /* RADAR DE NOTICIAS COLAPSABLE */
+        .radar-box {
+            background: rgba(16, 29, 46, 0.85);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            display: none;
+        }
+
+        .radar-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+        .radar-item:last-child { border-bottom: none; }
+
+        .radar-text {
+            font-size: 13px;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .radar-meta {
+            font-size: 11px;
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        /* FILTROS RÁPIDOS */
+        .filter-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .pill-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pill-btn {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            color: #8ab4f8;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .pill-btn.active {
+            background: #0084ff;
+            color: #ffffff;
+            border-color: #0084ff;
+        }
+
+        /* TABLERO KANBAN */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .board-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .board-grid { grid-template-columns: 1fr; }
+        }
+
+        .board-col {
+            background: rgba(22, 36, 61, 0.4);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 10px;
+            padding: 12px;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .col-head {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .col-badge {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #ffffff;
+        }
+
+        /* TARJETA MINIMALISTA (LO QUE HAGO + TEXTO CORTO) */
+        .mini-card {
+            background: var(--bg-card, #16243d);
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s;
+        }
+
+        .mini-card:hover {
+            border-color: #00bfff;
+        }
+
+        .mini-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .badge-rubro {
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .b-refri { background: rgba(0, 191, 255, 0.15); color: #00bfff; }
+        .b-luz { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .b-noticia { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .mini-date {
+            color: #94a3b8;
+            font-size: 10px;
+        }
+
+        /* 1. QUÉ HAGO (DIRECTO Y AL GRANO) */
+        .action-box {
+            background: rgba(10, 17, 28, 0.7);
+            border-left: 3px solid #fbbf24;
+            padding: 8px 10px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .action-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .action-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 2px;
+            line-height: 1.35;
+        }
+
+        /* 2. TEXTO VAGO / SIMPLE PARA EL POST */
+        .copy-box {
+            background: rgba(0, 132, 255, 0.05);
+            border: 1px dashed rgba(0, 132, 255, 0.25);
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        .copy-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #38bdf8;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-text {
+            font-size: 11px;
+            color: #cbd5e1;
+            margin-top: 4px;
+            line-height: 1.35;
+            white-space: pre-line;
+            max-height: 52px;
+            overflow-y: auto;
+        }
+
+        .mini-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 6px;
+            margin-top: 2px;
+        }
+
+        .mini-source {
+            font-size: 10px;
+            color: #627d98;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #8ab4f8;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .btn-icon:hover { color: #ffffff; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            padding: 16px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-box {
+            background: #111e33;
+            border: 1px solid var(--border-color, #1e3656);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-row label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8ab4f8;
+        }
+        .input-c {
+            background: #0a111c;
+            border: 1px solid #1e3656;
+            color: #ffffff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            font-family: inherit;
+        }
+        textarea.input-c { min-height: 60px; resize: vertical; }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.25s ease;
+            z-index: 10000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">Texto copiado 📋</div>
+
+    <!-- HEADER SIMPLE -->
+    <header class="header-simple">
+        <div class="header-title">
+            <h1>Marketing Simple <small style="font-size: 12px; color: #00bfff; font-weight: normal;">• La Rioja</small></h1>
+            <p>Qué grabar hoy, qué foto sacar y textos cortos listos para pegar.</p>
+        </div>
+        <div class="btn-group">
+            <button class="btn-s btn-amber" onclick="toggleRadar()">⚡ Noticias La Rioja</button>
+            <button class="btn-s btn-blue" onclick="openModal()">+ Nueva Tarea</button>
+            <button class="btn-s btn-dark" onclick="resetDefault()" title="Cargar ideas simples de ejemplo">🔄 Reiniciar</button>
+        </div>
+    </header>
+
+    <!-- BARRA DEL CLIMA COMPACTA (OPEN-METEO) -->
+    <div class="weather-bar">
+        <div class="weather-left">
+            <span class="weather-temp" id="wTemp">39°C</span>
+            <div class="weather-desc">
+                <strong>La Rioja Capital</strong> • Térmica: <span id="wThermal">42°C</span>
+                <small>☀️ Calor extremo: momento ideal para ofrecer service de aire.</small>
+            </div>
+        </div>
+        <button class="btn-s btn-blue" style="font-size: 11px; padding: 5px 10px;" onclick="addClimaSimple()">
+            + Usar Alerta Calor
+        </button>
+    </div>
+
+    <!-- RADAR DE NOTICIAS RIOJANAS (SIMPLE) -->
+    <div id="radarBox" class="radar-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <strong style="font-size: 13px; color: #fbbf24;">📰 Noticias de la semana en La Rioja (Click para usar):</strong>
+            <button class="btn-icon" onclick="toggleRadar()">✕ Cerrar</button>
+        </div>
+
+        <div class="radar-item">
+            <div>
+                <div class="radar-meta">SMN • 16/11/2026</div>
+                <div class="radar-text">Alerta naranja por 42°C en La Rioja esta semana.</div>
+            </div>
+            <button class="btn-s btn-blue" style="padding: 4px 8px; font-size: 11px;" onclick="addFromNews(0)">+ Usar</button>
+        </div>
+
+        <div class="radar-item">
+            <div>
+                <div class="radar-meta">Nueva Rioja • 15/11/2026</div>
+                <div class="radar-text">EDELAR advierte sobre picos de consumo y bajas de tensión en la siesta.</div>
+            </div>
+            <button class="btn-s btn-blue" style="padding: 4px 8px; font-size: 11px;" onclick="addFromNews(1)">+ Usar</button>
+        </div>
+
+        <div class="radar-item">
+            <div>
+                <div class="radar-meta">El Independiente • 14/11/2026</div>
+                <div class="radar-text">Aumentos de tarifa eléctrica: recomiendan recambio a LED para bajar boleta.</div>
+            </div>
+            <button class="btn-s btn-blue" style="padding: 4px 8px; font-size: 11px;" onclick="addFromNews(2)">+ Usar</button>
+        </div>
+    </div>
+
+    <!-- FILTRO RÁPIDO -->
+    <div class="filter-strip">
+        <div class="pill-group">
+            <button class="pill-btn active" onclick="setFilter('todos', this)">Todos</button>
+            <button class="pill-btn" onclick="setFilter('refrigeracion', this)">❄️ Refrigeración</button>
+            <button class="pill-btn" onclick="setFilter('iluminacion', this)">💡 Iluminación</button>
+            <button class="pill-btn" onclick="setFilter('alerta', this)">⚡ Noticias Rioja</button>
+        </div>
+        <span style="font-size: 11px; color: #627d98;">Datos guardados en tu navegador (0 consumo Firebase)</span>
+    </div>
+
+    <!-- TABLERO SIMPLE (4 COLUMNAS) -->
+    <div class="board-grid">
+        <!-- 1. POR GRABAR -->
+        <div class="board-col" style="border-top: 3px solid #fbbf24;">
+            <div class="col-head" style="color: #fbbf24;">
+                <span>🎬 Por Grabar / Fotos</span>
+                <span class="col-badge" id="cGrabar">0</span>
+            </div>
+            <div id="colGrabar" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- 2. POR EDITAR -->
+        <div class="board-col" style="border-top: 3px solid #00bfff;">
+            <div class="col-head" style="color: #00bfff;">
+                <span>✂️ Por Editar</span>
+                <span class="col-badge" id="cEditar">0</span>
+            </div>
+            <div id="colEditar" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- 3. LISTO PARA PUBLICAR -->
+        <div class="board-col" style="border-top: 3px solid #10b981;">
+            <div class="col-head" style="color: #10b981;">
+                <span>🚀 Listo para Subir</span>
+                <span class="col-badge" id="cListo">0</span>
+            </div>
+            <div id="colListo" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- 4. YA PUBLICADO -->
+        <div class="board-col" style="border-top: 3px solid #a78bfa;">
+            <div class="col-head" style="color: #a78bfa;">
+                <span>✅ Ya Publicado</span>
+                <span class="col-badge" id="cHecho">0</span>
+            </div>
+            <div id="colHecho" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- MODAL SIMPLE -->
+    <div id="modalBox" class="modal-overlay">
+        <div class="modal-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size: 14px; color:#ffffff;" id="modalHeading">Nueva Tarea</strong>
+                <button class="btn-icon" onclick="closeModal()">✕</button>
+            </div>
+
+            <input type="hidden" id="inId">
+
+            <div class="form-row">
+                <label>🎯 Qué tengo que hacer (Acción directa):</label>
+                <input type="text" id="inShooting" class="input-c" placeholder="Ej. Grabar 10 seg lavando la turbina con agua negra cayendo">
+            </div>
+
+            <div class="form-row">
+                <label>💬 Texto simple para redes (opción corta):</label>
+                <textarea id="inCopy" class="input-c" placeholder="Ej. Limpieza profunda de aire acondicionado antes del calor. Turnos por WhatsApp al [número] 📲"></textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="form-row">
+                    <label>Rubro:</label>
+                    <select id="inRubro" class="input-c">
+                        <option value="refrigeracion">❄️ Refrigeración</option>
+                        <option value="iluminacion">💡 Iluminación</option>
+                        <option value="alerta">⚡ Noticia La Rioja</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Columna:</label>
+                    <select id="inStatus" class="input-c">
+                        <option value="grabar">🎬 Por Grabar / Fotos</option>
+                        <option value="editar">✂️ Por Editar</option>
+                        <option value="listo">🚀 Listo para Subir</option>
+                        <option value="hecho">✅ Ya Publicado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="form-row">
+                    <label>Día previsto:</label>
+                    <input type="date" id="inDate" class="input-c">
+                </div>
+                <div class="form-row">
+                    <label>Fuente / Origen:</label>
+                    <input type="text" id="inSource" class="input-c" placeholder="Ej. Taller o SMN">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn-s btn-dark" onclick="closeModal()">Cancelar</button>
+                <button class="btn-s btn-blue" onclick="saveTask()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORE_KEY = 'electrofrio_mkt_simple';
+        let currentFilter = 'todos';
+
+        // NOTICIAS RIOJANAS RÁPIDAS
+        const QUICK_NEWS = [
+            {
+                rubro: 'alerta',
+                source: 'SMN (16/11)',
+                shooting: 'Foto al termómetro del auto en 40°C o captura del pronóstico del celular.',
+                copy: '☀️ ¡Se vienen 42°C en La Rioja!\n\n¿Tu aire tira poco viento o no enfría? No esperes a que colapse en plena siesta.\n\n❄️ Turnos disponibles por WhatsApp.'
+            },
+            {
+                rubro: 'alerta',
+                source: 'Nueva Rioja / EDELAR',
+                shooting: 'Foto en mano de un protector de tensión enchufable para aire.',
+                copy: '⚠️ Bajas de tensión en La Rioja: la causa #1 de motores quemados.\n\nProtegé tu equipo con un protector automático.\n\n🔌 Disponibles en nuestro local.'
+            },
+            {
+                rubro: 'iluminacion',
+                source: 'El Independiente (14/11)',
+                shooting: 'Foto de lámpara halógena vieja vs lámpara LED moderna de bajo consumo.',
+                copy: '💡 Bajá hasta un 80% el consumo de luz cambiando a tecnología LED.\n\nLámparas, paneles y reflectores solares en stock.\n\n📍 Consultanos al WhatsApp.'
+            }
+        ];
+
+        // TAREAS INICIALES SIMPLES (QUÉ HAGO + TEXTO VAGO)
+        const DEFAULT_TASKS = [
+            {
+                id: 't-1',
+                rubro: 'refrigeracion',
+                status: 'grabar',
+                date: '2026-11-18',
+                source: 'Taller',
+                shooting: 'Grabá 10 segundos del agua negra saliendo de la turbina mientras la lavás con la carpa.',
+                copy: 'Limpieza profunda de turbina 🧼\n\nMirá cómo estaba este equipo. Si tu aire no enfría como antes, escribinos para service en el día ❄️'
+            },
+            {
+                id: 't-2',
+                rubro: 'iluminacion',
+                status: 'grabar',
+                date: '2026-11-20',
+                source: 'Local',
+                shooting: 'Sacá foto a la cocina a oscuras con solo la tira LED bajo alacena prendida.',
+                copy: 'Luz cálida bajo alacena ✨ Cambia por completo la cocina y gasta casi nada.\n\nKits listos para colocar en nuestro local 💡'
+            },
+            {
+                id: 't-3',
+                rubro: 'refrigeracion',
+                status: 'editar',
+                date: '2026-11-22',
+                source: 'Service',
+                shooting: 'Foto buscando fuga de gas con espuma o manómetros conectados al compresor.',
+                copy: 'Al aire NO se le gasta el gas: si le falta, tiene una fuga ❌\n\nNosotros encontramos la pérdida y la reparamos garantizado 📲'
+            },
+            {
+                id: 't-4',
+                rubro: 'iluminacion',
+                status: 'listo',
+                date: '2026-11-24',
+                source: 'Catálogo',
+                shooting: 'Video corto prendiendo un reflector solar de noche en el patio con el control.',
+                copy: 'Reflector solar LED ☀️ 0 consumo en la boleta de luz. Prende solo de noche y no lleva cables.\n\nEnvíos en La Rioja 📦'
+            }
+        ];
+
+        function loadTasks() {
+            const data = localStorage.getItem(STORE_KEY);
+            if (!data) {
+                localStorage.setItem(STORE_KEY, JSON.stringify(DEFAULT_TASKS));
+                return DEFAULT_TASKS;
+            }
+            try { return JSON.parse(data); } catch(e) { return DEFAULT_TASKS; }
+        }
+
+        function saveAndRender(tasks) {
+            localStorage.setItem(STORE_KEY, JSON.stringify(tasks));
+            render();
+        }
+
+        // CARGA CLIMA EN VIVO
+        async function fetchWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-29.4131&longitude=-66.8558&current=temperature_2m,apparent_temperature&timezone=America%2FArgentina%2FLa_Rioja');
+                if (!res.ok) return;
+                const d = await res.json();
+                document.getElementById('wTemp').textContent = Math.round(d.current.temperature_2m) + '°C';
+                document.getElementById('wThermal').textContent = Math.round(d.current.apparent_temperature) + '°C';
+            } catch(e) {}
+        }
+
+        function addClimaSimple() {
+            const temp = document.getElementById('wTemp').textContent;
+            const tasks = loadTasks();
+            tasks.unshift({
+                id: 't-' + Date.now(),
+                rubro: 'alerta',
+                status: 'grabar',
+                date: new Date().toISOString().split('T')[0],
+                source: 'Clima La Rioja (' + temp + ')',
+                shooting: 'Sacá foto al termómetro marcando ' + temp + ' o captura del pronóstico del celular.',
+                copy: '☀️ ¡' + temp + ' hoy en La Rioja!\n\nNo te quedes sin aire acondicionado en la siesta. Turnos de urgencia por WhatsApp al [número] ❄️'
+            });
+            saveAndRender(tasks);
+            showToast('✅ Agregado a "Por Grabar"');
+        }
+
+        function addFromNews(idx) {
+            const n = QUICK_NEWS[idx];
+            if (!n) return;
+            const tasks = loadTasks();
+            tasks.unshift({
+                id: 't-' + Date.now(),
+                rubro: n.rubro,
+                status: 'grabar',
+                date: new Date().toISOString().split('T')[0],
+                source: n.source,
+                shooting: n.shooting,
+                copy: n.copy
+            });
+            saveAndRender(tasks);
+            toggleRadar();
+            showToast('✅ Agregado a "Por Grabar"');
+        }
+
+        function toggleRadar() {
+            const b = document.getElementById('radarBox');
+            b.style.display = b.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function setFilter(rubro, btn) {
+            currentFilter = rubro;
+            document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const tasks = loadTasks();
+            const filtered = tasks.filter(t => currentFilter === 'todos' || t.rubro === currentFilter);
+
+            const cG = document.getElementById('colGrabar');
+            const cE = document.getElementById('colEditar');
+            const cL = document.getElementById('colListo');
+            const cH = document.getElementById('colHecho');
+
+            cG.innerHTML = ''; cE.innerHTML = ''; cL.innerHTML = ''; cH.innerHTML = '';
+
+            let nG = 0, nE = 0, nL = 0, nH = 0;
+
+            filtered.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'mini-card';
+
+                let rubroClass = 'b-refri';
+                let rubroTxt = '❄️ Refri';
+                if (t.rubro === 'iluminacion') { rubroClass = 'b-luz'; rubroTxt = '💡 Iluminación'; }
+                else if (t.rubro === 'alerta') { rubroClass = 'b-noticia'; rubroTxt = '⚡ La Rioja'; }
+
+                card.innerHTML = `
+                    <div class="mini-top">
+                        <span class="badge-rubro ${rubroClass}">${rubroTxt}</span>
+                        <span class="mini-date">📅 ${t.date || 'Hoy'}</span>
+                    </div>
+
+                    <div class="action-box">
+                        <div class="action-label">🎯 Qué hago:</div>
+                        <div class="action-text">${escapeHTML(t.shooting)}</div>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-label">
+                            <span>💬 Texto simple:</span>
+                            <button class="btn-icon" title="Copiar texto" onclick="copy('${t.id}')">📋 Copiar</button>
+                        </div>
+                        <div class="copy-text">${escapeHTML(t.copy)}</div>
+                    </div>
+
+                    <div class="mini-footer">
+                        <span class="mini-source">Fuente: ${escapeHTML(t.source || 'Propia')}</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon" title="Mover / Editar" onclick="edit('${t.id}')">✏️</button>
+                            <button class="btn-icon" title="Borrar" onclick="del('${t.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+
+                if (t.status === 'grabar') { cG.appendChild(card); nG++; }
+                else if (t.status === 'editar') { cE.appendChild(card); nE++; }
+                else if (t.status === 'listo') { cL.appendChild(card); nL++; }
+                else { cH.appendChild(card); nH++; }
+            });
+
+            document.getElementById('cGrabar').textContent = nG;
+            document.getElementById('cEditar').textContent = nE;
+            document.getElementById('cListo').textContent = nL;
+            document.getElementById('cHecho').textContent = nH;
+        }
+
+        function escapeHTML(s) {
+            return (s || '').replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
+        }
+
+        function copy(id) {
+            const tasks = loadTasks();
+            const t = tasks.find(x => x.id === id);
+            if (t) {
+                navigator.clipboard.writeText(t.copy).then(() => showToast('Texto copiado 📋'));
+            }
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2200);
+        }
+
+        function openModal() {
+            document.getElementById('inId').value = '';
+            document.getElementById('modalHeading').textContent = 'Nueva Tarea';
+            document.getElementById('inShooting').value = '';
+            document.getElementById('inCopy').value = '';
+            document.getElementById('inRubro').value = 'refrigeracion';
+            document.getElementById('inStatus').value = 'grabar';
+            document.getElementById('inDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('inSource').value = 'Taller';
+            document.getElementById('modalBox').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalBox').classList.remove('active');
+        }
+
+        function edit(id) {
+            const tasks = loadTasks();
+            const t = tasks.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('inId').value = t.id;
+            document.getElementById('modalHeading').textContent = 'Mover / Editar Tarea';
+            document.getElementById('inShooting').value = t.shooting;
+            document.getElementById('inCopy').value = t.copy;
+            document.getElementById('inRubro').value = t.rubro;
+            document.getElementById('inStatus').value = t.status;
+            document.getElementById('inDate').value = t.date;
+            document.getElementById('inSource').value = t.source || '';
+            document.getElementById('modalBox').classList.add('active');
+        }
+
+        function saveTask() {
+            const shooting = document.getElementById('inShooting').value.trim();
+            if (!shooting) { alert('Indica qué tienes que hacer'); return; }
+
+            const tasks = loadTasks();
+            const id = document.getElementById('inId').value;
+
+            if (id) {
+                const i = tasks.findIndex(x => x.id === id);
+                if (i !== -1) {
+                    tasks[i].shooting = shooting;
+                    tasks[i].copy = document.getElementById('inCopy').value;
+                    tasks[i].rubro = document.getElementById('inRubro').value;
+                    tasks[i].status = document.getElementById('inStatus').value;
+                    tasks[i].date = document.getElementById('inDate').value;
+                    tasks[i].source = document.getElementById('inSource').value;
+                }
+            } else {
+                tasks.unshift({
+                    id: 't-' + Date.now(),
+                    shooting: shooting,
+                    copy: document.getElementById('inCopy').value,
+                    rubro: document.getElementById('inRubro').value,
+                    status: document.getElementById('inStatus').value,
+                    date: document.getElementById('inDate').value,
+                    source: document.getElementById('inSource').value || 'Propia'
+                });
+            }
+
+            saveAndRender(tasks);
+            closeModal();
+            showToast('Guardado ✅');
+        }
+
+        function del(id) {
+            if (confirm('¿Eliminar esta tarea?')) {
+                let tasks = loadTasks().filter(x => x.id !== id);
+                saveAndRender(tasks);
+            }
+        }
+
+        function resetDefault() {
+            if (confirm('¿Reiniciar con las tareas de ejemplo?')) {
+                localStorage.setItem(STORE_KEY, JSON.stringify(DEFAULT_TASKS));
+                render();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchWeather();
+            render();
+        });
+    </script>
+</body>
+</html>
