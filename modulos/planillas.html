@@ -1196,6 +1196,15 @@
                 }
 
                 if (planillas.length > 0) {
+                    // Preservar ediciones pendientes que el usuario aún está escribiendo
+                    if (window._pendingPlanillaUpdates && Object.keys(window._pendingPlanillaUpdates).length > 0) {
+                        planillas.forEach(p => {
+                            const pending = window._pendingPlanillaUpdates[p.id];
+                            if (pending) {
+                                Object.assign(p, pending);
+                            }
+                        });
+                    }
                     safeSavePlanillasLocalStorage(planillas);
                     renderWorksheetsTable();
                     populateWorksheetAddressDropdown();
@@ -1471,6 +1480,14 @@
             window.currentFilteredWorksheetIds = filtered.map(p => p.id);
             const displayed = filtered.slice(0, window.worksheetsRenderLimit);
 
+            // Preservar foco y posición del cursor si el usuario está escribiendo dentro de la tabla
+            const activeEl = document.activeElement;
+            const isTableInputFocused = activeEl && activeEl.id && activeEl.closest && activeEl.closest('#worksheetsTableBody');
+            const activeInputId = isTableInputFocused ? activeEl.id : null;
+            const isTextType = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+            const selStart = isTextType ? activeEl.selectionStart : null;
+            const selEnd = isTextType ? activeEl.selectionEnd : null;
+
             tbody.innerHTML = '';
             if (displayed.length === 0) {
                 const emptyMsg = isAdmin 
@@ -1561,10 +1578,10 @@
                     <td data-label="HORARIO" style="font-size: 12px; white-space: nowrap;">${horarioStr}</td>
                     <td data-label="COLABORADORES" style="font-size: 12px;">${collabsStr}</td>
                     <td data-label="MANO DE OBRA" class="role-admin-only">
-                        <input type="text" id="mo-${p.id}" class="inline-input" value="${moValue}" oninput="window.updatePlanillaInline('${p.id}', 'manoObra', this.value)" placeholder="MANO DE OBRA" style="width: 100%; min-width: 130px; padding: 5px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box;">
+                        <input type="text" id="mo-${p.id}" class="inline-input" value="${moValue}" oninput="window.updatePlanillaMemory('${p.id}', 'manoObra', this.value)" onchange="window.updatePlanillaInline('${p.id}', 'manoObra', this.value)" placeholder="MANO DE OBRA" style="width: 100%; min-width: 130px; padding: 5px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box;">
                     </td>
                     <td data-label="MATERIALES" class="role-admin-only">
-                        <input type="text" id="mat-${p.id}" class="inline-input" value="${matValue}" oninput="window.updatePlanillaInline('${p.id}', 'materiales', this.value)" placeholder="MATERIALES" style="width: 100%; min-width: 130px; padding: 5px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box;">
+                        <input type="text" id="mat-${p.id}" class="inline-input" value="${matValue}" oninput="window.updatePlanillaMemory('${p.id}', 'materiales', this.value)" onchange="window.updatePlanillaInline('${p.id}', 'materiales', this.value)" placeholder="MATERIALES" style="width: 100%; min-width: 130px; padding: 5px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box;">
                     </td>
                     <td data-label="ESTADO" class="role-admin-only">
                         <select class="inline-select" onchange="window.handleEstadoChange(this, '${p.id}')" style="width: 100%; min-width: 135px; ${estColorStyle}">
@@ -1604,6 +1621,19 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Restaurar foco y posición del cursor si el usuario estaba escribiendo dentro de la tabla
+            if (activeInputId) {
+                const restoredEl = document.getElementById(activeInputId);
+                if (restoredEl) {
+                    restoredEl.focus();
+                    if (isTextType && selStart !== null && selEnd !== null) {
+                        try {
+                            restoredEl.setSelectionRange(selStart, selEnd);
+                        } catch(e) {}
+                    }
+                }
+            }
 
             // Mostrar u ocultar botón de cargar más
             const loadMoreCont = document.getElementById('btnLoadMoreContainer');
@@ -1857,17 +1887,18 @@
         window._pendingPlanillaUpdates = {};
         window._planillaUpdateTimers = {};
 
-        window.updatePlanillaInline = function(planillaId, field, value) {
+        // Actualiza el valor en memoria y caché local instantáneamente mientras el usuario teclea (sin interrumpir la escritura)
+        window.updatePlanillaMemory = function(planillaId, field, value) {
             const pIndex = planillas.findIndex(p => p.id === planillaId);
             if (pIndex > -1) {
                 planillas[pIndex][field] = value;
-                safeSavePlanillasLocalStorage(planillas);
-
                 if (!window._pendingPlanillaUpdates[planillaId]) {
                     window._pendingPlanillaUpdates[planillaId] = {};
                 }
                 window._pendingPlanillaUpdates[planillaId][field] = value;
+                safeSavePlanillasLocalStorage(planillas);
 
+                // Auto-guardado en segundo plano con debounce amplio (1.5s de inactividad) para sincronizar Firestore
                 if (typeof db !== 'undefined') {
                     const timerKey = `${planillaId}_${field}`;
                     if (window._planillaUpdateTimers[timerKey]) {
@@ -1884,8 +1915,27 @@
                         } catch (e) {
                             console.error('Error al actualizar planilla inline en firebase:', e);
                         }
-                    }, 800);
+                    }, 1500);
                 }
+            }
+        };
+
+        // Guarda de inmediato cuando se sale del campo (blur/change) o presiona Enter
+        window.updatePlanillaInline = function(planillaId, field, value) {
+            window.updatePlanillaMemory(planillaId, field, value);
+
+            if (typeof db !== 'undefined') {
+                const timerKey = `${planillaId}_${field}`;
+                if (window._planillaUpdateTimers[timerKey]) {
+                    clearTimeout(window._planillaUpdateTimers[timerKey]);
+                }
+                const updateObj = {};
+                updateObj[field] = value;
+                db.collection('planillas').doc(planillaId).update(updateObj).then(() => {
+                    if (window._pendingPlanillaUpdates[planillaId]) {
+                        delete window._pendingPlanillaUpdates[planillaId][field];
+                    }
+                }).catch(e => console.error('Error al guardar cambio inline en firebase:', e));
             }
         };
 
